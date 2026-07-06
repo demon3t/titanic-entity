@@ -4,6 +4,11 @@
   "description": "Entity API client, request models, and query helpers for Titanic.Entity.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demon3t/titanic-entity",
+    "directory": "packages/entity-api"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
