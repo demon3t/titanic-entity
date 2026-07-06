@@ -1,4 +1,4 @@
-﻿# Пакетная архитектура @titanic/entity-react
+﻿# Пакетная архитектура @titanic-entity/entity-react
 
 Этот документ описывает, как UI-элементы библиотеки регистрируются через базовый пакет `entity-base` и как их расширять в прикладных пакетах.
 
@@ -145,7 +145,7 @@ const EntityField = registry?.getField("EntityField");
 Расширение получает базовый компонент и возвращает новый компонент с той же сигнатурой props.
 
 ```tsx
-import { defineFieldSchema, type EntityFieldProps } from "@titanic/entity-react";
+import { defineFieldSchema, type EntityFieldProps } from "@titanic-entity/entity-react";
 
 export const strictFieldSchema = defineFieldSchema<EntityFieldProps>({
   kind: "field",

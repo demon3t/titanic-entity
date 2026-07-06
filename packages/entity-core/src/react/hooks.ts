@@ -7,8 +7,8 @@ import {
   type EntityQueryInput,
   type ESQFilterCollectionJsonModel,
   type ESQJsonModel
-} from "@titanic/entity-api";
-import { ConditionOperator } from "@titanic/entity-api/enums/ConditionOperator";
+} from "@titanic-entity/entity-api";
+import { ConditionOperator } from "@titanic-entity/entity-api/enums/ConditionOperator";
 import type { EntityColumnSchema } from "../entity/models/EntityColumnSchema";
 import type { EntityLookupOptionsSource } from "../entity/models/EntityLookupOptionsSource";
 import type { EntitySchema } from "../entity/models/EntitySchema";

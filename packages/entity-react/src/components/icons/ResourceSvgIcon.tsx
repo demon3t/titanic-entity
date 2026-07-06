@@ -1,5 +1,5 @@
 // Компонент иконки 'ResourceSvgIcon', читающий графику из ресурсов пакета.
-import type { ResourceSvgIconResource, ResourceSvgIconShape } from "@titanic/entity-resources";
+import type { ResourceSvgIconResource, ResourceSvgIconShape } from "@titanic-entity/entity-resources";
 
 export interface ResourceSvgIconProps {
   className?: string;

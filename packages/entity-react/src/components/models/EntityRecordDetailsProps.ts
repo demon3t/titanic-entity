@@ -1,6 +1,6 @@
 // Контракт свойств UI-компонента 'EntityRecordDetailsProps'.
 import type { ReactNode } from "react";
-import type { EntityApiEntity } from "@titanic/entity-api";
+import type { EntityApiEntity } from "@titanic-entity/entity-api";
 
 export interface EntityRecordDetailsField {
   key: string;

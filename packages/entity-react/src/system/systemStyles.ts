@@ -5,10 +5,10 @@ import {
   getEntityValue,
   type EntityApiClient,
   type EntityApiEntity
-} from "@titanic/entity-api";
+} from "@titanic-entity/entity-api";
 import type { EntityDataGridColumn } from "../grids";
 import type { EntityRecordPageConfig } from "../components/records/EntityRecordsPage";
-import { EntityFieldKind, type EntityJsonRequiredField, type EntitySchema, type EntityValues } from "@titanic/entity-core";
+import { EntityFieldKind, type EntityJsonRequiredField, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
 
 export const systemStyleTableName = "sys_style";
 export const systemStyleOrderColumn = "SortOrder";

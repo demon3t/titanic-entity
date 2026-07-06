@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { entityQuery, type EntityApiClient } from "@titanic/entity-api";
+import { entityQuery, type EntityApiClient } from "@titanic-entity/entity-api";
 import type { EntityDataGridColumn } from "../grids";
 import { EntityDataGrid } from "./grid/EntityDataGrid";
 import type { EntityOrmListProps } from "./models/EntityOrmListProps";

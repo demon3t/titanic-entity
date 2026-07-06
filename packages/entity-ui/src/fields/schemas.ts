@@ -1,4 +1,4 @@
-import { defineFieldSchema } from "@titanic/entity-base";
+import { defineFieldSchema } from "@titanic-entity/entity-base";
 import {
   DateInput,
   EntityField,
@@ -11,7 +11,7 @@ import {
   type EntityJsonEditorProps,
   type NumberInputProps,
   type SelectEntityProps
-} from "@titanic/entity-react";
+} from "@titanic-entity/entity-react";
 
 export const entityFieldSchema = defineFieldSchema<EntityFieldProps>({
   kind: "field",

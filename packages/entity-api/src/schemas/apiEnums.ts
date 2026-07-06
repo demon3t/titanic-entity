@@ -1,4 +1,4 @@
-import { defineEnumSchema, Titanic } from "@titanic/entity-base";
+import { defineEnumSchema, Titanic } from "@titanic-entity/entity-base";
 import { ConditionOperator } from "../enums/ConditionOperator";
 import { EntityAggregationType } from "../enums/EntityAggregationType";
 import { EntityApiBatchExecutionMode } from "../enums/EntityApiBatchExecutionMode";

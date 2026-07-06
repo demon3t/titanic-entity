@@ -7,9 +7,9 @@ import {
   type EntityApiEntity,
   type EntityGridColumnSettingsClient,
   type ESQOrderJsonModel
-} from "@titanic/entity-api";
-import { getSaveValues, toEntityValues, type EntityColumnSchema, type EntitySchema, type EntityValues } from "@titanic/entity-core";
-import { entityCommonIcons } from "@titanic/entity-resources";
+} from "@titanic-entity/entity-api";
+import { getSaveValues, toEntityValues, type EntityColumnSchema, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
+import { entityCommonIcons } from "@titanic-entity/entity-resources";
 import { EntityForm } from "../EntityForm";
 import { EntityDataGrid } from "../grid/EntityDataGrid";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";

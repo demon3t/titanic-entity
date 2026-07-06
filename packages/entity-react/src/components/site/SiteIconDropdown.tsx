@@ -1,7 +1,7 @@
 ﻿// Базовый иконочный dropdown сайта для выбора значения из ресурсных SVG-иконок.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
-import type { ResourceSvgIconResource } from "@titanic/entity-resources";
+import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 
 export interface SiteIconDropdownOption {
   icon: ResourceSvgIconResource;

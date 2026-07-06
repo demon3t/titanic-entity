@@ -1,4 +1,4 @@
-﻿# @titanic/entity-react
+﻿# @titanic-entity/entity-react
 
 React/TypeScript библиотека для работы с `Titanic.Entity` и Entity ORM API. Пакет объединяет HTTP-клиент, модели ESQ, React hooks, базовые UI-компоненты, базовый пакет `entity-base` и расширяемые шаблоны страниц.
 
@@ -15,7 +15,7 @@ React/TypeScript библиотека для работы с `Titanic.Entity` и
 ## Установка
 
 ```bash
-npm install @titanic/entity-react
+npm install @titanic-entity/entity-react
 ```
 
 Для локальной разработки из демо-приложения:
@@ -27,7 +27,7 @@ npm install ../titanic-entity-react
 Стили подключаются один раз в приложении или через бандл библиотеки:
 
 ```tsx
-import "@titanic/entity-react/styles.css";
+import "@titanic-entity/entity-react/styles.css";
 ```
 
 ## Структура проекта
@@ -57,8 +57,8 @@ import {
   entityQuery,
   useEntityQuery,
   type EntitySchema
-} from "@titanic/entity-react";
-import "@titanic/entity-react/styles.css";
+} from "@titanic-entity/entity-react";
+import "@titanic-entity/entity-react/styles.css";
 
 const client = new EntityApiClient({
   baseUrl: "http://localhost:5006",
@@ -258,18 +258,17 @@ npm run build
 
 Перед первой публикацией добавьте в репозиторий GitHub secret:
 
-- `NPM_TOKEN` - npm automation token с правом публикации пакетов в scope `@titanic`.
+- `NPM_TOKEN` - npm automation token с правом публикации пакетов в scope `@titanic-entity`.
 
 Ручной dry-run можно запустить из GitHub UI:
 
 ```text
-Actions -> Publish npm packages -> Run workflow -> dry_run: true
+Actions -> Publish npm packages -> Run workflow -> dry_run: true, npm_tag: beta
 ```
 
-Реальная публикация запускается двумя способами:
+Реальная beta-публикация запускается двумя способами:
 
-- вручную через `Run workflow` с `dry_run: false`;
-- автоматически при push тега вида `v0.1.0`.
+- автоматически при merge/push в ветку `main`;
+- вручную через `Run workflow` с `dry_run: false` и `npm_tag: beta`.
 
-Workflow выполняет `npm ci`, `npm run typecheck`, `npm run build`, временно заменяет внутренние `file:../...` зависимости на версии workspace-пакетов и публикует пакеты в npm в правильном порядке.
-
+Workflow выполняет `npm ci`, `npm run typecheck`, `npm run build`, временно заменяет внутренние `file:../...` зависимости на версии workspace-пакетов и публикует пакеты в npm в правильном порядке. Для первого релиза используется версия `0.1.0-beta.0`, чтобы пакеты устанавливались через `npm install @titanic-entity/entity-react@beta`.

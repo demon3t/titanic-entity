@@ -1,1 +1,1 @@
-export { toEnumValues } from "@titanic/entity-base/enumValues";
+export { toEnumValues } from "@titanic-entity/entity-base/enumValues";

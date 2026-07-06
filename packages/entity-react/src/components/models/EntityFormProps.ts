@@ -1,4 +1,4 @@
-import type { EntitySchema, EntityValues } from "@titanic/entity-core";
+import type { EntitySchema, EntityValues } from "@titanic-entity/entity-core";
 
 /**
  * Props schema-driven Entity-формы.

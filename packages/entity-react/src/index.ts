@@ -1,17 +1,17 @@
-import { definePackage } from "@titanic/entity-base";
+import { definePackage } from "@titanic-entity/entity-base";
 import {
   entityReactEntitySchemas,
   entityReactEnumSchemas,
   titanicEntityCorePackage
-} from "@titanic/entity-core";
-import { titanicEntityApiPackage } from "@titanic/entity-api";
-import { titanicEntityResourcesPackage } from "@titanic/entity-resources";
+} from "@titanic-entity/entity-core";
+import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
+import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
 import { entityReactSchemas } from "./schemas";
 
-export * from "@titanic/entity-base";
-export * from "@titanic/entity-api";
-export * from "@titanic/entity-core";
-export * from "@titanic/entity-resources";
+export * from "@titanic-entity/entity-base";
+export * from "@titanic-entity/entity-api";
+export * from "@titanic-entity/entity-core";
+export * from "@titanic-entity/entity-resources";
 export {
   entityReactEntitySchemas,
   entityReactEnumSchemas

@@ -1,4 +1,4 @@
-import type { EntityColumnSchema, EntityDisplayValues, EntityValues } from "@titanic/entity-core";
+import type { EntityColumnSchema, EntityDisplayValues, EntityValues } from "@titanic-entity/entity-core";
 
 /**
  * Props компонента одного поля Entity-формы.

@@ -1,4 +1,4 @@
-import { defineComponentSchema } from "@titanic/entity-base";
+import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   PackageSiteShell,
   SiteCollapsiblePanel,
@@ -11,7 +11,7 @@ import {
   type SiteIconButtonProps,
   type SiteLayoutProps,
   type SitePanelToggleButtonProps
-} from "@titanic/entity-react";
+} from "@titanic-entity/entity-react";
 
 export const packageSiteShellComponentSchema = defineComponentSchema<PackageSiteShellProps>({
   kind: "component",

@@ -1,4 +1,4 @@
-import { defineComponentSchema } from "@titanic/entity-base";
+import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   EntityForm,
   EntityOrmList,
@@ -11,7 +11,7 @@ import {
   type EntityRecordDetailsProps,
   type EntityRegistryProps,
   type EntityTableProps
-} from "@titanic/entity-react";
+} from "@titanic-entity/entity-react";
 
 export const entityFormComponentSchema = defineComponentSchema<EntityFormProps>({
   kind: "component",

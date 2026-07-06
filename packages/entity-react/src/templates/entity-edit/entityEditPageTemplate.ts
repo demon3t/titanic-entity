@@ -1,5 +1,5 @@
 // Шаблон страницы редактирования сущности для пакетного переиспользования.
-import { getColumnKey, type EntityColumnSchema, type LookupOption } from "@titanic/entity-core";
+import { getColumnKey, type EntityColumnSchema, type LookupOption } from "@titanic-entity/entity-core";
 import type {
   EntityEditPageAction,
   EntityEditPageAttribute,

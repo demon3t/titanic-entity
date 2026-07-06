@@ -1,6 +1,6 @@
 // React-инфраструктура 'EntityApiProviderProps' для подключения Entity API.
 import type { ComponentType, ReactNode } from "react";
-import type { EntityApiClient } from "@titanic/entity-api";
+import type { EntityApiClient } from "@titanic-entity/entity-api";
 
 export type EntityApiClientCollection =
   | ReadonlyMap<string, EntityApiClient>

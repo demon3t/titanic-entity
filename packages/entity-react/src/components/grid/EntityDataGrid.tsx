@@ -11,8 +11,8 @@ import {
   type ESQColumnJsonModel,
   type ESQFilterJsonModel,
   type ESQJsonModel
-} from "@titanic/entity-api";
-import { getCellDisplayValue, toEntityValues } from "@titanic/entity-core";
+} from "@titanic-entity/entity-api";
+import { getCellDisplayValue, toEntityValues } from "@titanic-entity/entity-core";
 import { defaultEntityDataGridCulture, getEntityDataGridLabels } from "../../resources/EntityDataGrid";
 import { EntityDataGridRowContextMenu } from "../context-menus/EntityDataGridRowContextMenu";
 import { RandomGifLoader } from "../feedback/RandomGifLoader";
@@ -22,7 +22,7 @@ import {
   entityCommonIcons,
   entityDataGridRowActionIcons,
   entityDataGridSettingsIcons
-} from "@titanic/entity-resources";
+} from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 import type {
   EntityDataGridColumnPickerLabels,

@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { entityCommonIcons, entityDateInputIcons } from "@titanic/entity-resources";
+import { entityCommonIcons, entityDateInputIcons } from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 
 export interface DateInputLabels {

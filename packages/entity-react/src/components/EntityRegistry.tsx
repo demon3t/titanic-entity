@@ -1,4 +1,4 @@
-import type { EntityApiEntity } from "@titanic/entity-api";
+import type { EntityApiEntity } from "@titanic-entity/entity-api";
 import type { EntityDataGridProps } from "../grids";
 import { EntityDataGrid } from "./grid/EntityDataGrid";
 

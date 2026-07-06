@@ -1,6 +1,6 @@
 // Базовая кнопка сворачивания панели сайта, переиспользуемая пакетными оболочками.
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
-import type { ResourceSvgIconResource } from "@titanic/entity-resources";
+import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 
 export interface SitePanelToggleButtonProps {
   className?: string;

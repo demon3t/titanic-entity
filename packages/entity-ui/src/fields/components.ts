@@ -1,4 +1,4 @@
-import { defineComponentSchema } from "@titanic/entity-base";
+import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   DateInput,
   EntityField,
@@ -11,7 +11,7 @@ import {
   type EntityJsonEditorProps,
   type NumberInputProps,
   type SelectEntityProps
-} from "@titanic/entity-react";
+} from "@titanic-entity/entity-react";
 
 export const entityFieldComponentSchema = defineComponentSchema<EntityFieldProps>({
   kind: "component",

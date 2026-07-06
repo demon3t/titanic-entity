@@ -8,7 +8,7 @@ import type {
   EntityUserProfileDto,
   ESQFilterJsonModel,
   ESQOrderJsonModel
-} from "@titanic/entity-api";
+} from "@titanic-entity/entity-api";
 import type { EntityDataGridLabels, EntityDataGridRowAction, EntityDataGridSettings } from "../../grids";
 
 export interface EntityRegistryClient {

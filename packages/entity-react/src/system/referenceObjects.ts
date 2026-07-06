@@ -5,8 +5,8 @@ import {
   type EntityApiClient,
   type EntityApiEntity,
   type EntityApiStructureColumnResponse
-} from "@titanic/entity-api";
-import { EntityFieldKind, type EntitySchema } from "@titanic/entity-core";
+} from "@titanic-entity/entity-api";
+import { EntityFieldKind, type EntitySchema } from "@titanic-entity/entity-core";
 import type { EntityDataGridColumn } from "../grids";
 
 export interface ReferenceObjectFieldConfig {

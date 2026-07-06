@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { createEmptyValues, getColumnKey } from "@titanic/entity-core";
+import { createEmptyValues, getColumnKey } from "@titanic-entity/entity-core";
 import type { EntityFormProps } from "./models/EntityFormProps";
 import { EntityField } from "./fields/EntityField";
 import type { EntityFieldProps } from "./fields/models/EntityFieldProps";
 import { EntityGrid } from "./layout/EntityGrid";
 import type { EntityGridProps } from "./layout/models/EntityGridProps";
-import { useUiComponent } from "@titanic/entity-base";
+import { useUiComponent } from "@titanic-entity/entity-base";
 
 export type { EntityFormProps } from "./models/EntityFormProps";
 

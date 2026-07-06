@@ -7,7 +7,7 @@ import type {
   EntityJsonRequiredField,
   EntityJsonValue,
   EntityJsonValueKind
-} from "@titanic/entity-core";
+} from "@titanic-entity/entity-core";
 
 export type {
   EntityJsonEditorLabels,
@@ -16,7 +16,7 @@ export type {
   EntityJsonRequiredField,
   EntityJsonValue,
   EntityJsonValueKind
-} from "@titanic/entity-core";
+} from "@titanic-entity/entity-core";
 
 export interface EntityJsonEditorProps extends EntityJsonEditorOptions {
   id?: string;

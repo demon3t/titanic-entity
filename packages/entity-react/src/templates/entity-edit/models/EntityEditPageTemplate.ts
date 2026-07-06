@@ -5,7 +5,7 @@ import type {
   EntitySchema,
   EntityValues,
   LookupOption
-} from "@titanic/entity-core";
+} from "@titanic-entity/entity-core";
 
 export type EntityEditPageRenderValue<TValue> = TValue | ((context: EntityEditPageContext) => TValue);
 export type EntityEditPagePredicate = boolean | ((context: EntityEditPageContext) => boolean);
