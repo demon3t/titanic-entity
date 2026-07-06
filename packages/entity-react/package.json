@@ -1,6 +1,6 @@
 {
-  "name": "@titanic/entity-react",
-  "version": "0.1.0",
+  "name": "@titanic-entity/entity-react",
+  "version": "0.1.0-beta.0",
   "description": "React TypeScript client and UI primitives for Titanic.Entity HTTP API.",
   "type": "module",
   "license": "MIT",
@@ -31,10 +31,10 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@titanic/entity-api": "file:../entity-api",
-    "@titanic/entity-base": "file:../entity-base",
-    "@titanic/entity-core": "file:../entity-core",
-    "@titanic/entity-resources": "file:../entity-resources"
+    "@titanic-entity/entity-api": "file:../entity-api",
+    "@titanic-entity/entity-base": "file:../entity-base",
+    "@titanic-entity/entity-core": "file:../entity-core",
+    "@titanic-entity/entity-resources": "file:../entity-resources"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

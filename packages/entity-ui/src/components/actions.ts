@@ -1,11 +1,11 @@
-import { defineComponentSchema } from "@titanic/entity-base";
+import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   EntityPageActionButton,
   EntityPageActions,
   entityReactComponentNames,
   type EntityPageActionButtonProps,
   type EntityPageActionsProps
-} from "@titanic/entity-react";
+} from "@titanic-entity/entity-react";
 
 export const entityPageActionButtonComponentSchema = defineComponentSchema<EntityPageActionButtonProps>({
   kind: "component",

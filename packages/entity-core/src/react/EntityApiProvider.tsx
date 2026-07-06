@@ -1,6 +1,6 @@
 // React-инфраструктура 'EntityApiProvider' для подключения Entity API.
 import { createContext, useContext, useMemo } from "react";
-import type { EntityApiClient } from "@titanic/entity-api";
+import type { EntityApiClient } from "@titanic-entity/entity-api";
 import type {
   EntityApiAdditionalProvider,
   EntityApiClientCollection,

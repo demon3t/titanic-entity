@@ -1,6 +1,6 @@
 // Контракт свойств UI-компонента 'EntityOrmListProps'.
 import type { ReactNode } from "react";
-import type { EntityApiEntity, EntityQueryInput, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic/entity-api";
+import type { EntityApiEntity, EntityQueryInput, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic-entity/entity-api";
 
 export interface EntityOrmListClient {
   select(query: EntityQueryInput): Promise<EntityApiEntity[]>;

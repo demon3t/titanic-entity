@@ -1,4 +1,4 @@
-import { definePackage } from "@titanic/entity-base";
+import { definePackage } from "@titanic-entity/entity-base";
 import { entityApiSchemas } from "./schemas";
 
 // Client

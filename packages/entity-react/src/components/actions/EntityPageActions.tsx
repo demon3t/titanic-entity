@@ -1,6 +1,6 @@
 // Базовый UI-компонент действия страницы 'EntityPageActions'.
 import { useMemo } from "react";
-import { useUiComponent } from "@titanic/entity-base";
+import { useUiComponent } from "@titanic-entity/entity-base";
 import { EntityPageActionButton } from "./EntityPageActionButton";
 import type { EntityPageActionButtonProps } from "./models/EntityPageActionButtonProps";
 import type { EntityPageActionsProps } from "./models/EntityPageActionsProps";

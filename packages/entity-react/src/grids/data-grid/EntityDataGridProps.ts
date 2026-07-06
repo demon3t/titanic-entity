@@ -5,8 +5,8 @@ import type {
   EntityQueryInput,
   ESQFilterJsonModel,
   ESQOrderJsonModel
-} from "@titanic/entity-api";
-import type { GifCollectionResource, ResourceSvgIconResource } from "@titanic/entity-resources";
+} from "@titanic-entity/entity-api";
+import type { GifCollectionResource, ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 import type { EntityDataGridColumn, EntityDataGridLabels, EntityDataGridSettings } from "./EntityDataGridSettings";
 
 export interface EntityDataGridEntityDescriptor {

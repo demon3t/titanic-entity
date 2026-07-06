@@ -1,4 +1,4 @@
-import type { EntityGridColumnSetting, EntityGridColumnSettingsMode, EntityGridModeSettingsMap } from "@titanic/entity-api";
+import type { EntityGridColumnSetting, EntityGridColumnSettingsMode, EntityGridModeSettingsMap } from "@titanic-entity/entity-api";
 import { defaultEntityDataGridColumnSettingsLabels } from "../column-settings/resources/entityDataGridColumnSettingsLabels";
 
 export interface EntityDataGridLabels {

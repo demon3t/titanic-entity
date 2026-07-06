@@ -1,5 +1,5 @@
-import { defineTemplateSchema } from "@titanic/entity-base";
-import { EntityEditPage, entityReactTemplateNames, type EntityEditPageProps } from "@titanic/entity-react";
+import { defineTemplateSchema } from "@titanic-entity/entity-base";
+import { EntityEditPage, entityReactTemplateNames, type EntityEditPageProps } from "@titanic-entity/entity-react";
 
 export const entityEditPageTemplateSchema = defineTemplateSchema<EntityEditPageProps>({
   kind: "template",

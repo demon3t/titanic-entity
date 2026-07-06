@@ -1,4 +1,4 @@
-import { defineIconModuleSchema } from "@titanic/entity-base";
+import { defineIconModuleSchema } from "@titanic-entity/entity-base";
 import {
   entityCommonIcons,
   entityCultureIcons,

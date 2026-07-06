@@ -1,4 +1,4 @@
-import type { EntityApiManagerStructureResponse, EntityApiStructureColumnResponse, EntityApiStructureEntityResponse } from "@titanic/entity-api";
+import type { EntityApiManagerStructureResponse, EntityApiStructureColumnResponse, EntityApiStructureEntityResponse } from "@titanic-entity/entity-api";
 import type { EntityDataGridColumnPickerLabels } from "../../data-grid/EntityDataGridProps";
 import type {
   EntityDataGridColumn,

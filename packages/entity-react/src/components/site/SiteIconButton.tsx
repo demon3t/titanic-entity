@@ -1,6 +1,6 @@
 // Базовая иконочная кнопка сайта с ресурсной SVG-иконкой и всплывающей подписью.
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
-import type { ResourceSvgIconResource } from "@titanic/entity-resources";
+import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 
 export interface SiteIconButtonProps {
   buttonClassName: string;

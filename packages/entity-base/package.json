@@ -1,6 +1,6 @@
 {
-  "name": "@titanic/entity-base",
-  "version": "0.1.0",
+  "name": "@titanic-entity/entity-base",
+  "version": "0.1.0-beta.0",
   "description": "Base package registry and schema helpers for Titanic.Entity UI packages.",
   "type": "module",
   "license": "MIT",

@@ -4,11 +4,13 @@ import path from "node:path";
 
 const rootDir = process.cwd();
 const packagesDir = path.join(rootDir, "packages");
-const args = new Set(process.argv.slice(2));
+const rawArgs = process.argv.slice(2);
+const args = new Set(rawArgs);
 const dryRun = args.has("--dry-run");
 const provenance = args.has("--provenance");
 const planOnly = args.has("--plan");
 const skipExisting = !args.has("--no-skip-existing");
+const publishTag = getArgValue(rawArgs, "--tag");
 const dependencyBlocks = ["dependencies", "optionalDependencies", "peerDependencies"];
 
 async function readJson(filePath) {
@@ -118,6 +120,20 @@ function run(command, commandArgs, options = {}) {
   return result.status ?? 1;
 }
 
+function getArgValue(args, name) {
+  const valuePrefix = `${name}=`;
+  const inlineValue = args.find((arg) => arg.startsWith(valuePrefix));
+
+  if (inlineValue) {
+    return inlineValue.slice(valuePrefix.length).trim() || undefined;
+  }
+
+  const index = args.indexOf(name);
+  const nextValue = index >= 0 ? args[index + 1] : undefined;
+
+  return nextValue && !nextValue.startsWith("--") ? nextValue.trim() : undefined;
+}
+
 function validatePublishableDependencies(workspacePackages, names) {
   const invalidDependencies = [];
 
@@ -165,6 +181,10 @@ for (const workspacePackage of sortedPackages) {
   console.log(`- ${workspacePackage.name}@${workspacePackage.version}`);
 }
 
+if (publishTag) {
+  console.log(`npm dist-tag: ${publishTag}`);
+}
+
 if (planOnly) {
   process.exit(0);
 }
@@ -182,6 +202,10 @@ for (const workspacePackage of sortedPackages) {
   }
 
   const publishArgs = ["publish", "--workspace", workspacePackage.name, "--access", "public"];
+
+  if (publishTag) {
+    publishArgs.push("--tag", publishTag);
+  }
 
   if (dryRun) {
     publishArgs.push("--dry-run");

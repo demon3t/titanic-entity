@@ -6,7 +6,7 @@ import type {
   EntityDataGridModeSettingsMap
 } from "../../data-grid/EntityDataGridSettings";
 import type { EntityDataGridLabels } from "../../data-grid/EntityDataGridSettings";
-import type { EntityApiManagerStructureResponse } from "@titanic/entity-api";
+import type { EntityApiManagerStructureResponse } from "@titanic-entity/entity-api";
 import type { EntityDataGridColumnPickerLabels } from "../../data-grid/EntityDataGridProps";
 
 export interface EntityDataGridColumnSettingsDialogContext<TRow = unknown> {

@@ -1,8 +1,8 @@
-import { definePackage } from "@titanic/entity-base";
-import { titanicEntityApiPackage } from "@titanic/entity-api";
-import { titanicEntityCorePackage } from "@titanic/entity-core";
-import { titanicEntityReactUiPackage } from "@titanic/entity-react";
-import { titanicEntityResourcesPackage } from "@titanic/entity-resources";
+import { definePackage } from "@titanic-entity/entity-base";
+import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
+import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
+import { titanicEntityReactUiPackage } from "@titanic-entity/entity-react";
+import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
 import { entityUiComponentSchemas } from "./components";
 import { entityUiFieldSchemas } from "./fields";
 import { entityUiGridSchemas } from "./grids";

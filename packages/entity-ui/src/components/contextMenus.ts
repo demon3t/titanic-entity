@@ -1,11 +1,11 @@
-import { defineComponentSchema } from "@titanic/entity-base";
+import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   EntityDataGridRowContextMenu,
   SiteIconDropdown,
   entityReactComponentNames,
   type EntityDataGridRowContextMenuProps,
   type SiteIconDropdownProps
-} from "@titanic/entity-react";
+} from "@titanic-entity/entity-react";
 
 export const siteIconDropdownComponentSchema = defineComponentSchema<SiteIconDropdownProps>({
   kind: "component",

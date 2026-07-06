@@ -1,5 +1,5 @@
 // Переиспользуемый UI-компонент 'EntityRecordDetails' для пакетной архитектуры.
-import type { EntityApiEntity } from "@titanic/entity-api";
+import type { EntityApiEntity } from "@titanic-entity/entity-api";
 import type { EntityRecordDetailsProps } from "./models/EntityRecordDetailsProps";
 
 export type { EntityRecordDetailsField, EntityRecordDetailsProps } from "./models/EntityRecordDetailsProps";

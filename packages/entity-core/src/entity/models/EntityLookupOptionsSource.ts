@@ -1,4 +1,4 @@
-import type { ESQFilterCollectionJsonModel, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic/entity-api";
+import type { ESQFilterCollectionJsonModel, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic-entity/entity-api";
 
 /**
  * Источник Entity ORM API для lookup-опций. Backend локализует возвращаемые

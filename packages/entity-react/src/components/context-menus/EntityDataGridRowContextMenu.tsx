@@ -3,7 +3,7 @@ import type {
   EntityDataGridRowAction,
   EntityDataGridRowActionContext
 } from "../../grids";
-import type { ResourceSvgIconResource } from "@titanic/entity-resources";
+import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 
 export interface EntityDataGridRowContextMenuProps<TRow = unknown> {
   actions: readonly EntityDataGridRowAction<TRow>[];

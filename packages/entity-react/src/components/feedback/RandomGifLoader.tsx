@@ -1,6 +1,6 @@
 // Компонент обратной связи 'RandomGifLoader' для общих UI-сценариев.
 import { useEffect, useMemo, useState } from "react";
-import type { GifCollectionResource } from "@titanic/entity-resources";
+import type { GifCollectionResource } from "@titanic-entity/entity-resources";
 
 export interface RandomGifLoaderProps {
   className?: string;

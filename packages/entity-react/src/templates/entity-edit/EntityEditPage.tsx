@@ -1,12 +1,12 @@
 // Шаблон страницы редактирования сущности для пакетного переиспользования.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentType, CSSProperties, FormEvent, ReactNode } from "react";
-import { createEmptyValues, type EntityDisplayValues, type EntityValues } from "@titanic/entity-core";
+import { createEmptyValues, type EntityDisplayValues, type EntityValues } from "@titanic-entity/entity-core";
 import { EntityField } from "../../components/fields/EntityField";
 import type { EntityFieldProps } from "../../components/fields/models/EntityFieldProps";
 import { EntityGrid } from "../../components/layout/EntityGrid";
 import type { EntityGridProps } from "../../components/layout/models/EntityGridProps";
-import { useUiComponent } from "@titanic/entity-base";
+import { useUiComponent } from "@titanic-entity/entity-base";
 import { createEntityEditPageTemplate } from "./entityEditPageTemplate";
 import type {
   EntityEditPageAction,

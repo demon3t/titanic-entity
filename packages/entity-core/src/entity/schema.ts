@@ -1,4 +1,4 @@
-import type { EntityApiColumnValueResponse, EntityApiEntity } from "@titanic/entity-api";
+import type { EntityApiColumnValueResponse, EntityApiEntity } from "@titanic-entity/entity-api";
 import { EntityFieldKind } from "./enums/EntityFieldKind";
 import type { EntityColumnSchema } from "./models/EntityColumnSchema";
 import type { EntityDisplayValues } from "./models/EntityDisplayValues";

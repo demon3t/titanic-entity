@@ -1,5 +1,5 @@
-import type { EntityApiEntity } from "@titanic/entity-api";
-import type { EntitySchema } from "@titanic/entity-core";
+import type { EntityApiEntity } from "@titanic-entity/entity-api";
+import type { EntitySchema } from "@titanic-entity/entity-core";
 
 /**
  * Props schema-driven таблицы Entity API результатов.

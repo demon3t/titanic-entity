@@ -4,7 +4,7 @@ export * from "./ColumnSettingsModeTabs";
 export * from "./ColumnSettingsVisibleFieldSchema";
 export * from "./ColumnSettingsVisibleFieldsSchema";
 
-import { defineComponentSchema } from "@titanic/entity-base";
+import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   ColumnSettingsDialogLayout,
   type ColumnSettingsDialogLayoutProps
