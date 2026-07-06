@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@titanic/entity-base": ["packages/entity-base/src/index.ts"],
+      "@titanic/entity-base/*": ["packages/entity-base/src/*"],
+      "@titanic/entity-api": ["packages/entity-api/src/index.ts"],
+      "@titanic/entity-api/*": ["packages/entity-api/src/*"],
+      "@titanic/entity-core": ["packages/entity-core/src/index.ts"],
+      "@titanic/entity-core/*": ["packages/entity-core/src/*"],
+      "@titanic/entity-resources": ["packages/entity-resources/src/index.ts"],
+      "@titanic/entity-resources/*": ["packages/entity-resources/src/*"],
+      "@titanic/entity-react": ["packages/entity-react/src/index.ts"],
+      "@titanic/entity-react/*": ["packages/entity-react/src/*"],
+      "@titanic/entity-ui": ["packages/entity-ui/src/index.ts"],
+      "@titanic/entity-ui/*": ["packages/entity-ui/src/*"]
+    },
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@titanic/entity-react",
+  "version": "0.1.0",
+  "description": "React TypeScript client and UI primitives for Titanic.Entity HTTP API.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./grids": {
+      "types": "./dist/grids/index.d.ts",
+      "import": "./dist/grids/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/copy-css.mjs ./src/styles ./dist/styles && node ../../scripts/copy-css.mjs ./src/styles.css ./dist/styles.css",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@titanic/entity-api": "file:../entity-api",
+    "@titanic/entity-base": "file:../entity-base",
+    "@titanic/entity-core": "file:../entity-core",
+    "@titanic/entity-resources": "file:../entity-resources"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  }
+}

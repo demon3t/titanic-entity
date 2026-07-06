@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# Binary assets
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.pdf binary
+*.zip binary

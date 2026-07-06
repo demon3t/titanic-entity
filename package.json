@@ -1,0 +1,20 @@
+{
+  "name": "titanic-entity-react-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Workspace for Titanic.Entity React framework packages.",
+  "type": "module",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @titanic/entity-base && npm run build -w @titanic/entity-api && npm run build -w @titanic/entity-core && npm run build -w @titanic/entity-resources && npm run build -w @titanic/entity-react && npm run build -w @titanic/entity-ui",
+    "typecheck": "npm run typecheck -w @titanic/entity-base && npm run typecheck -w @titanic/entity-api && npm run typecheck -w @titanic/entity-core && npm run typecheck -w @titanic/entity-resources && npm run typecheck -w @titanic/entity-react && npm run typecheck -w @titanic/entity-ui"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "~5.9.3"
+  }
+}
