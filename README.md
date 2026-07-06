@@ -254,10 +254,22 @@ npm run build
 
 ## Публикация
 
-```bash
-npm run build
-npm publish --access public
+Публикация выполняется через GitHub Actions workflow `Publish npm packages`.
+
+Перед первой публикацией добавьте в репозиторий GitHub secret:
+
+- `NPM_TOKEN` - npm automation token с правом публикации пакетов в scope `@titanic`.
+
+Ручной dry-run можно запустить из GitHub UI:
+
+```text
+Actions -> Publish npm packages -> Run workflow -> dry_run: true
 ```
 
-Перед публикацией проверьте `name`, `version`, содержимое `dist`, `README.md` и `docs`.
+Реальная публикация запускается двумя способами:
+
+- вручную через `Run workflow` с `dry_run: false`;
+- автоматически при push тега вида `v0.1.0`.
+
+Workflow выполняет `npm ci`, `npm run typecheck`, `npm run build`, временно заменяет внутренние `file:../...` зависимости на версии workspace-пакетов и публикует пакеты в npm в правильном порядке.
 
