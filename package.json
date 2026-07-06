@@ -5,6 +5,10 @@
   "description": "Workspace for Titanic.Entity React framework packages.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demon3t/titanic-entity"
+  },
   "workspaces": [
     "packages/*"
   ],

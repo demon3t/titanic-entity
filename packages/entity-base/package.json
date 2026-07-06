@@ -4,6 +4,11 @@
   "description": "Base package registry and schema helpers for Titanic.Entity UI packages.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demon3t/titanic-entity",
+    "directory": "packages/entity-base"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
