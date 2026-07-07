@@ -5,8 +5,8 @@ import {
   type EntityApiDeleteResult,
   type EntityApiEntity,
   type EntityQueryInput,
-  type ESQFilterCollectionJsonModel,
-  type ESQJsonModel
+  type ESQ,
+  type ESQFilterCollection
 } from "@titanic-entity/entity-api";
 import { ConditionOperator } from "@titanic-entity/entity-api/enums/ConditionOperator";
 import type { EntityColumnSchema } from "../entity/models/EntityColumnSchema";
@@ -185,7 +185,7 @@ export function useEntityDelete(tableName: string) {
 /**
  * Создать базовый ESQ select по UI-схеме.
  */
-export function useSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ESQJsonModel {
+export function useSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ESQ {
   return useMemo(() => entityQuery(schema.tableName)
     .columns(...schema.columns
       .filter((column) => !column.hidden)
@@ -225,7 +225,7 @@ export function getSaveValues(schema: EntitySchema, values: EntityValues): Entit
   return result;
 }
 
-function createLookupQuery(lookup: EntityLookupOptionsSource): ESQJsonModel {
+function createLookupQuery(lookup: EntityLookupOptionsSource): ESQ {
   const valueColumn = getLookupValueColumn(lookup);
   const displayColumn = getLookupDisplayColumn(lookup);
   const valueAlias = getLookupValueAlias(lookup);
@@ -247,7 +247,7 @@ function createLookupQuery(lookup: EntityLookupOptionsSource): ESQJsonModel {
 
 function normalizeLookupFilters(
   filters: EntityLookupOptionsSource["filters"]
-): ESQFilterCollectionJsonModel | undefined {
+): ESQFilterCollection | undefined {
   if (!filters) {
     return undefined;
   }

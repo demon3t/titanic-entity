@@ -3,8 +3,8 @@ import type {
   EntityApiEntity,
   EntityGridColumnSettingsClient,
   EntityQueryInput,
-  ESQFilterJsonModel,
-  ESQOrderJsonModel
+  ESQFilter,
+  ESQOrder
 } from "@titanic-entity/entity-api";
 import type { GifCollectionResource, ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 import type { EntityDataGridColumn, EntityDataGridLabels, EntityDataGridSettings } from "./EntityDataGridSettings";
@@ -44,8 +44,8 @@ export interface EntityDataGridQueryContext {
   columns: readonly string[];
   entity?: EntityDataGridEntityDescriptor;
   entityTypeName?: string;
-  filters: readonly ESQFilterJsonModel[];
-  orders?: readonly ESQOrderJsonModel[];
+  filters: readonly ESQFilter[];
+  orders?: readonly ESQOrder[];
   pageIndex: number;
   pageSize: number;
   primaryColumn?: string;
@@ -75,9 +75,9 @@ export interface EntityDataGridProps<TRow = EntityApiEntity> {
   columnPickerLabels?: EntityDataGridColumnPickerLabels;
   defaultVisibleColumnKeys?: readonly string[];
   visibleColumnKeys?: readonly string[];
-  filter?: ESQFilterJsonModel | readonly ESQFilterJsonModel[];
-  filters?: readonly ESQFilterJsonModel[];
-  orders?: readonly ESQOrderJsonModel[];
+  filter?: ESQFilter | readonly ESQFilter[];
+  filters?: readonly ESQFilter[];
+  orders?: readonly ESQOrder[];
   rowCount?: number;
   batchRowCount?: number;
   gridWidth?: number;

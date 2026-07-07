@@ -1,10 +1,4 @@
-/**
- * Значение одной колонки, возвращенное Entity API.
- */
-export interface EntityApiColumnValueResponse<T = unknown> {
-  /** Сырое значение колонки. */
-  value: T | null;
+import type { ApiColumnValueResponse } from "./ApiColumnValueResponse";
 
-  /** Отображаемое значение ссылочной колонки. */
-  displayValue: unknown | null;
-}
+/** Legacy alias for {@link ApiColumnValueResponse}. */
+export type EntityApiColumnValueResponse<T = unknown> = ApiColumnValueResponse<T>;

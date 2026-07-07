@@ -1,13 +1,4 @@
-import type { EntityApiBatchExecutionMode } from "../enums/EntityApiBatchExecutionMode";
-import type { EntityApiOperationResult } from "./EntityApiOperationResult";
+import type { ApiBatchResponse } from "./ApiBatchResponse";
 
-/**
- * Ответ batch endpoint-а Entity API.
- */
-export interface EntityApiBatchResponse {
-  /** Фактический режим выполнения batch-запроса. */
-  executionMode: EntityApiBatchExecutionMode;
-
-  /** Результаты операций batch-запроса. */
-  results: EntityApiOperationResult[];
-}
+/** Legacy alias for {@link ApiBatchResponse}. */
+export type EntityApiBatchResponse = ApiBatchResponse;

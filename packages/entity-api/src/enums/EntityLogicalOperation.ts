@@ -1,10 +1,8 @@
-/**
- * Логическая операция между фильтрами ESQ.
- */
+/** Logical operators used between ESQ filters. */
 export enum EntityLogicalOperation {
-  /** Объединять фильтры через AND. */
+  /** Join filters with `AND`. */
   And = 0,
 
-  /** Объединять фильтры через OR. */
+  /** Join filters with `OR`. */
   Or = 1
 }

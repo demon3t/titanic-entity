@@ -1,6 +1,6 @@
 // Контракт свойств UI-компонента 'EntityOrmListProps'.
 import type { ReactNode } from "react";
-import type { EntityApiEntity, EntityQueryInput, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic-entity/entity-api";
+import type { EntityApiEntity, EntityQueryInput, ESQFilter, ESQOrder } from "@titanic-entity/entity-api";
 
 export interface EntityOrmListClient {
   select(query: EntityQueryInput): Promise<EntityApiEntity[]>;
@@ -20,8 +20,8 @@ export interface EntityOrmListProps<TItem> {
   tableName?: string;
   query?: EntityQueryInput;
   columns?: string[];
-  filters?: ESQFilterJsonModel[];
-  orders?: ESQOrderJsonModel[];
+  filters?: ESQFilter[];
+  orders?: ESQOrder[];
   rowCount?: number;
   allColumns?: boolean;
   activeId?: string;

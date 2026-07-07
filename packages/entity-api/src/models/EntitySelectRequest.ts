@@ -1,14 +1,4 @@
-// Модель обмена данными Entity ORM API для 'EntitySelectRequest'.
-import type { ESQFilterJsonModel } from "./ESQFilterJsonModel";
-import type { ESQOrderJsonModel } from "./ESQOrderJsonModel";
-import type { EntityQueryInput } from "../query";
+import type { SelectRequest } from "./SelectRequest";
 
-export interface EntitySelectRequest {
-  tableName: string;
-  columns?: string[];
-  filters?: ESQFilterJsonModel[];
-  orders?: ESQOrderJsonModel[];
-  rowCount?: number;
-  allColumns?: boolean;
-  query?: EntityQueryInput;
-}
+/** Legacy alias for {@link SelectRequest}. */
+export type EntitySelectRequest = SelectRequest;
