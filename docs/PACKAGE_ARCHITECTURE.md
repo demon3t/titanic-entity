@@ -92,6 +92,22 @@ defineSectionSchema({
 entityName: "app_user"
 ```
 
+## Entity API и ESQ
+
+`@titanic-entity/entity-api` содержит HTTP-клиент, модели запросов и fluent builder `entityQuery(...)` для сборки ESQ без ручного JSON.
+
+Публичные ESQ-модели доступны под короткими именами: `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection`, `ESQOrder`.
+
+Query builder поддерживает постепенное добавление колонок, сортировки, фильтры, группы фильтров и агрегаты:
+
+```ts
+const query = entityQuery("invoice")
+  .column("CustomerId")
+  .sum("Amount", "totalAmount")
+  .count("Id", "invoiceCount")
+  .groupBy("CustomerId");
+```
+
 ## Базовый UI-пакет
 
 `packages/entity-ui/src/index.ts` ???????????? `titanicEntityUiPackage`. ?? ???????????? ??????? UI-???????? ?????????? ? ??????? ?? ??????? `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` ? `Titanic.EntityReact`.

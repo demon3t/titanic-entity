@@ -1,14 +1,7 @@
-// Модель обмена данными Entity ORM API для 'EntityUserProfile'.
-export interface EntityUserProfileDto {
-  key: string;
-  data: string | null;
-}
+import type { UserProfileDto, UserProfileOptions } from "./UserProfile";
 
-export interface EntityUserProfileOptions {
-  tableName?: string;
-  idColumn?: string;
-  keyColumn?: string;
-  userColumn?: string;
-  dataColumn?: string;
-}
+/** Legacy alias for {@link UserProfileDto}. */
+export type EntityUserProfileDto = UserProfileDto;
 
+/** Legacy alias for {@link UserProfileOptions}. */
+export type EntityUserProfileOptions = UserProfileOptions;

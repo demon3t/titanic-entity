@@ -1,7 +1,17 @@
+/**
+ * Creates a bearer authorization header map for the provided token.
+ *
+ * @param token JWT access token, if available.
+ */
 export function createBearerAuthHeaders(token: string | null | undefined): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+/**
+ * Decodes a JWT payload into a plain object.
+ *
+ * @param token JWT token in `header.payload.signature` form.
+ */
 export function decodeJwtPayload(token: string): Record<string, unknown> {
   const payload = token.split(".")[1];
   if (!payload) {
@@ -16,6 +26,11 @@ export function decodeJwtPayload(token: string): Record<string, unknown> {
   return JSON.parse(json) as Record<string, unknown>;
 }
 
+/**
+ * Extracts the user identifier from a JWT token payload.
+ *
+ * @param token JWT access token.
+ */
 export function getJwtUserId(token: string | null | undefined): string {
   if (!token) {
     throw new Error("Authentication token is missing.");

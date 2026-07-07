@@ -19,6 +19,19 @@ export * from "./enums/EntityOrderDirection";
 export * from "./errors/EntityApiError";
 
 // Models
+export * from "./models/ApiBatchRequest";
+export * from "./models/ApiBatchResponse";
+export * from "./models/ApiClientOptions";
+export * from "./models/ApiColumnValueResponse";
+export * from "./models/ApiDeleteResult";
+export * from "./models/ApiEntity";
+export * from "./models/ApiManagerStructureResponse";
+export * from "./models/ApiOperationResult";
+export * from "./models/ApiRequest";
+export * from "./models/GridColumnSettings";
+export * from "./models/Primitive";
+export * from "./models/SelectRequest";
+export * from "./models/UserProfile";
 export * from "./models/EntityApiBatchRequest";
 export * from "./models/EntityApiBatchResponse";
 export * from "./models/EntityApiClientOptions";
@@ -32,11 +45,12 @@ export * from "./models/EntityGridColumnSettings";
 export * from "./models/EntityPrimitive";
 export * from "./models/EntitySelectRequest";
 export * from "./models/EntityUserProfile";
-export * from "./models/ESQColumnJsonModel";
-export * from "./models/ESQFilterCollectionJsonModel";
-export * from "./models/ESQFilterJsonModel";
-export * from "./models/ESQJsonModel";
-export * from "./models/ESQOrderJsonModel";
+export * from "./models/EntityApiSchemaNames";
+export * from "./models/ESQ";
+export * from "./models/ESQColumn";
+export * from "./models/ESQFilter";
+export * from "./models/ESQFilterCollection";
+export * from "./models/ESQOrder";
 
 // Query
 export * from "./query";
@@ -48,9 +62,7 @@ export * from "./schemas";
 export * from "./services/EntityGridColumnSettingsClient";
 export * from "./services/EntityUserProfileClient";
 
-// Package
-export * from "./models/entityApiPackageNames";
-
+/** Package descriptor for the Entity API client package. */
 export const titanicEntityApiPackage = definePackage({
   name: "Titanic.EntityApi",
   version: "0.1.0",

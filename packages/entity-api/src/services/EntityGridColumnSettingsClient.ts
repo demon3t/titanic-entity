@@ -1,11 +1,24 @@
-import { ConditionOperator } from "../enums/ConditionOperator";
 import { createEntityGuid, getEntityValue, normalizeEntityProfileKey } from "../client/entityHelpers";
+import { ConditionOperator } from "../enums/ConditionOperator";
 import type { EntityApiClient } from "../client/EntityApiClient";
 import type { EntityApiEntity } from "../models/EntityApiEntity";
 import type { EntityGridColumnSettingsDto, EntityGridColumnSettingsSaveRequest } from "../models/EntityGridColumnSettings";
 
+/** Service contract for persisting per-user grid column settings. */
 export interface EntityGridColumnSettingsClient {
+  /**
+   * Loads the default settings for a grid and user pair.
+   *
+   * @param gridId Grid identifier.
+   * @param userId User identifier.
+   */
   getEntityGridColumnDefaultSettings(gridId: string, userId: string): Promise<EntityGridColumnSettingsDto | null>;
+
+  /**
+   * Saves the default settings for a grid and user pair.
+   *
+   * @param request Settings payload to persist.
+   */
   saveEntityGridColumnDefaultSettings(request: EntityGridColumnSettingsSaveRequest): Promise<EntityGridColumnSettingsDto>;
 }
 
@@ -24,9 +37,21 @@ const gridColumnSettingsEntity = {
   }
 } as const;
 
+/** Default implementation backed by {@link EntityApiClient}. */
 export class EntityGridColumnSettingsApiClient implements EntityGridColumnSettingsClient {
+  /**
+   * Creates a new grid column settings client.
+   *
+   * @param client Entity API transport used to read and save records.
+   */
   constructor(private readonly client: EntityGridColumnSettingsTransport) {}
 
+  /**
+   * Loads the default settings for a grid and user pair.
+   *
+   * @param gridId Grid identifier.
+   * @param userId User identifier.
+   */
   async getEntityGridColumnDefaultSettings(gridId: string, userId: string): Promise<EntityGridColumnSettingsDto | null> {
     const columns = gridColumnSettingsEntity.columns;
     const safeGridId = normalizeEntityProfileKey(gridId);
@@ -60,6 +85,11 @@ export class EntityGridColumnSettingsApiClient implements EntityGridColumnSettin
     return rows[0] ? mapEntityGridColumnSettingsRow(rows[0]) : null;
   }
 
+  /**
+   * Saves the default settings for a grid and user pair.
+   *
+   * @param request Settings payload to persist.
+   */
   async saveEntityGridColumnDefaultSettings(request: EntityGridColumnSettingsSaveRequest): Promise<EntityGridColumnSettingsDto> {
     const columns = gridColumnSettingsEntity.columns;
     const safeGridId = normalizeEntityProfileKey(request.gridId);
@@ -104,7 +134,12 @@ function mapEntityGridColumnSettingsRow(row: EntityApiEntity): EntityGridColumnS
   };
 }
 
-type ParsedEntityGridColumnSettings = Pick<EntityGridColumnSettingsDto, "columns" | "displayMode" | "columnSettingsMode" | "modeSettings">;
+type ParsedEntityGridColumnSettings = {
+  columns: EntityGridColumnSettingsDto["columns"];
+  displayMode?: EntityGridColumnSettingsDto["displayMode"];
+  columnSettingsMode?: EntityGridColumnSettingsDto["columnSettingsMode"];
+  modeSettings?: EntityGridColumnSettingsDto["modeSettings"];
+};
 
 function parseEntityGridColumnSettings(value: string | null): ParsedEntityGridColumnSettings {
   if (!value) {

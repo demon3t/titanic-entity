@@ -135,6 +135,34 @@ const query = entityQuery("app_user")
 const rows = await client.select(query);
 ```
 
+Колонки можно добавлять постепенно, включая агрегаты:
+
+```ts
+const totalsQuery = entityQuery("invoice")
+  .addAgragateColumn(EntityAggregationType.None, "CustomerId")
+  .addAgragateColumn(EntityAggregationType.Sum, "Amount", "totalAmount")
+  .addAgragateColumn(EntityAggregationType.Count, "Id", "invoiceCount")
+  .groupBy("CustomerId");
+```
+
+`addAgragateColumn` также принимает подзапрос:
+
+```ts
+const paidInvoiceAmounts = entityQuery("invoice")
+  .column("Amount")
+  .equal("CustomerId", "$parent.Id")
+  .equal("Status.Code", "Paid");
+
+const customerQuery = entityQuery("customer")
+  .column("Id")
+  .column("Name")
+  .addAgragateColumn(EntityAggregationType.Sum, paidInvoiceAmounts, "paidAmount");
+```
+
+В ESQ такая колонка уйдет как `{ aggregationType, alias, subQuery }`. Также доступны корректное имя `addAggregateColumn(...)`, alias `addAggregationColumn(...)` и короткие методы `.sum/.count/.avg/.min/.max`.
+
+`column` и `addColumn` принимают строку, готовый `ESQColumn` или options-объект: `.column("Amount", { alias: "total", aggregationType: EntityAggregationType.Sum })`.
+
 Группы фильтров можно собирать так:
 
 ```ts
@@ -142,6 +170,8 @@ const query = entityQuery("app_user")
   .select("Id", "Login")
   .and((filter) => filter.equal("IsActive", true).isNotNull("Login"));
 ```
+
+Для ручной типизации ESQ доступны типы `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection` и `ESQOrder`.
 
 ## React provider и несколько Entity API провайдеров
 

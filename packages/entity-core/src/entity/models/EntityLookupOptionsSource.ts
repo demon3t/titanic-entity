@@ -1,4 +1,4 @@
-import type { ESQFilterCollectionJsonModel, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic-entity/entity-api";
+import type { ESQFilter, ESQFilterCollection, ESQOrder } from "@titanic-entity/entity-api";
 
 /**
  * Источник Entity ORM API для lookup-опций. Backend локализует возвращаемые
@@ -24,10 +24,10 @@ export interface EntityLookupOptionsSource {
   displayAlias?: string;
 
   /** Необязательные фильтры справочника. */
-  filters?: ESQFilterCollectionJsonModel | ESQFilterJsonModel[];
+  filters?: ESQFilterCollection | ESQFilter[];
 
   /** Необязательная сортировка справочника. По умолчанию displayColumn ASC. */
-  orders?: ESQOrderJsonModel[];
+  orders?: ESQOrder[];
 
   /** Максимальное количество запрашиваемых опций. */
   rowCount?: number;

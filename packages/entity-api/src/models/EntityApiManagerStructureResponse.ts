@@ -1,21 +1,14 @@
-// Модель обмена данными Entity ORM API для 'EntityApiManagerStructureResponse'.
-export interface EntityApiManagerStructureResponse {
-  entities: EntityApiStructureEntityResponse[];
-}
+import type {
+  ApiManagerStructureResponse,
+  ApiStructureColumnResponse,
+  ApiStructureEntityResponse
+} from "./ApiManagerStructureResponse";
 
-export interface EntityApiStructureEntityResponse {
-  tableName: string;
-  entityTypeName: string;
-  columns: EntityApiStructureColumnResponse[];
-}
+/** Legacy alias for {@link ApiManagerStructureResponse}. */
+export type EntityApiManagerStructureResponse = ApiManagerStructureResponse;
 
-export interface EntityApiStructureColumnResponse {
-  propertyName: string;
-  columnName: string;
-  dataValueType: number | string;
-  isNullable: boolean;
-  isPrimary: boolean;
-  isDisplay: boolean;
-  isReference: boolean;
-  referenceTableName?: string | null;
-}
+/** Legacy alias for {@link ApiStructureEntityResponse}. */
+export type EntityApiStructureEntityResponse = ApiStructureEntityResponse;
+
+/** Legacy alias for {@link ApiStructureColumnResponse}. */
+export type EntityApiStructureColumnResponse = ApiStructureColumnResponse;
