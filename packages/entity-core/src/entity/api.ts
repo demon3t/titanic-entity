@@ -1,11 +1,11 @@
 import {
-  ConditionOperator,
   entityQuery,
   type EntityApiColumnValueResponse,
   type EntityApiEntity,
   type ESQ,
   type ESQFilterCollection
 } from "@titanic-entity/entity-api";
+import { createEqualFilter } from "./filters";
 import type { EntityDisplayValues } from "./models/EntityDisplayValues";
 import type { EntityLookupOptionsSource } from "./models/EntityLookupOptionsSource";
 import type { EntitySchema } from "./models/EntitySchema";
@@ -53,11 +53,7 @@ export function createSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ES
 export function createPrimaryFilter(schema: EntitySchema, id: unknown): ESQFilterCollection {
   return {
     items: [
-      {
-        path: schema.primaryColumn ?? "Id",
-        comparisonType: ConditionOperator.Equal,
-        value: id
-      }
+      createEqualFilter(schema.primaryColumn ?? "Id", id)
     ]
   };
 }

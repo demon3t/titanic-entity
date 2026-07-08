@@ -5,6 +5,7 @@ import { entityCoreSchemas } from "./schemas";
 export * from "./entity/api";
 export * from "./entity/Column";
 export * from "./entity/EntityModel";
+export * from "./entity/filters";
 export * from "./entity/schema";
 export * from "./entity/systemEntities";
 

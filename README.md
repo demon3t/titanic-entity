@@ -171,6 +171,19 @@ const query = entityQuery("app_user")
   .and((filter) => filter.equal("IsActive", true).isNotNull("Login"));
 ```
 
+Если нужен готовый ESQ-фильтр без query builder, `entity-core` добавляет factory-методы в `Titanic`:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-core";
+
+const filters = Titanic.createFilterCollection([
+  Titanic.createEqualFilter("IsActive", true),
+  Titanic.createIsNullFilter("DeletedOn")
+]);
+```
+
+Доступны `createEqualFilter`, `createNotEqualFilter`, `createGreaterThanFilter`, `createGreaterThanOrEqualFilter`, `createLessThanFilter`, `createLessThanOrEqualFilter`, `createInFilter`, `createNotInFilter`, `createContainsFilter`, `createIsNullFilter`, `createIsNotNullFilter`, а также `createAndFilter`, `createOrFilter` и `createFilterCollection`.
+
 Для ручной типизации ESQ доступны типы `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection` и `ESQOrder`.
 
 ## React provider и несколько Entity API провайдеров

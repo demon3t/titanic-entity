@@ -8,6 +8,7 @@ export * from "@titanic-entity/entity-base";
 export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
 export * from "@titanic-entity/entity-resources";
+export { Titanic } from "@titanic-entity/entity-core";
 export {
   entityReactEntitySchemas,
   entityReactEnumSchemas
