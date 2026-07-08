@@ -36,7 +36,7 @@ import "@titanic-entity/entity-react/styles.css";
 src/
   packages/
     entity-base/       Базовый пакет: package registry, схемы, провайдер и Titanic
-    entity-core/       Entity-модели, схемы и React provider
+    entity-core/       Entity-модели, схемы и доменные utilities
     entity-api/        HTTP-клиент, ESQ и API-схемы
     entity-resources/  ресурсы и иконки
     entity-react/      React-компоненты, templates, resources, styles

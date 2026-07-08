@@ -1,26 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  entityQuery,
   toEntityQueryJson,
   type EntityApiDeleteResult,
   type EntityApiEntity,
   type EntityQueryInput,
-  type ESQ,
-  type ESQFilterCollection
+  type ESQ
 } from "@titanic-entity/entity-api";
-import { ConditionOperator } from "@titanic-entity/entity-api/enums/ConditionOperator";
-import type { EntityColumnSchema } from "../entity/models/EntityColumnSchema";
-import type { EntityLookupOptionsSource } from "../entity/models/EntityLookupOptionsSource";
-import type { EntitySchema } from "../entity/models/EntitySchema";
-import type { EntityValues } from "../entity/models/EntityValues";
-import type { LookupOption } from "../entity/models/LookupOption";
-import { getColumnKey } from "../entity/schema";
+import {
+  createLookupQuery,
+  createSchemaSelectQuery,
+  mapLookupRows,
+  type EntityColumnSchema,
+  type EntitySchema,
+  type EntityValues,
+  type LookupOption
+} from "@titanic-entity/entity-core";
 import { useEntityApiClient, useOptionalEntityApiClient } from "./EntityApiProvider";
 import type { AsyncState } from "./models/AsyncState";
 import type { UseEntityQueryOptions } from "./models/UseEntityQueryOptions";
 
 export type { AsyncState } from "./models/AsyncState";
 export type { UseEntityQueryOptions } from "./models/UseEntityQueryOptions";
+export { createPrimaryFilter, getSaveValues } from "@titanic-entity/entity-core";
 
 const EMPTY_LOOKUP_OPTIONS: LookupOption[] = [];
 
@@ -35,9 +36,6 @@ export interface UseEntityLookupOptionsResult extends AsyncState<LookupOption[]>
   source: "api" | "static";
 }
 
-/**
- * Выполнить ESQ select и хранить состояние загрузки для React UI.
- */
 export function useEntityQuery(query: EntityQueryInput, options: UseEntityQueryOptions = {}) {
   const client = useEntityApiClient();
   const queryJson = useMemo(() => toEntityQueryJson(query), [query]);
@@ -45,7 +43,11 @@ export function useEntityQuery(query: EntityQueryInput, options: UseEntityQueryO
   const queryJsonRef = useRef(queryJson);
   const enabled = options.enabled ?? true;
   const dependencies = options.dependencies ?? [queryFingerprint];
-  const [state, setState] = useState<AsyncState<EntityApiEntity[]>>({ data: null, loading: enabled, error: null });
+  const [state, setState] = useState<AsyncState<EntityApiEntity[]>>({
+    data: null,
+    loading: enabled,
+    error: null
+  });
 
   useEffect(() => {
     queryJsonRef.current = queryJson;
@@ -77,10 +79,6 @@ export function useEntityQuery(query: EntityQueryInput, options: UseEntityQueryO
   return { ...state, reload };
 }
 
-/**
- * Загрузить lookup-опции из Entity ORM API, если настроен column.lookup.
- * Статические column.options остаются fallback, пока данные загружаются или API недоступен.
- */
 export function useEntityLookupOptions(
   column: EntityColumnSchema,
   options: UseEntityLookupOptionsOptions = {}
@@ -106,8 +104,7 @@ export function useEntityLookupOptions(
     setState((current) => ({ ...current, loading: true, error: null }));
 
     try {
-      const query = createLookupQuery(lookup);
-      const rows = await client.select(query);
+      const rows = await client.select(createLookupQuery(lookup));
       const data = mapLookupRows(rows, lookup);
       setState({ data, loading: false, error: null });
       return data;
@@ -136,12 +133,13 @@ export function useEntityLookupOptions(
   };
 }
 
-/**
- * Получить функцию Save и состояние ее выполнения.
- */
 export function useEntitySave(tableName: string) {
   const client = useEntityApiClient();
-  const [state, setState] = useState<AsyncState<EntityApiEntity>>({ data: null, loading: false, error: null });
+  const [state, setState] = useState<AsyncState<EntityApiEntity>>({
+    data: null,
+    loading: false,
+    error: null
+  });
 
   const save = useCallback(async (values: EntityValues) => {
     setState({ data: null, loading: true, error: null });
@@ -159,12 +157,13 @@ export function useEntitySave(tableName: string) {
   return { ...state, save };
 }
 
-/**
- * Получить функцию Delete и состояние ее выполнения.
- */
 export function useEntityDelete(tableName: string) {
   const client = useEntityApiClient();
-  const [state, setState] = useState<AsyncState<EntityApiDeleteResult>>({ data: null, loading: false, error: null });
+  const [state, setState] = useState<AsyncState<EntityApiDeleteResult>>({
+    data: null,
+    loading: false,
+    error: null
+  });
 
   const deleteByFilter = useCallback(async (filter: Record<string, unknown>) => {
     setState({ data: null, loading: true, error: null });
@@ -182,115 +181,6 @@ export function useEntityDelete(tableName: string) {
   return { ...state, deleteByFilter };
 }
 
-/**
- * Создать базовый ESQ select по UI-схеме.
- */
 export function useSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ESQ {
-  return useMemo(() => entityQuery(schema.tableName)
-    .columns(...schema.columns
-      .filter((column) => !column.hidden)
-      .map((column) => ({ path: column.path, alias: column.alias })))
-    .take(rowCount)
-    .orders(...(schema.displayColumn ? [{ path: schema.displayColumn }] : []))
-    .toJson(), [schema, rowCount]);
-}
-
-/**
- * Создать фильтр по primary key сущности.
- */
-export function createPrimaryFilter(schema: EntitySchema, id: unknown) {
-  return {
-    items: [
-      {
-        path: schema.primaryColumn ?? "Id",
-        comparisonType: ConditionOperator.Equal,
-        value: id
-      }
-    ]
-  };
-}
-
-/**
- * Подготовить значения формы к Save-запросу Entity API.
- */
-export function getSaveValues(schema: EntitySchema, values: EntityValues): EntityValues {
-  const result: EntityValues = {};
-  for (const column of schema.columns) {
-    const key = getColumnKey(column);
-    if ((!column.readOnly || column.path === schema.primaryColumn) && key in values) {
-      result[column.path] = values[key];
-    }
-  }
-
-  return result;
-}
-
-function createLookupQuery(lookup: EntityLookupOptionsSource): ESQ {
-  const valueColumn = getLookupValueColumn(lookup);
-  const displayColumn = getLookupDisplayColumn(lookup);
-  const valueAlias = getLookupValueAlias(lookup);
-  const displayAlias = getLookupDisplayAlias(lookup);
-  const columns = [
-    { path: valueColumn, alias: valueAlias === valueColumn ? undefined : valueAlias },
-    ...(displayColumn === valueColumn
-      ? []
-      : [{ path: displayColumn, alias: displayAlias === displayColumn ? undefined : displayAlias }])
-  ];
-
-  return entityQuery({ tableName: lookup.tableName, entityTypeName: lookup.entityTypeName })
-    .take(lookup.rowCount ?? 50)
-    .columns(...columns)
-    .filters(normalizeLookupFilters(lookup.filters))
-    .orders(...(lookup.orders ?? [{ path: displayColumn }]))
-    .toJson();
-}
-
-function normalizeLookupFilters(
-  filters: EntityLookupOptionsSource["filters"]
-): ESQFilterCollection | undefined {
-  if (!filters) {
-    return undefined;
-  }
-
-  return Array.isArray(filters) ? { items: filters } : filters;
-}
-
-function mapLookupRows(rows: EntityApiEntity[], lookup: EntityLookupOptionsSource): LookupOption[] {
-  const valueAlias = getLookupValueAlias(lookup);
-  const displayAlias = getLookupDisplayAlias(lookup);
-
-  return rows
-    .map((row) => {
-      const value = row[valueAlias]?.value;
-      if (value !== null && typeof value !== "string" && typeof value !== "number") {
-        return null;
-      }
-
-      const displayValue =
-        row[displayAlias]?.displayValue ??
-        row[displayAlias]?.value ??
-        row[valueAlias]?.displayValue ??
-        value;
-
-      return value === null || value === undefined
-        ? null
-        : { value, displayValue: String(displayValue ?? value) } satisfies LookupOption;
-    })
-    .filter((option): option is LookupOption => option !== null);
-}
-
-function getLookupValueColumn(lookup: EntityLookupOptionsSource): string {
-  return lookup.valueColumn ?? "Id";
-}
-
-function getLookupDisplayColumn(lookup: EntityLookupOptionsSource): string {
-  return lookup.displayColumn ?? "Name";
-}
-
-function getLookupValueAlias(lookup: EntityLookupOptionsSource): string {
-  return lookup.valueAlias ?? getLookupValueColumn(lookup);
-}
-
-function getLookupDisplayAlias(lookup: EntityLookupOptionsSource): string {
-  return lookup.displayAlias ?? getLookupDisplayColumn(lookup);
+  return useMemo(() => createSchemaSelectQuery(schema, rowCount), [schema, rowCount]);
 }
