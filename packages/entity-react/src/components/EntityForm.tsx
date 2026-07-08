@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { createEmptyValues, getColumnKey } from "@titanic-entity/entity-core";
+import { getColumnKey } from "@titanic-entity/entity-core";
 import type { EntityFormProps } from "./models/EntityFormProps";
 import { EntityField } from "./fields/EntityField";
 import type { EntityFieldProps } from "./fields/models/EntityFieldProps";
 import { EntityGrid } from "./layout/EntityGrid";
 import type { EntityGridProps } from "./layout/models/EntityGridProps";
 import { useUiComponent } from "@titanic-entity/entity-base";
+import { useEntityFormState } from "../headless/entityFormState";
 
 export type { EntityFormProps } from "./models/EntityFormProps";
 
 /**
- * Форма по схеме для создания и редактирования записей Entity.
+ * Renders a schema-driven form for creating and editing Entity records.
  */
 export function EntityForm({
   schema,
@@ -24,26 +24,11 @@ export function EntityForm({
 }: EntityFormProps) {
   const FieldComponent = useUiComponent<EntityFieldProps>("EntityField", EntityField);
   const GridComponent = useUiComponent<EntityGridProps>("EntityGrid", EntityGrid);
-  const initialValues = useMemo(() => value ?? createEmptyValues(schema), [schema, value]);
-  const [values, setValues] = useState(initialValues);
-  const valuesRef = useRef(initialValues);
-
-  useEffect(() => {
-    valuesRef.current = initialValues;
-    setValues(initialValues);
-  }, [initialValues]);
-
-  const handleChange = useCallback((key: string, nextValue: unknown) => {
-    // Отложенные фиксации полей могут приходить из таймеров; держим актуальный источник слияния.
-    const nextValues = { ...valuesRef.current, [key]: nextValue };
-    valuesRef.current = nextValues;
-    setValues(nextValues);
-    onChange?.(nextValues);
-  }, [onChange]);
+  const { values, getValues, setValue } = useEntityFormState({ schema, value, onChange });
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    await onSubmit?.(valuesRef.current);
+    await onSubmit?.(getValues());
   };
 
   return (
@@ -55,7 +40,7 @@ export function EntityForm({
             key={getColumnKey(column)}
             column={column}
             values={values}
-            onChange={handleChange}
+            onChange={setValue}
             disabled={disabled}
             manualCommitDelayMs={manualCommitDelayMs}
           />

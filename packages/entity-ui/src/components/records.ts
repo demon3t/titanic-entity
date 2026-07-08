@@ -1,5 +1,6 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
-import { EntityRecordsPage, entityReactComponentNames, type EntityRecordsPageProps } from "@titanic-entity/entity-react";
+import { EntityRecordsPage, type EntityRecordsPageProps } from "@titanic-entity/entity-react/components";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 
 export const entityRecordsPageComponentSchema = defineComponentSchema<EntityRecordsPageProps>({
   kind: "component",

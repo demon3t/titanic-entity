@@ -1,5 +1,6 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
-import { RandomGifLoader, entityReactComponentNames, type RandomGifLoaderProps } from "@titanic-entity/entity-react";
+import { RandomGifLoader, type RandomGifLoaderProps } from "@titanic-entity/entity-react/components";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 
 export const randomGifLoaderComponentSchema = defineComponentSchema<RandomGifLoaderProps>({
   kind: "component",

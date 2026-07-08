@@ -1,17 +1,19 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
 import {
   EntityForm,
-  EntityOrmList,
   EntityRecordDetails,
+  type EntityFormProps,
+  type EntityRecordDetailsProps
+} from "@titanic-entity/entity-react/components";
+import {
+  EntityOrmList,
   EntityRegistry,
   EntityTable,
-  entityReactComponentNames,
-  type EntityFormProps,
   type EntityOrmListProps,
-  type EntityRecordDetailsProps,
   type EntityRegistryProps,
   type EntityTableProps
-} from "@titanic-entity/entity-react";
+} from "@titanic-entity/entity-react/grids";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 
 export const entityFormComponentSchema = defineComponentSchema<EntityFormProps>({
   kind: "component",

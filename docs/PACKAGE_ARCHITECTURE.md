@@ -55,6 +55,32 @@ Schema - единица регистрации внутри пакета. Сей
 
 Доменные Entity API модели, готовые UI-компоненты, ресурсы, стили и бизнес-логика остаются в профильных пакетах. Для npm-пакета публичными entrypoints считаются корневой импорт `@titanic-entity/entity-base`, а также совместимые subpath-импорты `@titanic-entity/entity-base/enumValues` и `@titanic-entity/entity-base/Titanic`. Внутренние файлы `src/*` не считаются публичным API.
 
+## Границы `entity-react`
+
+`@titanic-entity/entity-react` отвечает только за React-слой поверх `entity-base`, `entity-core`, `entity-api` и `entity-resources`.
+
+Стабильные entrypoints для React-приложений:
+
+| entrypoint | Назначение |
+| --- | --- |
+| `@titanic-entity/entity-react` | Совместимый root-фасад и descriptor `titanicEntityReactUiPackage` |
+| `@titanic-entity/entity-react/headless` | State hooks и контроллеры без визуального слоя |
+| `@titanic-entity/entity-react/components` | Общие React-компоненты: forms, actions, records, icons, feedback, site controls |
+| `@titanic-entity/entity-react/fields` | Поля и input-компоненты |
+| `@titanic-entity/entity-react/grids` | Гриды, таблицы, списки, registry-компоненты и grid-модели |
+| `@titanic-entity/entity-react/layout` | Layout primitives и site shell |
+| `@titanic-entity/entity-react/templates` | Переиспользуемые page templates |
+| `@titanic-entity/entity-react/resources` | React UI resources и локализации |
+| `@titanic-entity/entity-react/system` | Системные helper-модели для React UI |
+| `@titanic-entity/entity-react/schemas` и `/model` | Package schemas и registry names |
+
+Внутренними считаются прямые импорты в файлы реализации, например `components/grid/EntityDataGrid`, `components/fields/EntityField`, `grids/column-settings/model/*` и `templates/entity-edit/models/*`. Их можно менять при внутреннем рефакторинге без отдельной гарантии совместимости. Для публичных методов и hooks TSDoc-комментарии пишутся на английском.
+
+Headless-слой содержит логику состояния, которую можно переиспользовать без готового visual component:
+
+- `useEntityFormState` - управляет значениями schema-driven формы.
+- `useEntityEditPageController` - строит controller/context для `EntityEditPage` template.
+
 ## Навигация
 
 Навигация строится из `workspace` и `section`.
@@ -157,7 +183,8 @@ const EntityField = registry?.getField("EntityField");
 Расширение получает базовый компонент и возвращает новый компонент с той же сигнатурой props.
 
 ```tsx
-import { defineFieldSchema, type EntityFieldProps } from "@titanic-entity/entity-react";
+import { defineFieldSchema } from "@titanic-entity/entity-base";
+import type { EntityFieldProps } from "@titanic-entity/entity-react/fields";
 
 export const strictFieldSchema = defineFieldSchema<EntityFieldProps>({
   kind: "field",

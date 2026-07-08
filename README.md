@@ -1,6 +1,6 @@
 ﻿# @titanic-entity/entity-react
 
-React/TypeScript библиотека для работы с `Titanic.Entity` и Entity ORM API. Пакет объединяет HTTP-клиент, модели ESQ, React hooks, базовые UI-компоненты, базовый пакет `entity-base` и расширяемые шаблоны страниц.
+React/TypeScript библиотека для работы с `Titanic.Entity` и Entity ORM API. Пакет `entity-react` отвечает за React-слой: headless hooks, визуальные компоненты, layout, fields, grids, templates, ресурсы и стили. HTTP-клиент, ESQ builder, core-модели и package registry остаются в профильных пакетах и доступны из `entity-react` через совместимый root-фасад.
 
 ## Для чего нужен пакет
 
@@ -39,7 +39,7 @@ src/
     entity-core/       Entity-модели, схемы и React provider
     entity-api/        HTTP-клиент, ESQ и API-схемы
     entity-resources/  ресурсы и иконки
-    entity-react/      React-компоненты, templates, resources, styles
+    entity-react/      React headless hooks, components, fields, grids, layout, templates, resources, styles
     entity-ui/         UI package schemas: components, fields, grids, templates
 ```
 
@@ -50,14 +50,16 @@ src/
 ```tsx
 import {
   EntityApiClient,
+  entityQuery
+} from "@titanic-entity/entity-api";
+import {
   EntityApiProvider,
   EntityFieldKind,
-  EntityForm,
-  EntityTable,
-  entityQuery,
   useEntityQuery,
   type EntitySchema
-} from "@titanic-entity/entity-react";
+} from "@titanic-entity/entity-core";
+import { EntityForm } from "@titanic-entity/entity-react/components";
+import { EntityTable } from "@titanic-entity/entity-react/grids";
 import "@titanic-entity/entity-react/styles.css";
 
 const client = new EntityApiClient({
@@ -176,6 +178,38 @@ const personalClient = useEntityApiClient("personalData");
 - `RandomGifLoader` - loader с рандомным проигрыванием GIF из коллекции ресурсов.
 - `ResourceSvgIcon` - отрисовка SVG-иконок из ресурсов пакета.
 
+## Публичные React entrypoints
+
+Для нового кода предпочтительны явные entrypoints:
+
+- `@titanic-entity/entity-react/headless` - headless state hooks и контроллеры без визуального слоя.
+- `@titanic-entity/entity-react/components` - общие визуальные компоненты: формы, actions, records, icons, feedback и site controls.
+- `@titanic-entity/entity-react/fields` - поля и input-компоненты.
+- `@titanic-entity/entity-react/grids` - гриды, таблицы, списки и grid-модели.
+- `@titanic-entity/entity-react/layout` - layout primitives и site shell.
+- `@titanic-entity/entity-react/templates` - шаблоны страниц.
+- `@titanic-entity/entity-react/resources` - React resources и локализации.
+- `@titanic-entity/entity-react/system` - системные Entity helpers для React UI.
+- `@titanic-entity/entity-react/schemas` и `/model` - схемы пакета и имена registry-элементов.
+
+Root import `@titanic-entity/entity-react` остается совместимым фасадом для приложений, но глубокие импорты в файлы вроде `components/grid/EntityDataGrid` или `grids/column-settings/model/*` считаются внутренними и не являются стабильным API.
+
+## Headless hooks
+
+Headless-слой отделяет состояние от представления:
+
+```tsx
+import { useEntityFormState } from "@titanic-entity/entity-react/headless";
+
+const { values, setValue, getValues } = useEntityFormState({
+  schema,
+  value,
+  onChange
+});
+```
+
+`useEntityFormState` управляет значениями schema-driven формы. `useEntityEditPageController` строит контроллер для `EntityEditPage` template: нормализованный template, context, submit и reset.
+
 ## EntityDataGrid
 
 `EntityDataGrid` подходит для реестров и системных списков. Если переданы `client` и `tableName`, грид сам загрузит структуру провайдера через Entity ORM API и позволит выбрать отображаемые колонки.
@@ -236,7 +270,7 @@ const customPackage = definePackage({
 
 ## Соглашения по коду
 
-- Комментарии в исходниках пишутся на русском.
+- Публичные TSDoc-комментарии для методов, hooks и типов пишутся на английском.
 - Новые UI-элементы сначала проектируются как переиспользуемые компоненты, затем регистрируются в пакетном формате.
 - Если элемент относится к форме, гриду, шаблону или enum, используйте специализированные схемы `field`, `grid`, `template`, `enum`, а не только `component`.
 - Новые зависимости не добавляются без явной причины.
