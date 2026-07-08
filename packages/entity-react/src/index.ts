@@ -1,21 +1,25 @@
 import { definePackage } from "@titanic-entity/entity-base";
-import {
-  entityReactEntitySchemas,
-  entityReactEnumSchemas,
-  titanicEntityCorePackage
-} from "@titanic-entity/entity-core";
+import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
 import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
-import { entityReactSchemas } from "./schemas";
+import { entityReactEntitySchemas, entityReactEnumSchemas, entityReactSchemas } from "./schemas";
 
 export * from "@titanic-entity/entity-base";
 export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
 export * from "@titanic-entity/entity-resources";
+export { Titanic } from "@titanic-entity/entity-core";
 export {
   entityReactEntitySchemas,
   entityReactEnumSchemas
 };
+
+// React API
+export * from "./react/EntityApiProvider";
+export * from "./react/hooks";
+export * from "./react/models/AsyncState";
+export * from "./react/models/EntityApiProviderProps";
+export * from "./react/models/UseEntityQueryOptions";
 
 // Components
 export * from "./components/EntityForm";

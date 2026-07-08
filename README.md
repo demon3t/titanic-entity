@@ -36,7 +36,7 @@ import "@titanic-entity/entity-react/styles.css";
 src/
   packages/
     entity-base/       Базовый пакет: package registry, схемы, провайдер и Titanic
-    entity-core/       Entity-модели, схемы и React provider
+    entity-core/       Entity-модели, схемы и доменные utilities
     entity-api/        HTTP-клиент, ESQ и API-схемы
     entity-resources/  ресурсы и иконки
     entity-react/      React-компоненты, templates, resources, styles
@@ -170,6 +170,19 @@ const query = entityQuery("app_user")
   .select("Id", "Login")
   .and((filter) => filter.equal("IsActive", true).isNotNull("Login"));
 ```
+
+Если нужен готовый ESQ-фильтр без query builder, `entity-core` добавляет factory-методы в `Titanic`:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-core";
+
+const filters = Titanic.createFilterCollection([
+  Titanic.createIsEqualFilter("IsActive", true),
+  Titanic.createIsNullFilter("DeletedOn")
+]);
+```
+
+Доступны `createIsEqualFilter`, `createIsNotEqualFilter`, `createIsGreaterThanFilter`, `createIsGreaterThanOrEqualFilter`, `createIsLessThanFilter`, `createIsLessThanOrEqualFilter`, `createIsInFilter`, `createIsNotInFilter`, `createIsContainsFilter`, `createIsNullFilter`, `createIsNotNullFilter`, а также `createAndFilter`, `createOrFilter` и `createFilterCollection`.
 
 Для ручной типизации ESQ доступны типы `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection` и `ESQOrder`.
 

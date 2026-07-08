@@ -1,7 +1,8 @@
 import type { EntityApiEntity } from "@titanic-entity/entity-api";
+import { toApiEntity, toEntityValues } from "./api";
 import type { EntitySchema } from "./models/EntitySchema";
 import type { EntityValues } from "./models/EntityValues";
-import { createEmptyValues, getColumnKey, toApiEntity, toEntityValues } from "./schema";
+import { createEmptyValues, getSaveValues } from "./schema";
 
 /**
  * Runtime-модель одной Entity-записи на frontend.
@@ -75,15 +76,7 @@ export class EntityModel {
    * Получить значения, пригодные для Save операции Entity API.
    */
   getSaveValues(): EntityValues {
-    const result: EntityValues = {};
-    for (const column of this.schema.columns) {
-      const key = getColumnKey(column);
-      if ((!column.readOnly || column.path === this.schema.primaryColumn) && key in this.values) {
-        result[column.path] = this.values[key];
-      }
-    }
-
-    return result;
+    return getSaveValues(this.schema, this.values);
   }
 }
 
