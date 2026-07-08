@@ -1,17 +1,16 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { SiteIconButton, type SiteIconButtonProps } from "@titanic-entity/entity-react/components";
 import {
   PackageSiteShell,
   SiteCollapsiblePanel,
-  SiteIconButton,
   SiteLayout,
   SitePanelToggleButton,
-  entityReactComponentNames,
   type PackageSiteShellProps,
   type SiteCollapsiblePanelProps,
-  type SiteIconButtonProps,
   type SiteLayoutProps,
   type SitePanelToggleButtonProps
-} from "@titanic-entity/entity-react";
+} from "@titanic-entity/entity-react/layout";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 
 export const packageSiteShellComponentSchema = defineComponentSchema<PackageSiteShellProps>({
   kind: "component",

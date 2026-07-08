@@ -1,5 +1,7 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
-import { EntityDataGrid, EntityGrid, entityReactComponentNames, type EntityDataGridProps, type EntityGridProps } from "@titanic-entity/entity-react";
+import { EntityDataGrid, type EntityDataGridProps } from "@titanic-entity/entity-react/grids";
+import { EntityGrid, type EntityGridProps } from "@titanic-entity/entity-react/layout";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 
 export const entityDataGridComponentSchema = defineComponentSchema<EntityDataGridProps<any>>({
   kind: "component",

@@ -1,5 +1,6 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
-import { ResourceSvgIcon, entityReactComponentNames, type ResourceSvgIconProps } from "@titanic-entity/entity-react";
+import { ResourceSvgIcon, type ResourceSvgIconProps } from "@titanic-entity/entity-react/components";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 
 export const resourceSvgIconComponentSchema = defineComponentSchema<ResourceSvgIconProps>({
   kind: "component",

@@ -11,7 +11,7 @@ import {
   type EntityJsonEditorProps,
   type NumberInputProps,
   type SelectEntityProps
-} from "@titanic-entity/entity-react";
+} from "@titanic-entity/entity-react/fields";
 
 export const entityFieldSchema = defineFieldSchema<EntityFieldProps>({
   kind: "field",
