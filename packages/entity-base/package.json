@@ -20,9 +20,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js"
+    "./enumValues": {
+      "types": "./dist/enumValues.d.ts",
+      "import": "./dist/enumValues.js"
+    },
+    "./Titanic": {
+      "types": "./dist/Titanic.d.ts",
+      "import": "./dist/Titanic.js"
     }
   },
   "scripts": {
