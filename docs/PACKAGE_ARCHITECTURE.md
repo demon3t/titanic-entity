@@ -43,6 +43,18 @@ Schema - единица регистрации внутри пакета. Сей
 | `module` | Произвольный экспорт пакета |
 | `component` | Общий компонент, если более узкий тип не подходит |
 
+## Границы `entity-base`
+
+`@titanic-entity/entity-base` содержит только фундаментальный слой пакетной системы:
+
+- общие типы схем, descriptor и registry;
+- `define*Schema` helpers и `definePackage`;
+- сборку runtime registry через `createPackageRegistry` и `createPackageFromDescriptor`;
+- React provider/hooks для доступа к уже собранному registry;
+- глобальный `Titanic` registry для enum и icon resources.
+
+Доменные Entity API модели, готовые UI-компоненты, ресурсы, стили и бизнес-логика остаются в профильных пакетах. Для npm-пакета публичными entrypoints считаются корневой импорт `@titanic-entity/entity-base`, а также совместимые subpath-импорты `@titanic-entity/entity-base/enumValues` и `@titanic-entity/entity-base/Titanic`. Внутренние файлы `src/*` не считаются публичным API.
+
 ## Навигация
 
 Навигация строится из `workspace` и `section`.
@@ -94,9 +106,9 @@ entityName: "app_user"
 
 ## Базовый UI-пакет
 
-`packages/entity-ui/src/index.ts` ???????????? `titanicEntityUiPackage`. ?? ???????????? ??????? UI-???????? ?????????? ? ??????? ?? ??????? `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` ? `Titanic.EntityReact`.
+`packages/entity-ui/src/index.ts` экспортирует `titanicEntityUiPackage`. Он регистрирует набор UI-элементов библиотеки и зависит от пакетов `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` и `Titanic.EntityReact`.
 
-????? ?????? `packages/entity-ui/src` ????????????? ?? ?????????? ????????: `components`, `fields`, `grids`, `templates`. Runtime ????? ? ????????? ??????? ????? ? `packages/entity-react/src/grids`, ? ????? `packages/entity-ui/src/grids` ???????????????? ?? ? ????????? schema-???????????.
+Файлы внутри `packages/entity-ui/src` организованы по типам элементов: `components`, `fields`, `grids`, `templates`. Runtime может жить в соседнем пакете, например в `packages/entity-react/src/grids`, а `packages/entity-ui/src/grids` регистрирует его в пакетных schema-дескрипторах.
 
 ### Template
 
@@ -291,7 +303,7 @@ const personalClient = useEntityApiClient("personalData");
 
 ## Правила добавления новых UI-элементов
 
-1. ???? ??????? ????? ?????? ???????, ??????? ??? ? `packages/entity-react/src/components` ??? `packages/entity-react/src/templates` ???????? ??????.
+1. Если элемент нужен базовой библиотеке, добавляйте его в подходящий каталог `packages/entity-react/src/components` или `packages/entity-react/src/templates`.
 2. Если элемент является полем, регистрируйте его через `defineFieldSchema`.
 3. Если элемент является гридом, списком или реестром, регистрируйте его через `defineGridSchema`.
 4. Если элемент является шаблоном страницы, регистрируйте его через `defineTemplateSchema`.

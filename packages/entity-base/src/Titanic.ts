@@ -2,10 +2,14 @@ import type {
   UiPackageDescriptor,
   UiPackageEnumSchema,
   UiPackageEnumValues,
+  UiPackageIconModuleSchema,
   UiPackageModuleExports,
-  UiPackageModuleSchema,
   UiPackageSchema
-} from "./index";
+} from "./types";
+import {
+  getUiPackageEnumRegistryKeys,
+  resolveUiPackageEnumSchema
+} from "./internal/enumSchemas";
 
 export interface TitanicIconResource {
   viewBox: string;
@@ -119,7 +123,7 @@ export class TitanicEnumRegistry {
     values: TValues,
     options: TitanicEnumRegistrationOptions = {}
   ): TValues {
-    for (const key of getEnumRegistryKeys({ name, packageName: options.packageName })) {
+    for (const key of getUiPackageEnumRegistryKeys({ name, packageName: options.packageName })) {
       this.all[key] = values;
       this[key] = values;
     }
@@ -128,9 +132,9 @@ export class TitanicEnumRegistry {
   }
 
   registerSchema(schema: UiPackageEnumSchema): UiPackageEnumValues {
-    const values = resolveEnumSchema(schema, this.all);
+    const values = resolveUiPackageEnumSchema(schema, (key) => this.all[key]);
 
-    for (const key of getEnumRegistryKeys(schema)) {
+    for (const key of getUiPackageEnumRegistryKeys(schema)) {
       this.all[key] = values;
       this[key] = values;
     }
@@ -183,7 +187,7 @@ export class Titanic {
   }
 
   static registerSchema(schema: UiPackageSchema): void {
-    if (isIconModuleSchema(schema)) {
+    if (isIconModuleSchema(schema) && schema.exports) {
       this.icons.registerModule(schema.name, schema.exports, {
         packageName: schema.packageName
       });
@@ -195,8 +199,10 @@ export class Titanic {
   }
 }
 
-function isIconModuleSchema(schema: UiPackageSchema): schema is UiPackageModuleSchema<TitanicIconModuleExports> {
-  return schema.kind === "module" && schema.resourceType === "icons";
+function isIconModuleSchema(
+  schema: UiPackageSchema
+): schema is UiPackageIconModuleSchema<TitanicIconModuleExports> {
+  return schema.kind === "module" && "resourceType" in schema && schema.resourceType === "icons";
 }
 
 function isEnumSchema(schema: UiPackageSchema): schema is UiPackageEnumSchema {
@@ -300,67 +306,4 @@ function toIconGroupName(exportName: string): string {
 
 function normalizeIconPathPart(value: string): string {
   return value.trim().replace(/^[^a-zA-Z_$]+/, "");
-}
-
-function resolveEnumSchema(
-  schema: UiPackageEnumSchema,
-  enumMap: Readonly<Record<string, UiPackageEnumValues>>
-): UiPackageEnumValues {
-  const baseValues = findBaseEnum(schema, enumMap);
-
-  if (schema.extension) {
-    return schema.extension({
-      name: schema.replaces ?? schema.name,
-      packageName: schema.packageName ?? "",
-      baseValues
-    });
-  }
-
-  if (schema.values) {
-    return schema.values;
-  }
-
-  throw new Error(`UI enum schema "${schema.name}" requires values or extension.`);
-}
-
-function findBaseEnum(
-  schema: UiPackageEnumSchema,
-  enumMap: Readonly<Record<string, UiPackageEnumValues>>
-): UiPackageEnumValues | undefined {
-  for (const key of getEnumBaseKeys(schema)) {
-    const values = enumMap[key];
-    if (values) {
-      return values;
-    }
-  }
-
-  return undefined;
-}
-
-function getEnumBaseKeys(schema: Pick<UiPackageEnumSchema, "name" | "replaces">): string[] {
-  return schema.replaces
-    ? [schema.replaces, getShortSchemaName(schema.replaces), schema.name]
-    : [schema.name];
-}
-
-function getEnumRegistryKeys(
-  schema: Pick<UiPackageEnumSchema, "name" | "packageName" | "replaces">
-): string[] {
-  const packageName = schema.packageName ?? "";
-  const keys = new Set<string>([
-    schema.name,
-    getShortSchemaName(schema.name),
-    packageName ? `${packageName}.${schema.name}` : schema.name
-  ]);
-
-  if (schema.replaces) {
-    keys.add(schema.replaces);
-    keys.add(getShortSchemaName(schema.replaces));
-  }
-
-  return [...keys];
-}
-
-function getShortSchemaName(name: string): string {
-  return name.split(".").at(-1) ?? name;
 }
