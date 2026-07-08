@@ -5,7 +5,7 @@ import {
   type ESQ,
   type ESQFilterCollection
 } from "@titanic-entity/entity-api";
-import { createEqualFilter } from "./filters";
+import { createIsEqualFilter } from "./filters";
 import type { EntityDisplayValues } from "./models/EntityDisplayValues";
 import type { EntityLookupOptionsSource } from "./models/EntityLookupOptionsSource";
 import type { EntitySchema } from "./models/EntitySchema";
@@ -53,7 +53,7 @@ export function createSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ES
 export function createPrimaryFilter(schema: EntitySchema, id: unknown): ESQFilterCollection {
   return {
     items: [
-      createEqualFilter(schema.primaryColumn ?? "Id", id)
+      createIsEqualFilter(schema.primaryColumn ?? "Id", id)
     ]
   };
 }

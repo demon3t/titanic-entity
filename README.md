@@ -177,12 +177,12 @@ const query = entityQuery("app_user")
 import { Titanic } from "@titanic-entity/entity-core";
 
 const filters = Titanic.createFilterCollection([
-  Titanic.createEqualFilter("IsActive", true),
+  Titanic.createIsEqualFilter("IsActive", true),
   Titanic.createIsNullFilter("DeletedOn")
 ]);
 ```
 
-Доступны `createEqualFilter`, `createNotEqualFilter`, `createGreaterThanFilter`, `createGreaterThanOrEqualFilter`, `createLessThanFilter`, `createLessThanOrEqualFilter`, `createInFilter`, `createNotInFilter`, `createContainsFilter`, `createIsNullFilter`, `createIsNotNullFilter`, а также `createAndFilter`, `createOrFilter` и `createFilterCollection`.
+Доступны `createIsEqualFilter`, `createIsNotEqualFilter`, `createIsGreaterThanFilter`, `createIsGreaterThanOrEqualFilter`, `createIsLessThanFilter`, `createIsLessThanOrEqualFilter`, `createIsInFilter`, `createIsNotInFilter`, `createIsContainsFilter`, `createIsNullFilter`, `createIsNotNullFilter`, а также `createAndFilter`, `createOrFilter` и `createFilterCollection`.
 
 Для ручной типизации ESQ доступны типы `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection` и `ESQOrder`.
 

@@ -6,15 +6,7 @@ import {
   type ESQFilterCollection
 } from "@titanic-entity/entity-api";
 
-/**
- * Creates a leaf ESQ filter with an explicit comparison operator.
- *
- * @param path Entity path of the filtered column.
- * @param comparisonType Comparison operator used by the filter.
- * @param value Primary filter value.
- * @param secondValue Secondary filter value used by range operators.
- */
-export function createFilter(
+function createFilter(
   path: string,
   comparisonType: ConditionOperator,
   value?: unknown,
@@ -34,7 +26,7 @@ export function createFilter(
  * @param path Entity path of the filtered column.
  * @param value Expected column value.
  */
-export function createEqualFilter(path: string, value: unknown): ESQFilter {
+export function createIsEqualFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.Equal, value);
 }
 
@@ -44,7 +36,7 @@ export function createEqualFilter(path: string, value: unknown): ESQFilter {
  * @param path Entity path of the filtered column.
  * @param value Value that should not match the column.
  */
-export function createNotEqualFilter(path: string, value: unknown): ESQFilter {
+export function createIsNotEqualFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.NotEqual, value);
 }
 
@@ -54,7 +46,7 @@ export function createNotEqualFilter(path: string, value: unknown): ESQFilter {
  * @param path Entity path of the filtered column.
  * @param value Lower exclusive boundary value.
  */
-export function createGreaterThanFilter(path: string, value: unknown): ESQFilter {
+export function createIsGreaterThanFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.GreaterThan, value);
 }
 
@@ -64,7 +56,7 @@ export function createGreaterThanFilter(path: string, value: unknown): ESQFilter
  * @param path Entity path of the filtered column.
  * @param value Lower inclusive boundary value.
  */
-export function createGreaterThanOrEqualFilter(path: string, value: unknown): ESQFilter {
+export function createIsGreaterThanOrEqualFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.GreaterThanOrEqual, value);
 }
 
@@ -74,7 +66,7 @@ export function createGreaterThanOrEqualFilter(path: string, value: unknown): ES
  * @param path Entity path of the filtered column.
  * @param value Upper exclusive boundary value.
  */
-export function createLessThanFilter(path: string, value: unknown): ESQFilter {
+export function createIsLessThanFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.LessThan, value);
 }
 
@@ -84,7 +76,7 @@ export function createLessThanFilter(path: string, value: unknown): ESQFilter {
  * @param path Entity path of the filtered column.
  * @param value Upper inclusive boundary value.
  */
-export function createLessThanOrEqualFilter(path: string, value: unknown): ESQFilter {
+export function createIsLessThanOrEqualFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.LessThanOrEqual, value);
 }
 
@@ -94,7 +86,7 @@ export function createLessThanOrEqualFilter(path: string, value: unknown): ESQFi
  * @param path Entity path of the filtered column.
  * @param values Candidate values accepted by the filter.
  */
-export function createInFilter(path: string, values: readonly unknown[]): ESQFilter {
+export function createIsInFilter(path: string, values: readonly unknown[]): ESQFilter {
   return createFilter(path, ConditionOperator.In, values);
 }
 
@@ -104,7 +96,7 @@ export function createInFilter(path: string, values: readonly unknown[]): ESQFil
  * @param path Entity path of the filtered column.
  * @param values Candidate values rejected by the filter.
  */
-export function createNotInFilter(path: string, values: readonly unknown[]): ESQFilter {
+export function createIsNotInFilter(path: string, values: readonly unknown[]): ESQFilter {
   return createFilter(path, ConditionOperator.NotIn, values);
 }
 
@@ -114,7 +106,7 @@ export function createNotInFilter(path: string, values: readonly unknown[]): ESQ
  * @param path Entity path of the filtered column.
  * @param value Value that should be contained in the column.
  */
-export function createContainsFilter(path: string, value: unknown): ESQFilter {
+export function createIsContainsFilter(path: string, value: unknown): ESQFilter {
   return createFilter(path, ConditionOperator.Contains, value);
 }
 
@@ -188,26 +180,24 @@ export function createFilterCollection(
 
 /** Static ESQ filter factory methods added to the Titanic facade by entity-core. */
 export interface TitanicEntityFilterFactory {
-  /** Creates a leaf ESQ filter with an explicit comparison operator. */
-  createFilter: typeof createFilter;
   /** Creates an equality ESQ filter. */
-  createEqualFilter: typeof createEqualFilter;
+  createIsEqualFilter: typeof createIsEqualFilter;
   /** Creates a non-equality ESQ filter. */
-  createNotEqualFilter: typeof createNotEqualFilter;
+  createIsNotEqualFilter: typeof createIsNotEqualFilter;
   /** Creates a greater-than ESQ filter. */
-  createGreaterThanFilter: typeof createGreaterThanFilter;
+  createIsGreaterThanFilter: typeof createIsGreaterThanFilter;
   /** Creates a greater-than-or-equal ESQ filter. */
-  createGreaterThanOrEqualFilter: typeof createGreaterThanOrEqualFilter;
+  createIsGreaterThanOrEqualFilter: typeof createIsGreaterThanOrEqualFilter;
   /** Creates a less-than ESQ filter. */
-  createLessThanFilter: typeof createLessThanFilter;
+  createIsLessThanFilter: typeof createIsLessThanFilter;
   /** Creates a less-than-or-equal ESQ filter. */
-  createLessThanOrEqualFilter: typeof createLessThanOrEqualFilter;
+  createIsLessThanOrEqualFilter: typeof createIsLessThanOrEqualFilter;
   /** Creates an ESQ membership filter. */
-  createInFilter: typeof createInFilter;
+  createIsInFilter: typeof createIsInFilter;
   /** Creates a negative ESQ membership filter. */
-  createNotInFilter: typeof createNotInFilter;
+  createIsNotInFilter: typeof createIsNotInFilter;
   /** Creates a contains ESQ filter. */
-  createContainsFilter: typeof createContainsFilter;
+  createIsContainsFilter: typeof createIsContainsFilter;
   /** Creates an ESQ null-check filter. */
   createIsNullFilter: typeof createIsNullFilter;
   /** Creates an ESQ non-null-check filter. */
@@ -224,16 +214,15 @@ export interface TitanicEntityFilterFactory {
 
 /** ESQ filter factory method map used to extend the Titanic facade. */
 export const titanicEntityFilterFactory: TitanicEntityFilterFactory = {
-  createFilter,
-  createEqualFilter,
-  createNotEqualFilter,
-  createGreaterThanFilter,
-  createGreaterThanOrEqualFilter,
-  createLessThanFilter,
-  createLessThanOrEqualFilter,
-  createInFilter,
-  createNotInFilter,
-  createContainsFilter,
+  createIsEqualFilter,
+  createIsNotEqualFilter,
+  createIsGreaterThanFilter,
+  createIsGreaterThanOrEqualFilter,
+  createIsLessThanFilter,
+  createIsLessThanOrEqualFilter,
+  createIsInFilter,
+  createIsNotInFilter,
+  createIsContainsFilter,
   createIsNullFilter,
   createIsNotNullFilter,
   createGroupFilter,
@@ -248,82 +237,68 @@ export const Titanic = Object.assign(BaseTitanic, titanicEntityFilterFactory);
 declare module "@titanic-entity/entity-base" {
   namespace Titanic {
     /**
-     * Creates a leaf ESQ filter with an explicit comparison operator.
-     *
-     * @param path Entity path of the filtered column.
-     * @param comparisonType Comparison operator used by the filter.
-     * @param value Primary filter value.
-     * @param secondValue Secondary filter value used by range operators.
-     */
-    export function createFilter(
-      path: string,
-      comparisonType: ConditionOperator,
-      value?: unknown,
-      secondValue?: unknown
-    ): ESQFilter;
-    /**
      * Creates an equality ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Expected column value.
      */
-    export function createEqualFilter(path: string, value: unknown): ESQFilter;
+    export function createIsEqualFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates a non-equality ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Value that should not match the column.
      */
-    export function createNotEqualFilter(path: string, value: unknown): ESQFilter;
+    export function createIsNotEqualFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates a greater-than ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Lower exclusive boundary value.
      */
-    export function createGreaterThanFilter(path: string, value: unknown): ESQFilter;
+    export function createIsGreaterThanFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates a greater-than-or-equal ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Lower inclusive boundary value.
      */
-    export function createGreaterThanOrEqualFilter(path: string, value: unknown): ESQFilter;
+    export function createIsGreaterThanOrEqualFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates a less-than ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Upper exclusive boundary value.
      */
-    export function createLessThanFilter(path: string, value: unknown): ESQFilter;
+    export function createIsLessThanFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates a less-than-or-equal ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Upper inclusive boundary value.
      */
-    export function createLessThanOrEqualFilter(path: string, value: unknown): ESQFilter;
+    export function createIsLessThanOrEqualFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates an ESQ membership filter.
      *
      * @param path Entity path of the filtered column.
      * @param values Candidate values accepted by the filter.
      */
-    export function createInFilter(path: string, values: readonly unknown[]): ESQFilter;
+    export function createIsInFilter(path: string, values: readonly unknown[]): ESQFilter;
     /**
      * Creates a negative ESQ membership filter.
      *
      * @param path Entity path of the filtered column.
      * @param values Candidate values rejected by the filter.
      */
-    export function createNotInFilter(path: string, values: readonly unknown[]): ESQFilter;
+    export function createIsNotInFilter(path: string, values: readonly unknown[]): ESQFilter;
     /**
      * Creates a contains ESQ filter.
      *
      * @param path Entity path of the filtered column.
      * @param value Value that should be contained in the column.
      */
-    export function createContainsFilter(path: string, value: unknown): ESQFilter;
+    export function createIsContainsFilter(path: string, value: unknown): ESQFilter;
     /**
      * Creates an ESQ null-check filter.
      *

@@ -98,7 +98,7 @@ entityName: "app_user"
 
 Публичные ESQ-модели доступны под короткими именами: `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection`, `ESQOrder`.
 
-`@titanic-entity/entity-core` расширяет статический `Titanic` factory-методами для фильтров: `Titanic.createEqualFilter(...)`, `Titanic.createIsNullFilter(...)`, `Titanic.createAndFilter(...)`, `Titanic.createFilterCollection(...)` и другими методами по `ConditionOperator`.
+`@titanic-entity/entity-core` расширяет статический `Titanic` factory-методами для фильтров: `Titanic.createIsEqualFilter(...)`, `Titanic.createIsNullFilter(...)`, `Titanic.createAndFilter(...)`, `Titanic.createFilterCollection(...)` и другими методами по `ConditionOperator`.
 
 Query builder поддерживает постепенное добавление колонок, сортировки, фильтры, группы фильтров и агрегаты:
 
