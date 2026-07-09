@@ -1,4 +1,10 @@
-import { Titanic } from "./Titanic";
+import {
+  Titanic,
+  type TitanicIconTree,
+  type TitanicLocalizationResource,
+  type TitanicLocalizationResourceTree,
+  type TitanicLocalizationTree
+} from "./Titanic";
 import type {
   UiPackageComponentSchema,
   UiPackageDescriptor,
@@ -7,9 +13,11 @@ import type {
   UiPackageFieldSchema,
   UiPackageGridSchema,
   UiPackageIconModuleSchema,
+  UiPackageLocalizationModuleSchema,
   UiPackageModuleExports,
   UiPackageModuleSchema,
   UiPackagePageSchema,
+  UiPackageSchema,
   UiPackageSectionSchema,
   UiPackageTemplateSchema,
   UiPackageWorkspaceSchema
@@ -86,6 +94,72 @@ export function defineModuleSchema<TExports extends UiPackageModuleExports = UiP
   return schema;
 }
 
+export interface DefineIconResourcesOptions<
+  TIcons extends TitanicIconTree = TitanicIconTree
+> extends Omit<
+    UiPackageIconModuleSchema<{ icons: TIcons } & UiPackageModuleExports>,
+    "exports" | "kind" | "resourceType"
+  > {
+  /** Icons to expose from the module. Use groupName to register them under a single group. */
+  icons: TIcons;
+  /** Additional icon-related exports, such as named icon groups for direct imports. */
+  exports?: UiPackageModuleExports;
+}
+
+export interface DefineIconPackageOptions<
+  TIcons extends TitanicIconTree = TitanicIconTree
+> extends Omit<UiPackageDescriptor, "schemas"> {
+  /** Icons to expose from the package. */
+  icons: TIcons;
+  /** Optional group name used for Titanic.Icons.group(groupName) and Titanic.Icons.get("group.key"). */
+  groupName?: string;
+  /** Optional module schema name. Defaults to `${name}.Icons`. */
+  moduleName?: string;
+  /** Additional schemas to include in the package descriptor. */
+  schemas?: readonly UiPackageSchema[];
+  /** Additional icon-related exports, such as named icon groups for direct imports. */
+  exports?: UiPackageModuleExports;
+}
+
+export interface DefineLocalizationResourcesOptions<
+  TTree extends TitanicLocalizationTree = TitanicLocalizationTree,
+  TResources extends TitanicLocalizationResourceTree = TitanicLocalizationResourceTree
+> extends Omit<
+    UiPackageLocalizationModuleSchema<UiPackageModuleExports>,
+    "exports" | "kind" | "resourceType"
+  > {
+  /** Single localization resource to expose from the module. Use groupName to choose its public path. */
+  localization?: TitanicLocalizationResource<TTree>;
+  /** Locale map shorthand used to build a single localization resource. */
+  locales?: Readonly<Record<string, TTree>>;
+  /** Grouped localization resources to expose from the module. */
+  localizations?: TResources;
+  /** Additional localization-related exports for direct imports. */
+  exports?: UiPackageModuleExports;
+}
+
+export interface DefineLocalizationPackageOptions<
+  TTree extends TitanicLocalizationTree = TitanicLocalizationTree,
+  TResources extends TitanicLocalizationResourceTree = TitanicLocalizationResourceTree
+> extends Omit<UiPackageDescriptor, "schemas"> {
+  /** Single localization resource to expose from the package. */
+  localization?: TitanicLocalizationResource<TTree>;
+  /** Locale map shorthand used to build a single localization resource. */
+  locales?: Readonly<Record<string, TTree>>;
+  /** Grouped localization resources to expose from the package. */
+  localizations?: TResources;
+  /** Optional group name used for Titanic.Localization.group(groupName) and Titanic.Localization.get("group.key"). */
+  groupName?: string;
+  /** Optional fallback locale used when the user locale has no matching string. */
+  defaultLocale?: string;
+  /** Optional module schema name. Defaults to `${name}.Localization`. */
+  moduleName?: string;
+  /** Additional schemas to include in the package descriptor. */
+  schemas?: readonly UiPackageSchema[];
+  /** Additional localization-related exports for direct imports. */
+  exports?: UiPackageModuleExports;
+}
+
 /** Preserves module export types while declaring an icon resource module schema. */
 export function defineIconModuleSchema<
   TExports extends UiPackageModuleExports = UiPackageModuleExports
@@ -100,4 +174,135 @@ export function defineIconModuleSchema<
     kind: "module",
     resourceType: "icons"
   };
+}
+
+/** Declares an icon resource module schema from an icon tree. */
+export function defineIconResources<TIcons extends TitanicIconTree = TitanicIconTree>(
+  options: DefineIconResourcesOptions<TIcons>
+): UiPackageIconModuleSchema<{ icons: TIcons } & UiPackageModuleExports> {
+  const { icons, exports: extraExports, ...schema } = options;
+
+  return defineIconModuleSchema({
+    ...schema,
+    exports: {
+      ...extraExports,
+      icons
+    } as { icons: TIcons } & UiPackageModuleExports
+  });
+}
+
+/** Declares and registers a package descriptor that exposes icon resources. */
+export function defineIconPackage<TIcons extends TitanicIconTree = TitanicIconTree>(
+  options: DefineIconPackageOptions<TIcons>
+): UiPackageDescriptor {
+  const {
+    icons,
+    groupName,
+    moduleName,
+    schemas = [],
+    exports: extraExports,
+    ...descriptor
+  } = options;
+
+  return definePackage({
+    ...descriptor,
+    schemas: [
+      ...schemas,
+      defineIconResources({
+        name: moduleName ?? `${descriptor.name}.Icons`,
+        packageName: descriptor.name,
+        groupName,
+        icons,
+        exports: extraExports
+      })
+    ]
+  });
+}
+
+/** Preserves module export types while declaring a localization resource module schema. */
+export function defineLocalizationModuleSchema<
+  TExports extends UiPackageModuleExports = UiPackageModuleExports
+>(
+  schema: Omit<UiPackageLocalizationModuleSchema<TExports>, "kind" | "resourceType"> & {
+    kind?: "module";
+    resourceType?: "localization";
+  }
+): UiPackageLocalizationModuleSchema<TExports> {
+  return {
+    ...schema,
+    kind: "module",
+    resourceType: "localization"
+  };
+}
+
+/** Declares a localization resource module schema from locale maps or grouped resources. */
+export function defineLocalizationResources<
+  TTree extends TitanicLocalizationTree = TitanicLocalizationTree,
+  TResources extends TitanicLocalizationResourceTree = TitanicLocalizationResourceTree
+>(
+  options: DefineLocalizationResourcesOptions<TTree, TResources>
+): UiPackageLocalizationModuleSchema<UiPackageModuleExports> {
+  const {
+    localization,
+    locales,
+    localizations,
+    exports: extraExports,
+    defaultLocale,
+    ...schema
+  } = options;
+  const localizationResource = localization ?? (
+    locales
+      ? {
+          ...(defaultLocale ? { defaultLocale } : {}),
+          locales
+        } satisfies TitanicLocalizationResource<TTree>
+      : undefined
+  );
+
+  return defineLocalizationModuleSchema({
+    ...schema,
+    defaultLocale,
+    exports: {
+      ...extraExports,
+      ...(localizations ? { localizations } : {}),
+      ...(localizationResource ? { localization: localizationResource } : {})
+    }
+  });
+}
+
+/** Declares and registers a package descriptor that exposes localization resources. */
+export function defineLocalizationPackage<
+  TTree extends TitanicLocalizationTree = TitanicLocalizationTree,
+  TResources extends TitanicLocalizationResourceTree = TitanicLocalizationResourceTree
+>(
+  options: DefineLocalizationPackageOptions<TTree, TResources>
+): UiPackageDescriptor {
+  const {
+    localization,
+    locales,
+    localizations,
+    groupName,
+    moduleName,
+    schemas = [],
+    exports: extraExports,
+    defaultLocale,
+    ...descriptor
+  } = options;
+
+  return definePackage({
+    ...descriptor,
+    schemas: [
+      ...schemas,
+      defineLocalizationResources({
+        name: moduleName ?? `${descriptor.name}.Localization`,
+        packageName: descriptor.name,
+        groupName,
+        defaultLocale,
+        localization,
+        locales,
+        localizations,
+        exports: extraExports
+      })
+    ]
+  });
 }

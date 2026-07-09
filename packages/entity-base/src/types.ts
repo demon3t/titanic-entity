@@ -113,6 +113,8 @@ export interface UiPackageEnumSchema<TValues extends UiPackageEnumValues = UiPac
 
 export type UiPackageModuleExports = Record<string, unknown>;
 
+export type UiPackageResourceType = "icons" | "localization";
+
 export interface UiPackageModuleSchema<TExports extends UiPackageModuleExports = UiPackageModuleExports>
   extends UiPackageSchemaBase {
   kind: "module";
@@ -126,6 +128,14 @@ export interface UiPackageIconModuleSchema<
   groupName?: string;
 }
 
+export interface UiPackageLocalizationModuleSchema<
+  TExports extends UiPackageModuleExports = UiPackageModuleExports
+> extends UiPackageModuleSchema<TExports> {
+  resourceType: "localization";
+  groupName?: string;
+  defaultLocale?: string;
+}
+
 export type UiPackageSchema =
   | UiPackageWorkspaceSchema
   | UiPackageSectionSchema<any>
@@ -136,7 +146,8 @@ export type UiPackageSchema =
   | UiPackageComponentSchema<any>
   | UiPackageEnumSchema
   | UiPackageModuleSchema
-  | UiPackageIconModuleSchema;
+  | UiPackageIconModuleSchema
+  | UiPackageLocalizationModuleSchema;
 
 export interface UiPackageDescriptor {
   name: string;
@@ -148,6 +159,9 @@ export interface UiPackageDescriptor {
 export interface UiPackageManifestSchema {
   kind: UiPackageSchema["kind"];
   name: string;
+  resourceType?: UiPackageResourceType;
+  groupName?: string;
+  defaultLocale?: string;
   packageName?: string;
   replaces?: string;
   title?: string;
@@ -190,6 +204,7 @@ export interface UiPackageRegistry {
   enums: readonly UiPackageEnumSchema[];
   modules: readonly UiPackageModuleSchema[];
   icons: readonly UiPackageIconModuleSchema[];
+  localizations: readonly UiPackageLocalizationModuleSchema[];
   getWorkspace(name: string): UiPackageWorkspaceSchema | undefined;
   getSection(name: string): UiPackageSectionSchema | undefined;
   getPage<TProps = unknown>(name: string): ComponentType<TProps> | undefined;
@@ -206,6 +221,9 @@ export interface UiPackageRegistry {
   getIconModule<TExports extends UiPackageModuleExports = UiPackageModuleExports>(
     name: string
   ): UiPackageIconModuleSchema<TExports> | undefined;
+  getLocalizationModule<TExports extends UiPackageModuleExports = UiPackageModuleExports>(
+    name: string
+  ): UiPackageLocalizationModuleSchema<TExports> | undefined;
 }
 
 export interface UiPackageProviderProps {

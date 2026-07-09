@@ -94,6 +94,8 @@ export interface EntityDataGridSettings {
   persistColumnSettings: boolean;
   showRowContextMenu: boolean;
   storagePrefix: string;
+  locale?: string;
+  /** @deprecated Use locale instead. */
   culture?: string;
   labels?: Partial<EntityDataGridLabels>;
 }

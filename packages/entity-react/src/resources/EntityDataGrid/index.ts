@@ -1,31 +1,36 @@
-import type { EntityDataGridCulture, EntityDataGridLabels } from "./types";
+import { Titanic } from "@titanic-entity/entity-base";
 import { entityDataGridEnUsLabels } from "./en-US";
 import { entityDataGridRuRuLabels } from "./ru-RU";
+import type { EntityDataGridCulture, EntityDataGridLabels } from "./types";
 
+export { entityDataGridEnUsLabels } from "./en-US";
+export { entityDataGridRuRuLabels } from "./ru-RU";
+
+/** Built-in EntityDataGrid label resources keyed by culture. */
 export const entityDataGridLabelResources = {
   "en-US": entityDataGridEnUsLabels,
   "ru-RU": entityDataGridRuRuLabels
 } as const satisfies Record<string, EntityDataGridLabels>;
 
+/** Default culture used when no matching EntityDataGrid labels are registered. */
 export const defaultEntityDataGridCulture: EntityDataGridCulture = "en-US";
 
+/** Resolves EntityDataGrid labels from the localization registry or built-in defaults. */
 export function getEntityDataGridLabels(culture: string | null | undefined): EntityDataGridLabels {
-  if (!culture) {
-    return entityDataGridEnUsLabels;
+  const registeredLabels = Titanic.Localization.group<EntityDataGridLabels>("dataGrid", {
+    locale: culture,
+    defaultLocale: defaultEntityDataGridCulture
+  });
+
+  if (registeredLabels) {
+    return registeredLabels;
   }
 
-  const directMatch = entityDataGridLabelResources[culture as keyof typeof entityDataGridLabelResources];
-  if (directMatch) {
-    return directMatch;
+  if (typeof culture === "string" && culture in entityDataGridLabelResources) {
+    return entityDataGridLabelResources[culture as keyof typeof entityDataGridLabelResources];
   }
 
-  const normalizedCulture = culture.trim().toLowerCase();
-  const fallbackCulture = (Object.keys(entityDataGridLabelResources) as EntityDataGridCulture[]).find((value) =>
-    value.toLowerCase().startsWith(normalizedCulture)
-  );
-
-  return fallbackCulture ? entityDataGridLabelResources[fallbackCulture] : entityDataGridEnUsLabels;
+  return entityDataGridLabelResources[defaultEntityDataGridCulture];
 }
 
 export type { EntityDataGridCulture, EntityDataGridLabels } from "./types";
-export { entityDataGridEnUsLabels, entityDataGridRuRuLabels };

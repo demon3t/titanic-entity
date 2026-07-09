@@ -13,6 +13,7 @@ import {
   type ESQJsonModel
 } from "@titanic-entity/entity-api";
 import { getCellDisplayValue, toEntityValues } from "@titanic-entity/entity-core";
+import { Titanic } from "@titanic-entity/entity-base";
 import { defaultEntityDataGridCulture, getEntityDataGridLabels } from "../../resources/EntityDataGrid";
 import { EntityDataGridRowContextMenu } from "../context-menus/EntityDataGridRowContextMenu";
 import { RandomGifLoader } from "../feedback/RandomGifLoader";
@@ -1362,12 +1363,13 @@ function mergeGridSettings(
   settings: Partial<EntityDataGridSettings> | undefined,
   labels: EntityDataGridProps["labels"]
 ): ResolvedEntityDataGridSettings {
-  const culture = settings?.culture ?? detectEntityDataGridCulture();
+  const culture = settings?.locale ?? settings?.culture ?? detectEntityDataGridCulture();
 
   return {
     ...defaultEntityDataGridSettings,
     ...settings,
     culture,
+    locale: culture,
     labels: {
       ...getEntityDataGridLabels(culture),
       ...settings?.labels,
@@ -1539,23 +1541,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 }
 
 function detectEntityDataGridCulture(): string {
-  if (typeof document !== "undefined") {
-    const documentCulture = document.documentElement.lang?.trim();
-
-    if (documentCulture) {
-      return documentCulture;
-    }
-  }
-
-  if (typeof navigator !== "undefined") {
-    const browserCulture = navigator.language?.trim();
-
-    if (browserCulture) {
-      return browserCulture;
-    }
-  }
-
-  return defaultEntityDataGridCulture;
+  return Titanic.Localization.getCurrentLocale() || defaultEntityDataGridCulture;
 }
 
 function toGridColumn<TRow>(
