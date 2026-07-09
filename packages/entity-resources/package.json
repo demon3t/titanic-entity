@@ -20,6 +20,38 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./assets": {
+      "types": "./dist/assets/index.d.ts",
+      "import": "./dist/assets/index.js"
+    },
+    "./assets/icons": {
+      "types": "./dist/assets/icons.d.ts",
+      "import": "./dist/assets/icons.js"
+    },
+    "./assets/icons/*": {
+      "types": "./dist/assets/icons/*/index.d.ts",
+      "import": "./dist/assets/icons/*/index.js"
+    },
+    "./assets/media": {
+      "types": "./dist/assets/media.d.ts",
+      "import": "./dist/assets/media.js"
+    },
+    "./icons": {
+      "types": "./dist/icons.d.ts",
+      "import": "./dist/icons.js"
+    },
+    "./media": {
+      "types": "./dist/media.d.ts",
+      "import": "./dist/media.js"
+    },
+    "./model": {
+      "types": "./dist/model/index.d.ts",
+      "import": "./dist/model/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js"
+    },
     "./*": {
       "types": "./dist/*.d.ts",
       "import": "./dist/*.js"

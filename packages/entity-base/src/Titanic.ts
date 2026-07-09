@@ -11,35 +11,57 @@ import {
   resolveUiPackageEnumSchema
 } from "./internal/enumSchemas";
 
+/** Describes an icon resource that can be registered in the Titanic icon registry. */
 export interface TitanicIconResource {
+  /** SVG viewBox used when the icon is rendered. */
   viewBox: string;
+  /** Shape descriptors used by the renderer package. */
   shapes: readonly unknown[];
+  /** Optional icon variants keyed by theme name. */
+  themes?: Readonly<Record<string, TitanicIconResource>>;
 }
 
+/** Nested collection of icon resources grouped by public resource path. */
 export type TitanicIconTree = {
   readonly [key: string]: TitanicIconResource | TitanicIconTree;
 };
 
+/** Module exports shape accepted by the Titanic icon registry. */
 export type TitanicIconModuleExports = UiPackageModuleExports & {
   icons?: TitanicIconTree;
   entityResourceIcons?: TitanicIconTree;
 };
 
+/** Options used when icon resources are registered. */
 export interface TitanicIconRegistrationOptions {
+  /** Optional module name added as an additional lookup prefix. */
   moduleName?: string;
+  /** Optional package name added as an additional lookup prefix. */
   packageName?: string;
 }
 
+/** Options used when enum resources are registered. */
 export interface TitanicEnumRegistrationOptions {
+  /** Optional package name added as an additional lookup prefix. */
   packageName?: string;
 }
 
+/** Options used when resolving an icon resource. */
+export interface TitanicIconResolveOptions {
+  /** Optional theme variant key. Icons usually inherit theme colors from CSS. */
+  theme?: string;
+}
+
+/** Registers and resolves icon resources contributed by Titanic packages. */
 export class TitanicIconRegistry {
   [key: string]: unknown;
 
+  /** Flat icon lookup table keyed by icon path and aliases. */
   readonly all: Record<string, TitanicIconResource> = {};
+  /** Icon lookup tree grouped by public package resource names. */
   readonly groups: Record<string, TitanicIconTree> = {};
 
+  /** Registers an icon group under the provided group name. */
   register(
     groupName: string,
     icons: TitanicIconTree,
@@ -57,6 +79,7 @@ export class TitanicIconRegistry {
     flattenIconTree(this.all, nextGroup, [normalizedGroupName], options);
   }
 
+  /** Registers all icon exports exposed by a package module schema. */
   registerModule(
     moduleName: string,
     moduleExports: UiPackageModuleExports,
@@ -83,14 +106,30 @@ export class TitanicIconRegistry {
     });
   }
 
-  get(path: string): TitanicIconResource | undefined {
-    return this.all[path] ?? resolveIconPath(this.groups, path);
+  /** Gets an icon by path and resolves a themed variant when one is available. */
+  get(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource | undefined {
+    return resolveTitanicIconResource(
+      this.all[path] ?? resolveIconPath(this.groups, path),
+      options
+    );
   }
 
+  /** Resolves an icon by path and returns the base icon when the theme has no variant. */
+  resolve(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource | undefined {
+    return this.get(path, options);
+  }
+
+  /** Gets a registered icon group by name. */
+  group<TTree extends TitanicIconTree = TitanicIconTree>(groupName: string): TTree | undefined {
+    return this.groups[normalizeIconPathPart(groupName)] as TTree | undefined;
+  }
+
+  /** Returns true when an icon exists for the provided path. */
   has(path: string): boolean {
     return Boolean(this.get(path));
   }
 
+  /** Removes all registered icon groups and lookup aliases. */
   clear(): void {
     Object.keys(this.groups).forEach((key) => {
       delete this.groups[key];
@@ -113,11 +152,14 @@ export class TitanicIconRegistry {
   }
 }
 
+/** Registers and resolves enum resources contributed by Titanic packages. */
 export class TitanicEnumRegistry {
   [key: string]: unknown;
 
+  /** Flat enum lookup table keyed by enum path and aliases. */
   readonly all: Record<string, UiPackageEnumValues> = {};
 
+  /** Registers enum values under the provided enum name. */
   register<TValues extends UiPackageEnumValues = UiPackageEnumValues>(
     name: string,
     values: TValues,
@@ -131,6 +173,7 @@ export class TitanicEnumRegistry {
     return values;
   }
 
+  /** Resolves and registers enum values from an enum schema. */
   registerSchema(schema: UiPackageEnumSchema): UiPackageEnumValues {
     const values = resolveUiPackageEnumSchema(schema, (key) => this.all[key]);
 
@@ -142,16 +185,19 @@ export class TitanicEnumRegistry {
     return values;
   }
 
+  /** Gets enum values by name or alias. */
   get<TValues extends UiPackageEnumValues = UiPackageEnumValues>(
     name: string
   ): TValues | undefined {
     return this.all[name] as TValues | undefined;
   }
 
+  /** Returns true when enum values are registered for the provided name. */
   has(name: string): boolean {
     return Boolean(this.get(name));
   }
 
+  /** Removes all registered enum values and lookup aliases. */
   clear(): void {
     Object.keys(this.all).forEach((key) => {
       delete this.all[key];
@@ -160,7 +206,9 @@ export class TitanicEnumRegistry {
   }
 }
 
+/** Utility methods for package schema definitions. */
 export class TitanicPackageTools {
+  /** Converts a TypeScript enum-like object to serializable enum values. */
   toEnumValues(values: Record<string, string | number>): UiPackageEnumValues {
     return Object.fromEntries(
       Object.entries(values).filter(([key]) => Number.isNaN(Number(key)))
@@ -168,11 +216,18 @@ export class TitanicPackageTools {
   }
 }
 
+/** Public facade for package resource registration and shared Titanic helpers. */
 export class Titanic {
+  /** Package schema helper methods. */
   static readonly Package = new TitanicPackageTools();
-  static readonly icons = new TitanicIconRegistry();
+  /** Shared icon registry exposed to packages and consumers. */
+  static readonly Icons = new TitanicIconRegistry();
+  /** @deprecated Use Titanic.Icons instead. */
+  static readonly icons = Titanic.Icons;
+  /** Shared enum registry exposed to packages and consumers. */
   static readonly enums = new TitanicEnumRegistry();
 
+  /** Registers all schemas exposed by a package descriptor. */
   static registerPackage(packageDescriptor: UiPackageDescriptor): void {
     packageDescriptor.schemas?.forEach((schema) => {
       this.registerSchema({
@@ -182,13 +237,15 @@ export class Titanic {
     });
   }
 
+  /** Registers all schemas exposed by package descriptors. */
   static registerPackages(packageDescriptors: readonly UiPackageDescriptor[]): void {
     packageDescriptors.forEach((packageDescriptor) => this.registerPackage(packageDescriptor));
   }
 
+  /** Registers a single package schema in the appropriate Titanic registry. */
   static registerSchema(schema: UiPackageSchema): void {
     if (isIconModuleSchema(schema) && schema.exports) {
-      this.icons.registerModule(schema.name, schema.exports, {
+      this.Icons.registerModule(schema.name, schema.exports, {
         packageName: schema.packageName
       });
     }
@@ -294,6 +351,17 @@ function resolveIconPath(
   }
 
   return isIconResource(currentValue) ? currentValue : undefined;
+}
+
+function resolveTitanicIconResource(
+  icon: TitanicIconResource | undefined,
+  options: TitanicIconResolveOptions
+): TitanicIconResource | undefined {
+  if (!icon || !options.theme) {
+    return icon;
+  }
+
+  return icon.themes?.[options.theme] ?? icon;
 }
 
 function toIconGroupName(exportName: string): string {

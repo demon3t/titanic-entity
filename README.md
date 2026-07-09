@@ -194,6 +194,21 @@ const personalClient = useEntityApiClient("personalData");
 
 Root import `@titanic-entity/entity-react` остается совместимым фасадом для приложений, но глубокие импорты в файлы вроде `components/grid/EntityDataGrid` или `grids/column-settings/model/*` считаются внутренними и не являются стабильным API.
 
+## Ресурсы и иконки
+
+Ресурсы живут в `@titanic-entity/entity-resources`. Для иконок используйте явный entrypoint:
+
+```ts
+import {
+  entityCommonIcons,
+  entityResourceIcons
+} from "@titanic-entity/entity-resources/icons";
+```
+
+Каждая иконка лежит в собственной папке с `index.ts` для runtime-кода и `icon.svg` для прямого просмотра. После регистрации `titanicEntityResourcesPackage` иконки можно получать через `Titanic.Icons.get("common.close")` или через группу `Titanic.Icons.group("common")?.close`.
+
+Темы по умолчанию применяются через CSS: большинство иконок использует `currentColor`, поэтому достаточно выдать нужный className элементу или его контейнеру. Для иконок с реальными тематическими вариантами можно использовать `themes` в ресурсе и получать вариант через `Titanic.Icons.get(path, { theme })` или prop `theme` у `ResourceSvgIcon`.
+
 ## Headless hooks
 
 Headless-слой отделяет состояние от представления:

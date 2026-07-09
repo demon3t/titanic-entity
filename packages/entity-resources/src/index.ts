@@ -2,14 +2,15 @@ import { definePackage } from "@titanic-entity/entity-base";
 import { entityResourceSchemas } from "./schemas";
 
 // Assets
-export * from "./assets/icons";
-export * from "./assets/media";
+export * from "./assets";
+export * from "./icons";
+export * from "./media";
 
 // Schemas
 export * from "./schemas";
 
 // Package
-export * from "./model/entityResourcePackageNames";
+export * from "./model";
 
 export const titanicEntityResourcesPackage = definePackage({
   name: "Titanic.EntityResources",
