@@ -9,7 +9,7 @@ import {
   type ESQOrderJsonModel
 } from "@titanic-entity/entity-api";
 import { getSaveValues, toEntityValues, type EntityColumnSchema, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
-import { entityCommonIcons } from "@titanic-entity/entity-resources";
+import { dragHandleIcon } from "@titanic-entity/entity-resources";
 import { EntityForm } from "../EntityForm";
 import { EntityDataGrid } from "../grid/EntityDataGrid";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
@@ -547,7 +547,7 @@ function clampDesignerGridSpan(value: number): number {
 }
 
 function RecordDesignerDragIcon() {
-  return <ResourceSvgIcon className="titanic-record-form-designer__drag-icon" icon={entityCommonIcons.dragHandle} />;
+  return <ResourceSvgIcon className="titanic-record-form-designer__drag-icon" icon={dragHandleIcon} />;
 }
 
 function normalizeColumns(columns: readonly EntityColumnSchema[]): EntityColumnSchema[] {

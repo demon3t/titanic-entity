@@ -100,9 +100,9 @@ export interface DefineIconResourcesOptions<
     UiPackageIconModuleSchema<{ icons: TIcons } & UiPackageModuleExports>,
     "exports" | "kind" | "resourceType"
   > {
-  /** Icons to expose from the module. Use groupName to register them under a single group. */
+  /** Icons to expose from the module. Use groupName only when a grouped public path is needed. */
   icons: TIcons;
-  /** Additional icon-related exports, such as named icon groups for direct imports. */
+  /** Additional icon-related exports, such as named icons for direct imports. */
   exports?: UiPackageModuleExports;
 }
 
@@ -117,7 +117,7 @@ export interface DefineIconPackageOptions<
   moduleName?: string;
   /** Additional schemas to include in the package descriptor. */
   schemas?: readonly UiPackageSchema[];
-  /** Additional icon-related exports, such as named icon groups for direct imports. */
+  /** Additional icon-related exports, such as named icons for direct imports. */
   exports?: UiPackageModuleExports;
 }
 

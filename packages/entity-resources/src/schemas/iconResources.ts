@@ -1,13 +1,5 @@
 import { defineIconResources } from "@titanic-entity/entity-base";
-import {
-  entityCommonIcons,
-  entityCultureIcons,
-  entityDataGridRowActionIcons,
-  entityDataGridSettingsIcons,
-  entityDateInputIcons,
-  entityResourceIcons,
-  entitySiteShellIcons
-} from "../assets/icons";
+import { entityResourceIcons } from "../assets/icons";
 import { entityResourceModuleNames } from "../model/entityResourcePackageNames";
 
 /**
@@ -17,13 +9,7 @@ export const entityResourceIconModuleSchema = defineIconResources({
   name: entityResourceModuleNames.Icons,
   icons: entityResourceIcons,
   exports: {
-    entityCommonIcons,
-    entityCultureIcons,
-    entityDataGridRowActionIcons,
-    entityDataGridSettingsIcons,
-    entityDateInputIcons,
-    entityResourceIcons,
-    entitySiteShellIcons
+    entityResourceIcons
   }
 });
 

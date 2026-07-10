@@ -20,9 +20,12 @@ import { RandomGifLoader } from "../feedback/RandomGifLoader";
 import { SiteIconDropdown } from "../site/SiteIconDropdown";
 import { createEntityDataGridColumnSettingsPackage } from "../../grids";
 import {
-  entityCommonIcons,
-  entityDataGridRowActionIcons,
-  entityDataGridSettingsIcons
+  closeIcon,
+  columnsIcon,
+  copyIcon,
+  dataGridRowActionDeleteIcon,
+  dataGridRowActionOpenIcon,
+  totalsIcon
 } from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 import type {
@@ -729,7 +732,7 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
       nextActions.push({
         key: "open",
         label: gridSettings.labels.openRecord,
-        icon: entityDataGridRowActionIcons.open,
+        icon: dataGridRowActionOpenIcon,
         onClick: ({ row }) => {
           if (onRowDoubleClick) {
             onRowDoubleClick(row);
@@ -744,7 +747,7 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
     nextActions.push({
       key: "copy",
       label: gridSettings.labels.copyRecord,
-      icon: entityDataGridRowActionIcons.copy,
+      icon: copyIcon,
       onClick: async ({ row }) => {
         await writeTextToClipboard(serializeGridRow(row));
       }
@@ -755,7 +758,7 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
         key: "delete",
         label: gridSettings.labels.deleteRecord,
         danger: true,
-        icon: entityDataGridRowActionIcons.delete,
+        icon: dataGridRowActionDeleteIcon,
         hidden: ({ row, rowIndex }) => getGridRowPrimaryValue(row, rowIndex, getRowKey, resolvedEntity.primaryColumn) == null,
         onClick: async ({ row, rowIndex }) => {
           const rowPrimaryValue = getGridRowPrimaryValue(row, rowIndex, getRowKey, resolvedEntity.primaryColumn);
@@ -869,12 +872,12 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
             label={gridSettings.labels.gridSettings}
             options={[
               {
-                icon: entityDataGridSettingsIcons.columns,
+                icon: columnsIcon,
                 label: gridSettings.labels.configureColumns,
                 value: "columns"
               },
               {
-                icon: entityDataGridSettingsIcons.totals,
+                icon: totalsIcon,
                 label: gridSettings.labels.configureTotals,
                 value: "totals"
               }
@@ -2502,5 +2505,5 @@ function normalizeColumnPath(value: unknown): string | undefined {
 }
 
 function CloseIcon() {
-  return <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon={entityCommonIcons.close} />;
+  return <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon={closeIcon} />;
 }

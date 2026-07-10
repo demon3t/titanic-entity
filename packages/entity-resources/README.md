@@ -6,8 +6,8 @@ Shared resource package for Titanic.Entity UI packages. This package ships reusa
 
 ```ts
 import {
+  closeIcon,
   entityResourceIcons,
-  entityCommonIcons,
   type ResourceSvgIconResource
 } from "@titanic-entity/entity-resources/icons";
 
@@ -30,22 +30,20 @@ This package intentionally has no localization entrypoint and does not ship loca
 Each icon lives in its own folder:
 
 ```text
-src/assets/icons/common/close/
+src/assets/icons/close/
 - index.ts
 - icon.svg
 ```
 
 `index.ts` exports the serializable runtime resource used by registries and renderers. `icon.svg` contains the same vector data for review without opening generated code.
 
-Grouped icon maps are exported from `src/assets/icons/index.ts`:
+The flat icon map and individual icons are exported from `src/assets/icons/index.ts`:
 
-- `entityCommonIcons`
-- `entityDateInputIcons`
-- `entityDataGridSettingsIcons`
-- `entityDataGridRowActionIcons`
-- `entitySiteShellIcons`
-- `entityCultureIcons`
 - `entityResourceIcons`
+- `closeIcon`
+- `calendarIcon`
+- `ruRuIcon`
+- `enUsIcon`
 
 ## Titanic.Icons
 
@@ -57,11 +55,11 @@ import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources"
 
 Titanic.registerPackage(titanicEntityResourcesPackage);
 
-const closeIcon = Titanic.Icons.get("common.close");
-const sameIcon = Titanic.Icons.group("common")?.close;
+const closeIcon = Titanic.Icons.get("close");
+const sameIcon = Titanic.Icons.close;
 ```
 
-At runtime, registered groups are also exposed as properties on `Titanic.Icons`, for example `Titanic.Icons.common`.
+At runtime, registered icons are also exposed as properties on `Titanic.Icons`, for example `Titanic.Icons.close`.
 
 ## Reusable Icon Packages
 
@@ -73,12 +71,12 @@ For direct runtime registration:
 import { Titanic } from "@titanic-entity/entity-base";
 import { appIcons } from "./icons";
 
-Titanic.Icons.registerGroup("app", appIcons, {
+Titanic.Icons.registerIcons(appIcons, {
   packageName: "Acme.App"
 });
 
-const saveIcon = Titanic.Icons.get("app.save");
-const sameIcon = Titanic.Icons.group("app")?.save;
+const saveIcon = Titanic.Icons.get("save");
+const sameIcon = Titanic.Icons.save;
 ```
 
 For a package descriptor that can be reused across apps:
@@ -89,7 +87,6 @@ import { appIcons } from "./icons";
 
 export const acmeAppIconsPackage = defineIconPackage({
   name: "Acme.App.Resources",
-  groupName: "app",
   icons: appIcons
 });
 ```
@@ -105,27 +102,26 @@ export const acmeAppPackage = definePackage({
   schemas: [
     defineIconResources({
       name: "Acme.App.Icons",
-      groupName: "app",
       icons: appIcons
     })
   ]
 });
 ```
 
-When `groupName` is omitted, every top-level key in `icons` is registered as its own `Titanic.Icons` group.
+When `groupName` is omitted, every top-level key in `icons` is registered directly on `Titanic.Icons`. Use `groupName` only when a package intentionally wants a grouped public path such as `Titanic.Icons.get("app.save")`.
 
 ## Themes
 
 Most icons use `currentColor`; theme classes should set text/icon color on the host element and the SVG will update automatically:
 
 ```tsx
-<ResourceSvgIcon className="app-theme-dark__icon" icon={entityCommonIcons.close} />
+<ResourceSvgIcon className="app-theme-dark__icon" icon={closeIcon} />
 ```
 
 When an icon needs a different vector shape per theme, define `themes` on the icon resource and resolve it explicitly:
 
 ```ts
-const themedIcon = Titanic.Icons.get("siteShell.themeLight", { theme: "dark" });
+const themedIcon = Titanic.Icons.get("themeLight", { theme: "dark" });
 ```
 
 React renderers can also pass the optional `theme` prop to `ResourceSvgIcon`.

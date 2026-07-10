@@ -73,7 +73,7 @@ Schema - единица регистрации внутри пакета. Сей
 Иконки лежат по одной в папке. В каждой папке есть `index.ts` с serializable resource descriptor и `icon.svg` с тем же вектором для прямого просмотра:
 
 ```text
-src/assets/icons/common/close/
+src/assets/icons/close/
   index.ts
   icon.svg
 ```
@@ -83,11 +83,11 @@ src/assets/icons/common/close/
 ```ts
 Titanic.registerPackage(titanicEntityResourcesPackage);
 
-const closeIcon = Titanic.Icons.get("common.close");
-const sameIcon = Titanic.Icons.group("common")?.close;
+const closeIcon = Titanic.Icons.get("close");
+const sameIcon = Titanic.Icons.close;
 ```
 
-В runtime зарегистрированные группы также доступны как динамические свойства самого registry, например `Titanic.Icons.common`. Для TypeScript-кода предпочтительнее `group(...)`, потому что имя группы остаётся явным.
+В runtime зарегистрированные иконки также доступны как динамические свойства самого registry, например `Titanic.Icons.close`.
 
 Основной сценарий темизации иконок - CSS-класс темы и `currentColor`. Если конкретной иконке нужен другой vector resource для темы, она может объявить `themes`, а потребитель может получить вариант через `Titanic.Icons.get("path.to.icon", { theme })` или `ResourceSvgIcon` с prop `theme`.
 

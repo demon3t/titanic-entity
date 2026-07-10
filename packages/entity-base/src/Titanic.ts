@@ -35,7 +35,7 @@ export type TitanicIconModuleExports = UiPackageModuleExports & {
 
 /** Options used when icon resources are registered. */
 export interface TitanicIconRegistrationOptions {
-  /** Optional explicit group name for icon module exports named icons. */
+  /** Optional group name used when icons should be registered under a grouped public path. */
   groupName?: string;
   /** Optional module name added as an additional lookup prefix. */
   moduleName?: string;
@@ -123,6 +123,7 @@ export class TitanicIconRegistry {
   readonly all: Record<string, TitanicIconResource> = {};
   /** Icon lookup tree grouped by public package resource names. */
   readonly groups: Record<string, TitanicIconTree> = {};
+  private readonly directIconPropertyNames = new Set<string>();
 
   /** Registers an icon group under the provided group name. */
   register<TIcons extends TitanicIconTree = TitanicIconTree>(
@@ -151,6 +152,21 @@ export class TitanicIconRegistry {
     options: TitanicIconRegistrationOptions = {}
   ): TIcons {
     return this.register(groupName, icons, options);
+  }
+
+  /** Registers icons directly by their public names without adding a group prefix. */
+  registerIcons<TIcons extends TitanicIconTree = TitanicIconTree>(
+    icons: TIcons,
+    options: TitanicIconRegistrationOptions = {}
+  ): TIcons {
+    if (!isIconTree(icons)) {
+      return icons;
+    }
+
+    flattenIconTree(this.all, icons, [], options);
+    attachIconTreeProperties(this, icons, this.directIconPropertyNames);
+
+    return icons;
   }
 
   /** Registers every top-level key of a grouped icon tree as an icon group. */
@@ -187,7 +203,7 @@ export class TitanicIconRegistry {
         if (registrationOptions.groupName) {
           this.register(registrationOptions.groupName, exportedValue, registrationOptions);
         } else {
-          this.registerGroups(exportedValue, registrationOptions);
+          this.registerIcons(exportedValue, registrationOptions);
         }
         return;
       }
@@ -225,17 +241,20 @@ export class TitanicIconRegistry {
     return Boolean(this.get(path));
   }
 
-  /** Removes all registered icon groups and lookup aliases. */
+  /** Removes all registered icons, groups and lookup aliases. */
   clear(): void {
     Object.keys(this.groups).forEach((key) => {
       delete this.groups[key];
       delete this[key];
     });
+    this.directIconPropertyNames.forEach((key) => {
+      delete this[key];
+    });
+    this.directIconPropertyNames.clear();
     Object.keys(this.all).forEach((key) => {
       delete this.all[key];
     });
   }
-
 }
 
 /** Registers and resolves localization resources contributed by Titanic packages. */
@@ -736,6 +755,21 @@ function flattenIconTree(
     }
 
     flattenIconTree(target, value, nextPath, options);
+  });
+}
+
+function attachIconTreeProperties(
+  registry: TitanicIconRegistry,
+  icons: TitanicIconTree,
+  propertyNames: Set<string>
+): void {
+  Object.entries(icons).forEach(([key, value]) => {
+    if (key in registry && !propertyNames.has(key)) {
+      return;
+    }
+
+    propertyNames.add(key);
+    registry[key] = value;
   });
 }
 
