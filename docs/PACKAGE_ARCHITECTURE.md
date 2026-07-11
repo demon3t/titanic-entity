@@ -119,7 +119,7 @@ Titanic.Icons.overrideDefault(appUnknownIcon);
 | `@titanic-entity/entity-react/system` | Системные helper-модели для React UI |
 | `@titanic-entity/entity-react/schemas` и `/model` | Package schemas и registry names |
 
-Внутренними считаются прямые импорты в файлы реализации, например `components/grid/EntityDataGrid`, `components/fields/EntityField`, `grids/column-settings/model/*` и `templates/entity-edit/models/*`. Их можно менять при внутреннем рефакторинге без отдельной гарантии совместимости. Для публичных методов и hooks TSDoc-комментарии пишутся на английском.
+Внутренними считаются прямые импорты в файлы реализации, например `grids/EntityDataGrid`, `fields/EntityField`, `grids/column-settings/model/*` и `templates/entity-edit/models/*`. Их можно менять при внутреннем рефакторинге без отдельной гарантии совместимости. Для публичных методов и hooks TSDoc-комментарии пишутся на английском.
 
 Headless-слой содержит логику состояния, которую можно переиспользовать без готового visual component:
 
@@ -197,25 +197,58 @@ const query = entityQuery("invoice")
 
 `packages/entity-ui/src/index.ts` экспортирует `titanicEntityUiPackage`. Он регистрирует набор UI-элементов библиотеки и зависит от пакетов `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` и `Titanic.EntityReact`.
 
-Файлы внутри `packages/entity-ui/src` организованы по типам элементов: `components`, `fields`, `grids`, `templates`. Runtime может жить в соседнем пакете, например в `packages/entity-react/src/grids`, а `packages/entity-ui/src/grids` регистрирует его в пакетных schema-дескрипторах.
+Файлы UI-объектов внутри `packages/entity-ui/src` лежат сразу на верхнем уровне: `form`, `field`, `dataGrid`, `editPage` и так далее. Runtime может жить в соседнем пакете, например в `packages/entity-react/src/grids`, а `packages/entity-ui/src/dataGrid` регистрирует его в пакетных schema-дескрипторах.
+
+Каждый UI-объект лежит в отдельной папке:
+
+```text
+dataGrid/
+  icons/
+    index.ts
+  resources/
+    index.ts
+  index.ts
+  DataGrid.ts
+```
+
+Вложенные UI-объекты, например row context menu для `dataGrid`, выносятся в собственную папку с такой же структурой. Групповые файлы вроде `components.ts`, `fields.ts`, `grids.ts`, `templates.ts` и `schemas.ts` остаются агрегаторами и импортируют схемы из папок конкретных UI-объектов.
+
+Стабильные entrypoints для schema-пакета:
+
+| entrypoint | Назначение |
+| --- | --- |
+| `@titanic-entity/entity-ui` | Root-фасад, descriptor `titanicEntityUiPackage` и совместимые re-export'ы |
+| `@titanic-entity/entity-ui/components` | Агрегированный набор component schemas |
+| `@titanic-entity/entity-ui/fields` | Агрегированный набор field schemas |
+| `@titanic-entity/entity-ui/grids` | Агрегированный набор grid schemas, настройки и публичные grid-типы |
+| `@titanic-entity/entity-ui/templates` | Агрегированный набор template schemas |
+| `@titanic-entity/entity-ui/<uiObject>` | Схемы конкретного UI-объекта, например `form`, `dataGrid`, `editPage` |
+| `@titanic-entity/entity-ui/<uiObject>/icons` | Иконки конкретного UI-объекта |
+| `@titanic-entity/entity-ui/<uiObject>/resources` | Resources конкретного UI-объекта |
+| `@titanic-entity/entity-ui/schemas` | Агрегированный набор схем `entityUiSchemas` |
+| `@titanic-entity/entity-ui/styles.css` | Совместимый style entrypoint, который пробрасывает базовые стили из `entity-react` |
+
+`entity-ui` не владеет runtime CSS для компонентов. Базовые стили живут в `packages/entity-react/src/styles`, а `entity-ui/styles.css` остается тонким публичным входом для совместимого подключения.
 
 ### Template
 
-- `EntityEditPage`
+- `editPage`
 
 ### Field
 
-- `EntityField`
-- `NumberInput`
-- `SelectEntity`
+- `dateInput`
+- `field`
+- `jsonEditor`
+- `numberInput`
+- `lookupInput`
 
 ### Grid
 
-- `EntityDataGrid`
-- `EntityGrid`
-- `EntityOrmList`
-- `EntityRegistry`
-- `EntityTable`
+- `dataGrid`
+- `grid`
+- `ormList`
+- `registry`
+- `table`
 
 ### Enum
 
@@ -346,6 +379,8 @@ Resources/
 - `ResourceSvgIconResource`
 - `ResourceSvgIconMap`
 - `GifCollectionResource`
+
+Расширяемые и прикладные коллекции иконок нужно выносить в отдельные ресурсные пакеты, чтобы не перегружать базовый `@titanic-entity/entity-resources` и подключать коллекции выборочно. Целевая модель: отдельный workspace/npm-пакет, например `@titanic-entity/entity-icons`, зависит только от `@titanic-entity/entity-base`, экспортирует typed icon maps и `defineIconModuleSchema` descriptor, регистрируется через обычную регистрацию пакетов и работает с lookup в `Titanic.icons` по коротким и package-qualified путям. Базовый `entity-resources` остается местом для системных UI-иконок, флагов культур и GIF/media resources.
 
 ## EntityDataGrid как общий грид
 

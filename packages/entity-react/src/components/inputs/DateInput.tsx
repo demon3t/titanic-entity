@@ -1,5 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
+import { titanicCommonIcons, titanicDateInputIcons } from "../icons/titanicIcons";
+import { InputFieldFrame } from "./InputFieldFrame";
+import type { BaseInputFieldProps } from "./models/BaseInputField";
 
 export interface DateInputLabels {
   clear?: string;
@@ -14,12 +17,10 @@ export interface DateInputLabels {
   year?: string;
 }
 
-export interface DateInputProps {
+export interface DateInputProps extends BaseInputFieldProps<string | null, "date"> {
   id?: string;
   name?: string;
-  value?: string | null;
   disabled?: boolean;
-  required?: boolean;
   className?: string;
   locale?: string;
   labels?: DateInputLabels;
@@ -59,6 +60,10 @@ export function DateInput({
   labels,
   placeholder,
   rootClassName = "",
+  editable = true,
+  title,
+  validationError,
+  visible = true,
   onChange
 }: DateInputProps) {
   const fallbackId = useId();
@@ -80,6 +85,9 @@ export function DateInput({
   const parsedDraftDate = parseManualDate(inputDraft, currentLocale);
   const draftHasText = inputDraft.trim().length > 0;
   const draftInvalid = manualDraftActive && draftHasText && !parsedDraftDate;
+  const readOnly = disabled || !editable;
+  const invalid = draftInvalid || Boolean(validationError);
+  const errorId = validationError ? `${resolvedId}-error` : undefined;
   const calendarDays = useMemo(() => createCalendarDays(viewDate), [viewDate]);
   const monthOptions = useMemo(() => createMonthOptions(currentLocale), [currentLocale]);
   const yearRangeStart = useMemo(() => getYearRangeStart(viewDate.getFullYear()), [viewDate]);
@@ -92,8 +100,8 @@ export function DateInput({
   const rootClasses = ["titanic-date", rootClassName].filter(Boolean).join(" ");
   const controlClasses = [
     "titanic-date__control",
-    draftInvalid ? "titanic-date__control_invalid" : "",
-    disabled ? "titanic-date__control_disabled" : "",
+    invalid ? "titanic-date__control_invalid" : "",
+    readOnly ? "titanic-date__control_disabled" : "",
     className
   ].filter(Boolean).join(" ");
 
@@ -243,16 +251,23 @@ export function DateInput({
     }
   };
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <div className={rootClasses} ref={rootRef}>
+    <InputFieldFrame
+      control={(
+        <div className={rootClasses} ref={rootRef}>
       <input id={`${resolvedId}-value`} name={resolvedName} readOnly type="hidden" value={normalizedValue} />
       <div className={controlClasses}>
         <input
+          aria-errormessage={errorId}
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-invalid={draftInvalid}
+          aria-invalid={invalid}
           className="titanic-date__input"
-          disabled={disabled}
+          disabled={readOnly}
           id={resolvedId}
           placeholder={placeholder || resolvedLabels.placeholder}
           value={inputDraft}
@@ -266,12 +281,12 @@ export function DateInput({
           aria-haspopup="dialog"
           aria-label={placeholder || resolvedLabels.placeholder}
           className="titanic-date__calendar-button"
-          disabled={disabled}
+          disabled={readOnly}
           type="button"
           onClick={() => setOpen((currentValue) => !currentValue)}
         >
           <span className="titanic-date__icon" aria-hidden="true">
-            <ResourceSvgIcon icon="calendar" />
+            <ResourceSvgIcon icon={titanicDateInputIcons.titanicCalendar} />
           </span>
         </button>
       </div>
@@ -285,7 +300,7 @@ export function DateInput({
               type="button"
               onClick={() => changeVisiblePeriod(-1)}
             >
-              <ResourceSvgIcon icon="chevronLeft" />
+              <ResourceSvgIcon icon={titanicCommonIcons.titanicChevronLeft} />
             </button>
             <div className="titanic-date__period" id={`${resolvedId}-month`}>
               {calendarMode === "day" ? (
@@ -327,7 +342,7 @@ export function DateInput({
               type="button"
               onClick={() => changeVisiblePeriod(1)}
             >
-              <ResourceSvgIcon icon="chevronRight" />
+              <ResourceSvgIcon icon={titanicCommonIcons.titanicChevronRight} />
             </button>
           </div>
 
@@ -412,7 +427,14 @@ export function DateInput({
           </div>
         </div>
       ) : null}
-    </div>
+        </div>
+      )}
+      errorId={errorId}
+      htmlFor={resolvedId}
+      required={required}
+      title={title}
+      validationError={validationError}
+    />
   );
 }
 

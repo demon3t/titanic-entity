@@ -18,7 +18,7 @@ export const entityReactComponentNames = {
   PackageSiteShell: "PackageSiteShell",
   RandomGifLoader: "RandomGifLoader",
   ResourceSvgIcon: "ResourceSvgIcon",
-  SelectEntity: "SelectEntity",
+  LookupInput: "LookupInput",
   SiteCollapsiblePanel: "SiteCollapsiblePanel",
   SiteIconButton: "SiteIconButton",
   SiteIconDropdown: "SiteIconDropdown",
@@ -35,7 +35,7 @@ export const entityReactFieldNames = {
   DateInput: entityReactComponentNames.DateInput,
   EntityJsonEditor: entityReactComponentNames.EntityJsonEditor,
   NumberInput: entityReactComponentNames.NumberInput,
-  SelectEntity: entityReactComponentNames.SelectEntity
+  LookupInput: entityReactComponentNames.LookupInput
 } as const;
 
 export const entityReactGridNames = {

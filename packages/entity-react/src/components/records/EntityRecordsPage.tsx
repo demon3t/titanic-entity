@@ -12,6 +12,7 @@ import { getSaveValues, toEntityValues, type EntityColumnSchema, type EntitySche
 import { EntityForm } from "../EntityForm";
 import { EntityDataGrid } from "../grid/EntityDataGrid";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
+import { titanicCommonIcons } from "../icons/titanicIcons";
 import type { EntityDataGridColumn, EntityDataGridLabels } from "../../grids";
 
 export interface EntityRecordPageConfig {
@@ -445,7 +446,7 @@ function EntityRecordFormDesigner({
                       title={labels.moveField ?? "Move"}
                       type="button"
                     >
-                      <ResourceSvgIcon className="titanic-record-form-designer__drag-icon" icon="dragHandle" />
+                      <RecordDesignerDragIcon />
                     </button>
                     <div>
                       <strong>{column.label ?? column.path}</strong>
@@ -543,6 +544,10 @@ function startDesignerResize(
 
 function clampDesignerGridSpan(value: number): number {
   return Math.max(2, Math.min(24, Math.round(value)));
+}
+
+function RecordDesignerDragIcon() {
+  return <ResourceSvgIcon className="titanic-record-form-designer__drag-icon" icon={titanicCommonIcons.titanicDragHandle} />;
 }
 
 function normalizeColumns(columns: readonly EntityColumnSchema[]): EntityColumnSchema[] {

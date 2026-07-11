@@ -300,11 +300,15 @@ const { values, setValue, getValues } = useEntityFormState({
 
 Библиотека содержит базовый UI-пакет `titanicEntityUiPackage`. Он регистрирует UI-элементы как пакетные схемы и зависит от `titanicEntityReactUiPackage`:
 
-- `template` - шаблоны страниц, например `EntityEditPage`.
-- `field` - поля, например `EntityField`, `NumberInput`, `SelectEntity`.
-- `grid` - гриды и списки, например `EntityDataGrid`, `EntityTable`, `EntityOrmList`.
+- `template` - шаблоны страниц, например `editPage`.
+- `field` - поля, например `field`, `numberInput`, `lookupInput`.
+- `grid` - гриды и списки, например `dataGrid`, `table`, `ormList`.
 - `enum` - перечисления регистрируются в профильных пакетах, например `EntityFieldKind` в `Titanic.Entity`, `ConditionOperator` в `Titanic.EntityApi`.
 - `component` - общий fallback для компонентов, которые не относятся к более узкому типу.
+
+Для нового кода у `@titanic-entity/entity-ui` есть явные schema entrypoints: `/components`, `/fields`, `/grids`, `/templates` и `/schemas`. Конкретные UI-объекты доступны напрямую от корня пакета, например `/form`, `/field`, `/dataGrid` и `/editPage`. Root import остается совместимым фасадом, а runtime-стили компонентов принадлежат `entity-react` и доступны через `entity-react/styles.css` или совместимый `entity-ui/styles.css`.
+
+Внутри `entity-ui` схемы лежат рядом со своим UI-объектом прямо в `src`: например `form/Form.ts`, `field/Field.ts`, `dataGrid/DataGrid.ts`. У каждой папки есть `index.ts`, `icons/` и `resources/`; вложенные элементы вроде row/context menu оформляются отдельным UI-объектом с такой же структурой. Эти папки доступны через object-level subpath imports: `/<uiObject>`, `/<uiObject>/icons` и `/<uiObject>/resources`.
 
 Пакет-наследник может заменить или расширить любой элемент через `replaces` и `extension`.
 
