@@ -1,0 +1,299 @@
+name: Task triage
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  repository-projects: write
+
+env:
+  PROJECT_OWNER: demon3t
+  PROJECT_NUMBER: "5"
+  DEFAULT_PRIORITY: P2
+  DEFAULT_RELEASE: unscheduled
+
+jobs:
+  sync-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync labels and project fields
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PROJECT_TOKEN || github.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const projectOwner = process.env.PROJECT_OWNER;
+            const projectNumber = Number(process.env.PROJECT_NUMBER);
+            const defaultPriority = process.env.DEFAULT_PRIORITY;
+            const defaultRelease = process.env.DEFAULT_RELEASE;
+
+            const packageRules = [
+              { option: '@titanic-entity/entity-base', label: '@titanic-entity/entity-base', path: 'packages/entity-base/' },
+              { option: '@titanic-entity/entity-api', label: '@titanic-entity/entity-api', path: 'packages/entity-api/' },
+              { option: '@titanic-entity/entity-core', label: '@titanic-entity/entity-core', path: 'packages/entity-core/' },
+              { option: '@titanic-entity/entity-react', label: '@titanic-entity/entity-react', path: 'packages/entity-react/' },
+              { option: '@titanic-entity/entity-resources', label: '@titanic-entity/entity-resources', path: 'packages/entity-resources/' },
+              { option: '@titanic-entity/entity-ui', label: '@titanic-entity/entity-ui', path: 'packages/entity-ui/' },
+            ];
+
+            const typeLabels = new Map([
+              ['bug', 'type: bug'],
+              ['docs', 'type: docs'],
+              ['enhancement', 'type: enhancement'],
+              ['refactor', 'type: refactor'],
+              ['tech-debt', 'type: tech-debt'],
+            ]);
+
+            const legacyTypeLabels = new Map([
+              ['bug', 'bug'],
+              ['docs', 'documentation'],
+              ['enhancement', 'enhancement'],
+            ]);
+
+            const releaseLabels = new Map([
+              ['0.1.0-beta', 'release: 0.1.0-beta'],
+            ]);
+
+            const payload = context.payload;
+            const isPullRequest = Boolean(payload.pull_request);
+            const subject = isPullRequest ? payload.pull_request : payload.issue;
+            const issueNumber = subject.number;
+            const body = subject.body || '';
+            const title = subject.title || '';
+            const existingLabels = new Set((subject.labels || []).map((label) => label.name));
+
+            function escapeRegExp(value) {
+              return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function unique(values) {
+              return [...new Set(values.filter(Boolean))];
+            }
+
+            function formValue(markdown, heading) {
+              const pattern = new RegExp(`###\\s+${escapeRegExp(heading)}\\s*\\n+([\\s\\S]*?)(?=\\n###\\s+|$)`, 'i');
+              const match = markdown.match(pattern);
+              return match ? match[1].trim() : '';
+            }
+
+            function checked(markdown, label) {
+              const pattern = new RegExp(`^- \\[[xX]\\]\\s+${escapeRegExp(label)}\\s*$`, 'm');
+              return pattern.test(markdown);
+            }
+
+            function findPackageOptionFromIssue() {
+              const packageField = formValue(body, 'Package');
+              if (/cross-package/i.test(packageField)) return 'cross-package';
+              if (/workspace/i.test(packageField)) return 'workspace';
+              const match = packageRules.find((rule) => packageField.includes(rule.option));
+              return match ? match.option : undefined;
+            }
+
+            async function findPackageOptionsFromPullRequest() {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner,
+                repo,
+                pull_number: issueNumber,
+                per_page: 100,
+              });
+              const fromFiles = packageRules
+                .filter((rule) => files.some((file) => file.filename.startsWith(rule.path)))
+                .map((rule) => rule.option);
+              const fromChecklist = packageRules
+                .filter((rule) => checked(body, rule.label))
+                .map((rule) => rule.option);
+              return unique([...fromFiles, ...fromChecklist]);
+            }
+
+            function inferTypeOption() {
+              for (const [type, label] of typeLabels) {
+                if (existingLabels.has(label)) return type;
+              }
+              for (const [type, label] of legacyTypeLabels) {
+                if (existingLabels.has(label)) return type;
+              }
+              const source = isPullRequest ? title : `${formValue(body, 'Type')}\n${title}`;
+              const lower = source.toLowerCase();
+              for (const type of typeLabels.keys()) {
+                if (lower.includes(type)) return type;
+              }
+              if (/\bdocs?\b|documentation/i.test(source)) return 'docs';
+              if (/refactor/i.test(source)) return 'refactor';
+              return undefined;
+            }
+
+            function inferPriorityOption() {
+              const source = isPullRequest ? title : `${formValue(body, 'Priority')}\n${title}`;
+              const match = source.match(/\bP[0-3]\b/i);
+              return match ? match[0].toUpperCase() : defaultPriority;
+            }
+
+            function inferReleaseOption() {
+              const source = isPullRequest ? `${title}\n${body}` : `${formValue(body, 'Release')}\n${title}`;
+              if (/0\.1\.0-beta/i.test(source)) return '0.1.0-beta';
+              if (/\bnext\b/i.test(source)) return 'next';
+              if (/unscheduled/i.test(source)) return 'unscheduled';
+              return defaultRelease;
+            }
+
+            function blockerReason() {
+              if (isPullRequest) return '';
+              const value = formValue(body, 'Blockers / decisions');
+              if (!value || /^(none|no|n\/a)$/i.test(value.trim())) return '';
+              return value.trim();
+            }
+
+            let packageOptions = [];
+            if (isPullRequest) {
+              packageOptions = await findPackageOptionsFromPullRequest();
+              if (checked(body, 'cross-package / workspace')) {
+                packageOptions.push('cross-package');
+              }
+            } else {
+              const option = findPackageOptionFromIssue();
+              packageOptions = option ? [option] : [];
+            }
+
+            packageOptions = unique(packageOptions);
+            const packageLabels = packageOptions.filter((option) => option.startsWith('@titanic-entity/'));
+            const projectPackageOption = packageOptions.includes('cross-package')
+              ? 'cross-package'
+              : packageOptions.includes('workspace')
+                ? 'workspace'
+                : packageOptions.length === 1
+                  ? packageOptions[0]
+                  : packageOptions.length > 1
+                    ? 'cross-package'
+                    : undefined;
+
+            const typeOption = inferTypeOption();
+            const priorityOption = inferPriorityOption();
+            const releaseOption = inferReleaseOption();
+            const blockedReason = blockerReason();
+
+            const labelsToAdd = [
+              ...packageLabels,
+              typeOption ? typeLabels.get(typeOption) : undefined,
+              priorityOption ? `priority: ${priorityOption}` : undefined,
+              releaseOption ? releaseLabels.get(releaseOption) : undefined,
+              blockedReason ? 'state: blocked' : undefined,
+            ];
+
+            const missingLabels = unique(labelsToAdd).filter((label) => !existingLabels.has(label));
+            if (missingLabels.length) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  labels: missingLabels,
+                });
+              } catch (error) {
+                core.warning(`Label sync skipped for #${issueNumber}: ${error.message}`);
+              }
+            }
+
+            async function loadProject() {
+              const result = await github.graphql(`
+                query($login: String!, $number: Int!) {
+                  user(login: $login) {
+                    projectV2(number: $number) {
+                      id
+                      fields(first: 100) {
+                        nodes {
+                          __typename
+                          ... on ProjectV2Field {
+                            id
+                            name
+                            dataType
+                          }
+                          ... on ProjectV2SingleSelectField {
+                            id
+                            name
+                            options {
+                              id
+                              name
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `, { login: projectOwner, number: projectNumber });
+              return result.user.projectV2;
+            }
+
+            async function addToProject(projectId, contentId) {
+              const result = await github.graphql(`
+                mutation($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                    item {
+                      id
+                    }
+                  }
+                }
+              `, { projectId, contentId });
+              return result.addProjectV2ItemById.item.id;
+            }
+
+            async function updateSingleSelect(projectId, itemId, field, optionName) {
+              if (!optionName || !field || !field.options) return;
+              const option = field.options.find((candidate) => candidate.name === optionName);
+              if (!option) {
+                core.warning(`Project field ${field.name} has no option ${optionName}`);
+                return;
+              }
+              await github.graphql(`
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId,
+                    itemId: $itemId,
+                    fieldId: $fieldId,
+                    value: { singleSelectOptionId: $optionId }
+                  }) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `, { projectId, itemId, fieldId: field.id, optionId: option.id });
+            }
+
+            async function updateText(projectId, itemId, field, text) {
+              if (!text || !field) return;
+              await github.graphql(`
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $text: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId,
+                    itemId: $itemId,
+                    fieldId: $fieldId,
+                    value: { text: $text }
+                  }) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `, { projectId, itemId, fieldId: field.id, text: text.slice(0, 1024) });
+            }
+
+            try {
+              const project = await loadProject();
+              const itemId = await addToProject(project.id, subject.node_id);
+              const fields = new Map(project.fields.nodes.filter(Boolean).map((field) => [field.name, field]));
+
+              await updateSingleSelect(project.id, itemId, fields.get('Package'), projectPackageOption);
+              await updateSingleSelect(project.id, itemId, fields.get('Type'), typeOption);
+              await updateSingleSelect(project.id, itemId, fields.get('Release'), releaseOption);
+              await updateSingleSelect(project.id, itemId, fields.get('Priority'), priorityOption);
+              await updateText(project.id, itemId, fields.get('Blocked reason'), blockedReason);
+            } catch (error) {
+              core.warning(`Project sync skipped for #${issueNumber}: ${error.message}`);
+            }

@@ -1,0 +1,106 @@
+name: Task
+description: Structured task for package work in titanic-entity.
+title: ""
+projects:
+  - demon3t/5
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Where the main change is expected.
+      options:
+        - "@titanic-entity/entity-base"
+        - "@titanic-entity/entity-api"
+        - "@titanic-entity/entity-core"
+        - "@titanic-entity/entity-react"
+        - "@titanic-entity/entity-resources"
+        - "@titanic-entity/entity-ui"
+        - "cross-package"
+        - "workspace"
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - bug
+        - docs
+        - enhancement
+        - refactor
+        - tech-debt
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0
+        - P1
+        - P2
+        - P3
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: Release
+      options:
+        - 0.1.0-beta.1
+        - unscheduled
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this task is needed and what user/developer pain it resolves.
+      placeholder: "Current behavior, desired behavior, and links to relevant notes/issues."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Concrete code/docs areas expected to change.
+      placeholder: "Packages, modules, APIs, docs, tests."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable conditions that make the task complete.
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Checks expected before closing the task.
+      value: |
+        - [ ] Typecheck/build passes
+        - [ ] Focused tests or manual scenario checked
+        - [ ] Public docs/README updated when behavior changes
+    validations:
+      required: true
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Blockers / decisions
+      description: Known blockers, decisions, or external dependencies. Write "none" if clear.
+      placeholder: "none"
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: Explicitly excluded work so the task does not grow while being solved.
+      placeholder: "What should not be changed in this task."
