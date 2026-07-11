@@ -3,6 +3,7 @@ import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
 import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
 import { titanicEntityReactUiPackage } from "@titanic-entity/entity-react";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
+import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
 import { entityUiSchemas } from "./schemas";
 
 export * from "./dataGrid";
@@ -43,6 +44,7 @@ export const titanicEntityUiPackage = definePackage({
     titanicEntityCorePackage.name,
     titanicEntityApiPackage.name,
     titanicEntityResourcesPackage.name,
+    titanicEntityIconsPackage.name,
     titanicEntityReactUiPackage.name
   ],
   schemas: entityUiSchemas

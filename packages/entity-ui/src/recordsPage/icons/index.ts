@@ -1,7 +1,7 @@
 import { defineIconModuleSchema } from "@titanic-entity/entity-base";
-import { titanicCommonIcons } from "@titanic-entity/entity-react/components";
+import { titanicCommonIcons } from "@titanic-entity/entity-icons";
 
-export { titanicCommonIcons } from "@titanic-entity/entity-react/components";
+export { titanicCommonIcons } from "@titanic-entity/entity-icons";
 
 export const titanicRecordsPageIcons = {
   titanicDragHandle: titanicCommonIcons.titanicDragHandle

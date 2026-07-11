@@ -1,7 +1,7 @@
 import { defineIconModuleSchema } from "@titanic-entity/entity-base";
-import { titanicCommonIcons, titanicDateInputIcons } from "@titanic-entity/entity-react/components";
+import { titanicCommonIcons, titanicDateInputIcons } from "@titanic-entity/entity-icons";
 
-export { titanicCommonIcons, titanicDateInputIcons } from "@titanic-entity/entity-react/components";
+export { titanicCommonIcons, titanicDateInputIcons } from "@titanic-entity/entity-icons";
 
 export const titanicDateInputCommonIcons = {
   titanicChevronLeft: titanicCommonIcons.titanicChevronLeft,

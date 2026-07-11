@@ -26,6 +26,8 @@ Stable entrypoints:
 
 This package intentionally has no localization entrypoint and does not ship localized strings.
 
+Feature-level icon collections that are shared by UI packages live in `@titanic-entity/entity-icons`. Keep `entity-resources` focused on system icons, fallback assets, flags, media resources, and shared primitive resource types.
+
 ## Icon Folders
 
 Each icon lives in its own folder:

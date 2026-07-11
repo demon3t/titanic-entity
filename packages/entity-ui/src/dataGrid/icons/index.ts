@@ -3,13 +3,13 @@ import {
   titanicCommonIcons,
   titanicDataGridRowActionIcons,
   titanicDataGridSettingsIcons
-} from "@titanic-entity/entity-react/components";
+} from "@titanic-entity/entity-icons";
 
 export {
   titanicCommonIcons,
   titanicDataGridRowActionIcons,
   titanicDataGridSettingsIcons
-} from "@titanic-entity/entity-react/components";
+} from "@titanic-entity/entity-icons";
 
 export const titanicDataGridCommonIcons = {
   titanicClose: titanicCommonIcons.titanicClose

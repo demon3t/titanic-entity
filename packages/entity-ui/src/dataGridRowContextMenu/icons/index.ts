@@ -1,7 +1,7 @@
 import { defineIconModuleSchema } from "@titanic-entity/entity-base";
-import { titanicDataGridRowActionIcons } from "@titanic-entity/entity-react/components";
+import { titanicDataGridRowActionIcons } from "@titanic-entity/entity-icons";
 
-export { titanicDataGridRowActionIcons } from "@titanic-entity/entity-react/components";
+export { titanicDataGridRowActionIcons } from "@titanic-entity/entity-icons";
 
 export const titanicDataGridRowContextMenuIconGroups = {
   rowActions: titanicDataGridRowActionIcons
