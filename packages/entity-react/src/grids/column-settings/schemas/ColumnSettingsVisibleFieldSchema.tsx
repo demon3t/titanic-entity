@@ -5,6 +5,7 @@ import type {
   ReactNode
 } from "react";
 import type { EntityDataGridLabels } from "../../data-grid/EntityDataGridSettings";
+import { ResourceSvgIcon } from "../../../components/icons/ResourceSvgIcon";
 
 export interface ColumnSettingsVisibleFieldSchemaProps {
   canRemove: boolean;
@@ -66,7 +67,7 @@ export function ColumnSettingsVisibleFieldSchema({
             type="button"
             onClick={onRename}
           >
-            <EditIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__mini-icon" icon="edit" />
           </button>
           <button
             aria-label={labels.removeColumn}
@@ -76,7 +77,7 @@ export function ColumnSettingsVisibleFieldSchema({
             type="button"
             onClick={onRemove}
           >
-            <RemoveIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__mini-icon" icon="remove" />
           </button>
         </div>
       </div>
@@ -89,21 +90,5 @@ export function ColumnSettingsVisibleFieldSchema({
         onPointerDown={onResizeStart}
       />
     </article>
-  );
-}
-
-function EditIcon() {
-  return (
-    <svg className="titanic-data-grid-column-modal__mini-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-      <path d="m5 19 4.2-.8L18 9.4 14.6 6 5.8 14.8 5 19Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function RemoveIcon() {
-  return (
-    <svg className="titanic-data-grid-column-modal__mini-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-      <path d="m7 7 10 10M17 7 7 17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }

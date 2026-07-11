@@ -19,7 +19,6 @@ import { EntityDataGridRowContextMenu } from "../context-menus/EntityDataGridRow
 import { RandomGifLoader } from "../feedback/RandomGifLoader";
 import { SiteIconDropdown } from "../site/SiteIconDropdown";
 import { createEntityDataGridColumnSettingsPackage } from "../../grids";
-import { closeIcon } from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 import type {
   EntityDataGridColumnPickerLabels,
@@ -1183,7 +1182,7 @@ function EntityDataGridColumnSettingsModal<TRow>({
             type="button"
             onClick={onClose}
           >
-            <CloseIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon="close" />
           </button>
         </header>
 
@@ -1337,7 +1336,7 @@ function EntityDataGridTotalsSettingsModal({
             type="button"
             onClick={onClose}
           >
-            <CloseIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon="close" />
           </button>
         </header>
         <p className="titanic-data-grid-column-modal__empty">{labels.totalsEmpty}</p>
@@ -2490,8 +2489,4 @@ function getColumnSettingPath(setting: Pick<EntityDataGridColumnSetting, "key" |
 function normalizeColumnPath(value: unknown): string | undefined {
   const path = typeof value === "string" ? value.trim() : "";
   return path || undefined;
-}
-
-function CloseIcon() {
-  return <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon={closeIcon} />;
 }

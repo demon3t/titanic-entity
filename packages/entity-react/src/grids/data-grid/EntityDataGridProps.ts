@@ -6,7 +6,8 @@ import type {
   ESQFilterJsonModel,
   ESQOrderJsonModel
 } from "@titanic-entity/entity-api";
-import type { GifCollectionResource, ResourceSvgIconResource } from "@titanic-entity/entity-resources";
+import type { GifCollectionResource } from "@titanic-entity/entity-resources";
+import type { ResourceSvgIconInput } from "../../components/icons/ResourceSvgIcon";
 import type { EntityDataGridColumn, EntityDataGridLabels, EntityDataGridSettings } from "./EntityDataGridSettings";
 
 export interface EntityDataGridEntityDescriptor {
@@ -27,7 +28,7 @@ export interface EntityDataGridRowActionContext<TRow = EntityApiEntity> {
 export interface EntityDataGridRowAction<TRow = EntityApiEntity> {
   key: string;
   label: string;
-  icon?: ResourceSvgIconResource;
+  icon?: ResourceSvgIconInput;
   danger?: boolean;
   disabled?: boolean | ((context: EntityDataGridRowActionContext<TRow>) => boolean);
   hidden?: boolean | ((context: EntityDataGridRowActionContext<TRow>) => boolean);

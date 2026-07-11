@@ -1,7 +1,7 @@
 // Общий shell пакетного UI: рабочие места, разделы, основное окно и правая панель действий.
 import { useState, type ReactNode } from "react";
 import type { UiPackageSectionSchema, UiPackageWorkspaceSchema } from "@titanic-entity/entity-base";
-import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
+import type { ResourceSvgIconInput } from "../icons/ResourceSvgIcon";
 import { SiteCollapsiblePanel } from "./SiteCollapsiblePanel";
 import { SiteLayout } from "./SiteLayout";
 
@@ -97,7 +97,7 @@ export interface PackageSiteShellProps {
   labels: PackageSiteShellLabels;
   navigation: PackageSiteShellNavigation;
   navigationView?: PackageSiteShellNavigationView;
-  panelChevronIcon: ResourceSvgIconResource;
+  panelChevronIcon: ResourceSvgIconInput;
   resolvers?: PackageSiteShellResolvers;
   rightPanelCollapsible?: boolean;
   rightPanelItems?: readonly PackageSiteShellRightPanelItem[];

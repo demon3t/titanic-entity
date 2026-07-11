@@ -1,5 +1,4 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { calendarIcon, chevronLeftIcon, chevronRightIcon } from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 
 export interface DateInputLabels {
@@ -272,7 +271,7 @@ export function DateInput({
           onClick={() => setOpen((currentValue) => !currentValue)}
         >
           <span className="titanic-date__icon" aria-hidden="true">
-            <ResourceSvgIcon icon={calendarIcon} />
+            <ResourceSvgIcon icon="calendar" />
           </span>
         </button>
       </div>
@@ -286,7 +285,7 @@ export function DateInput({
               type="button"
               onClick={() => changeVisiblePeriod(-1)}
             >
-              <ResourceSvgIcon icon={chevronLeftIcon} />
+              <ResourceSvgIcon icon="chevronLeft" />
             </button>
             <div className="titanic-date__period" id={`${resolvedId}-month`}>
               {calendarMode === "day" ? (
@@ -328,7 +327,7 @@ export function DateInput({
               type="button"
               onClick={() => changeVisiblePeriod(1)}
             >
-              <ResourceSvgIcon icon={chevronRightIcon} />
+              <ResourceSvgIcon icon="chevronRight" />
             </button>
           </div>
 

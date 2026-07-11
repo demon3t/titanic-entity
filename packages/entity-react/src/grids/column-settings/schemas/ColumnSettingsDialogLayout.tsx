@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { EntityDataGridLabels } from "../../data-grid/EntityDataGridSettings";
+import { ResourceSvgIcon } from "../../../components/icons/ResourceSvgIcon";
 
 export interface ColumnSettingsDialogLayoutProps {
   children: ReactNode;
@@ -39,7 +40,7 @@ export function ColumnSettingsDialogLayout({
             type="button"
             onClick={onClose}
           >
-            <CloseIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon="close" />
           </button>
         </header>
 
@@ -78,13 +79,5 @@ export function ColumnSettingsDialogLayout({
         </footer>
       </section>
     </div>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg className="titanic-data-grid-column-modal__close-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-      <path d="m7 7 10 10M17 7 7 17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }

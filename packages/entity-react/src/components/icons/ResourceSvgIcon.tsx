@@ -6,12 +6,15 @@ import {
 } from "@titanic-entity/entity-resources";
 import { Titanic } from "@titanic-entity/entity-base";
 
+/** Icon value accepted by ResourceSvgIcon and icon-bearing React components. */
+export type ResourceSvgIconInput = ResourceSvgIconResource | string | null | undefined;
+
 /** Props for rendering a serializable resource SVG icon. */
 export interface ResourceSvgIconProps {
   /** Optional CSS class applied to the rendered SVG element. */
   className?: string;
   /** Icon resource descriptor or registered icon path. */
-  icon?: ResourceSvgIconResource | string | null;
+  icon?: ResourceSvgIconInput;
   /** Optional explicit theme variant. Most icons inherit theme colors from CSS currentColor. */
   theme?: ResourceSvgIconTheme;
 }

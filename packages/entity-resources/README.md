@@ -129,7 +129,7 @@ When `groupName` is omitted, every top-level key in `icons` is registered direct
 Most icons use `currentColor`; theme classes should set text/icon color on the host element and the SVG will update automatically:
 
 ```tsx
-<ResourceSvgIcon className="app-theme-dark__icon" icon={closeIcon} />
+<ResourceSvgIcon className="app-theme-dark__icon" icon="close" />
 ```
 
 When an icon needs a different vector shape per theme, define `themes` on the icon resource and resolve it explicitly:

@@ -9,7 +9,6 @@ import {
   type ESQOrderJsonModel
 } from "@titanic-entity/entity-api";
 import { getSaveValues, toEntityValues, type EntityColumnSchema, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
-import { dragHandleIcon } from "@titanic-entity/entity-resources";
 import { EntityForm } from "../EntityForm";
 import { EntityDataGrid } from "../grid/EntityDataGrid";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
@@ -446,7 +445,7 @@ function EntityRecordFormDesigner({
                       title={labels.moveField ?? "Move"}
                       type="button"
                     >
-                      <RecordDesignerDragIcon />
+                      <ResourceSvgIcon className="titanic-record-form-designer__drag-icon" icon="dragHandle" />
                     </button>
                     <div>
                       <strong>{column.label ?? column.path}</strong>
@@ -544,10 +543,6 @@ function startDesignerResize(
 
 function clampDesignerGridSpan(value: number): number {
   return Math.max(2, Math.min(24, Math.round(value)));
-}
-
-function RecordDesignerDragIcon() {
-  return <ResourceSvgIcon className="titanic-record-form-designer__drag-icon" icon={dragHandleIcon} />;
 }
 
 function normalizeColumns(columns: readonly EntityColumnSchema[]): EntityColumnSchema[] {
