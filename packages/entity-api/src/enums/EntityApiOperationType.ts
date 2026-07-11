@@ -1,16 +1,14 @@
-/**
- * Тип операции, которую нужно выполнить через единый endpoint Entity API.
- */
+/** Operation types supported by the Entity API manager endpoint. */
 export enum EntityApiOperationType {
-  /** Операция не задана или не распознана. */
+  /** Operation type is missing or unknown. */
   Unknown = 0,
 
-  /** Прочитать сущности через Entity Schema Query. */
+  /** Select entities via ESQ. */
   Select = 1,
 
-  /** Создать или обновить сущность через Entity.Save(). */
+  /** Create or update an entity. */
   Save = 2,
 
-  /** Удалить сущности по обязательному фильтру. */
+  /** Delete entities by filter. */
   Delete = 3
 }

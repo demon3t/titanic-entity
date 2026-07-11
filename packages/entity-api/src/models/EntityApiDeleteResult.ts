@@ -1,10 +1,4 @@
-/**
- * Результат Delete-операции Entity API.
- */
-export interface EntityApiDeleteResult {
-  /** Было ли удалено хотя бы одно значение. */
-  deleted: boolean;
+import type { ApiDeleteResult } from "./ApiDeleteResult";
 
-  /** Количество удаленных сущностей. */
-  affected: number;
-}
+/** Legacy alias for {@link ApiDeleteResult}. */
+export type EntityApiDeleteResult = ApiDeleteResult;

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, KeyboardEvent } from "react";
-import { EntityFieldKind, getColumnKey, useEntityLookupOptions } from "@titanic-entity/entity-core";
+import { EntityFieldKind, getColumnKey } from "@titanic-entity/entity-core";
 import { useUiField } from "@titanic-entity/entity-base";
+import { useEntityLookupOptions } from "../../react/hooks";
 import { DateInput, type DateInputProps } from "../inputs/DateInput";
 import { EntityJsonEditor, type EntityJsonEditorProps } from "../json/EntityJsonEditor";
 import type { EntityFieldProps } from "./models/EntityFieldProps";

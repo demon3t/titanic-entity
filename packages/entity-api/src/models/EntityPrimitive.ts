@@ -1,4 +1,4 @@
-/**
- * Примитивное значение, которое UI обычно отправляет в Entity API.
- */
-export type EntityPrimitive = string | number | boolean | Date | null;
+import type { Primitive } from "./Primitive";
+
+/** Legacy alias for {@link Primitive}. */
+export type EntityPrimitive = Primitive;

@@ -1,37 +1,35 @@
-/**
- * Оператор сравнения фильтра ESQ.
- */
+/** Comparison operators supported by ESQ filters. */
 export enum ConditionOperator {
-  /** Равно. */
+  /** Equal comparison. */
   Equal = 0,
 
-  /** Не равно. */
+  /** Not-equal comparison. */
   NotEqual = 1,
 
-  /** Больше. */
+  /** Greater-than comparison. */
   GreaterThan = 2,
 
-  /** Больше или равно. */
+  /** Greater-than-or-equal comparison. */
   GreaterThanOrEqual = 3,
 
-  /** Меньше. */
+  /** Less-than comparison. */
   LessThan = 4,
 
-  /** Меньше или равно. */
+  /** Less-than-or-equal comparison. */
   LessThanOrEqual = 5,
 
-  /** Входит в набор. */
+  /** Membership comparison. */
   In = 6,
 
-  /** Не входит в набор. */
+  /** Negative membership comparison. */
   NotIn = 7,
 
-  /** Регистронезависимое contains-сравнение. */
+  /** Case-insensitive contains comparison. */
   Contains = 8,
 
-  /** Значение отсутствует. */
+  /** Null check. */
   IsNull = 11,
 
-  /** Значение заполнено. */
+  /** Non-null check. */
   IsNotNull = 12
 }

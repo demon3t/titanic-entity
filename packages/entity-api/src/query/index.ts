@@ -1,2 +1,2 @@
-// Модуль сборки запросов Entity ORM API через цепочку методов.
+/** Query builder helpers for composing Entity API ESQ payloads. */
 export * from "./EntityQueryBuilder";

@@ -6,7 +6,7 @@ import {
   type EntityApiClient,
   type EntityApiEntity,
   type EntityGridColumnSettingsClient,
-  type ESQOrderJsonModel
+  type ESQOrder
 } from "@titanic-entity/entity-api";
 import { getSaveValues, toEntityValues, type EntityColumnSchema, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
 import { EntityForm } from "../EntityForm";
@@ -63,7 +63,7 @@ export interface EntityRecordsPageProps {
   gridLabels?: Partial<EntityDataGridLabels>;
   isDeleteBlocked?: (values: EntityValues) => boolean;
   labels: EntityRecordsPageLabels;
-  orders?: readonly ESQOrderJsonModel[];
+  orders?: readonly ESQOrder[];
   record: EntityRecordPageConfig;
   rowCount?: number;
   schema: EntitySchema;

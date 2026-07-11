@@ -1,10 +1,8 @@
-/**
- * Направление сортировки ESQ.
- */
+/** Sort directions supported by ESQ order clauses. */
 export enum EntityOrderDirection {
-  /** Сортировка по возрастанию. */
+  /** Ascending order. */
   Ascending = 0,
 
-  /** Сортировка по убыванию. */
+  /** Descending order. */
   Descending = 1
 }

@@ -8,9 +8,9 @@ import {
   type EntityApiManagerStructureResponse,
   type EntityApiStructureColumnResponse,
   type EntityApiStructureEntityResponse,
-  type ESQColumnJsonModel,
-  type ESQFilterJsonModel,
-  type ESQJsonModel
+  type ESQ,
+  type ESQColumn,
+  type ESQFilter
 } from "@titanic-entity/entity-api";
 import { getCellDisplayValue, toEntityValues } from "@titanic-entity/entity-core";
 import { Titanic } from "@titanic-entity/entity-base";
@@ -1390,7 +1390,7 @@ function resolveGridEntity(
 function normalizeGridFilters(
   filter: EntityDataGridProps["filter"],
   filters: EntityDataGridProps["filters"]
-): ESQFilterJsonModel[] {
+): ESQFilter[] {
   const normalizedFilters = [...(filters ?? [])];
 
   if (isGridFilterArray(filter)) {
@@ -1402,7 +1402,7 @@ function normalizeGridFilters(
   return normalizedFilters;
 }
 
-function isGridFilterArray(value: EntityDataGridProps["filter"]): value is readonly ESQFilterJsonModel[] {
+function isGridFilterArray(value: EntityDataGridProps["filter"]): value is readonly ESQFilter[] {
   return Array.isArray(value);
 }
 
@@ -1981,12 +1981,12 @@ function resolveEntityDataGridQueryInput(
 }
 
 function mergeDataGridSelectQueryColumns(
-  query: ESQJsonModel,
+  query: ESQ,
   columnPaths: readonly string[],
   skipRow: number,
   rowCount: number
-): ESQJsonModel | null {
-  const columns: ESQColumnJsonModel[] = [];
+): ESQ | null {
+  const columns: ESQColumn[] = [];
   const existingPaths = new Set<string>();
 
   (query.columns ?? []).forEach((column) => {
@@ -1997,6 +1997,9 @@ function mergeDataGridSelectQueryColumns(
     const path = normalizeColumnPath(column.path);
 
     if (!path) {
+      if (isSubQueryColumn(column)) {
+        columns.push({ ...column });
+      }
       return;
     }
 
@@ -2038,7 +2041,7 @@ function isGridNearViewportBottom(rootElement: HTMLElement | null): boolean {
   return rect.top < window.innerHeight && rect.bottom <= window.innerHeight + 160;
 }
 
-function isAllColumnsRequestColumn(column: ESQColumnJsonModel): boolean {
+function isAllColumnsRequestColumn(column: ESQColumn): boolean {
   const path = normalizeColumnPath(column.path)?.toLowerCase();
   const aggregationType = column.aggregationType as unknown;
   const hasAggregation = aggregationType !== undefined &&
@@ -2047,6 +2050,10 @@ function isAllColumnsRequestColumn(column: ESQColumnJsonModel): boolean {
     aggregationType !== "None";
 
   return !hasAggregation && (path === "*" || path === "all" || path === "allcolumns");
+}
+
+function isSubQueryColumn(column: ESQColumn): boolean {
+  return Boolean(column.subQuery);
 }
 
 function getCellValue<TRow>(row: TRow, column: EntityDataGridColumn<TRow>): unknown {

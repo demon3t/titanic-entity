@@ -1,22 +1,20 @@
-/**
- * Тип агрегации ESQ-колонки.
- */
+/** Aggregation types supported by ESQ selected columns. */
 export enum EntityAggregationType {
-  /** Обычная колонка без агрегации. */
+  /** No aggregation. */
   None = 0,
 
-  /** Агрегация COUNT. */
+  /** `COUNT(...)` aggregation. */
   Count = 1,
 
-  /** Агрегация SUM. */
+  /** `SUM(...)` aggregation. */
   Sum = 2,
 
-  /** Агрегация AVG. */
+  /** `AVG(...)` aggregation. */
   Avg = 3,
 
-  /** Агрегация MIN. */
+  /** `MIN(...)` aggregation. */
   Min = 4,
 
-  /** Агрегация MAX. */
+  /** `MAX(...)` aggregation. */
   Max = 5
 }

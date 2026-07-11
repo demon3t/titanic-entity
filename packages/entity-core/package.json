@@ -1,7 +1,7 @@
 {
   "name": "@titanic-entity/entity-core",
   "version": "0.1.0-beta.0",
-  "description": "Core entity schema, model, and React provider primitives for Titanic.Entity.",
+  "description": "Core entity schema, model, and domain utilities for Titanic.Entity.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -32,8 +32,5 @@
   "dependencies": {
     "@titanic-entity/entity-api": "file:../entity-api",
     "@titanic-entity/entity-base": "file:../entity-base"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0"
   }
 }

@@ -1,10 +1,8 @@
-/**
- * Режим выполнения batch-запроса Entity API.
- */
+/** Execution modes supported by Entity API batch requests. */
 export enum EntityApiBatchExecutionMode {
-  /** Выполнять операции по порядку. */
+  /** Execute operations one by one in order. */
   Sequential = 0,
 
-  /** Выполнять независимые операции параллельно. */
+  /** Execute independent operations in parallel. */
   Parallel = 1
 }

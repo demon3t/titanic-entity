@@ -36,7 +36,7 @@ import "@titanic-entity/entity-react/styles.css";
 src/
   packages/
     entity-base/       Базовый пакет: package registry, схемы, провайдер и Titanic
-    entity-core/       Entity-модели, схемы и React provider
+    entity-core/       Entity-модели, схемы и доменные utilities
     entity-api/        HTTP-клиент, ESQ и API-схемы
     entity-resources/  ресурсы и иконки
     entity-react/      React headless hooks, components, fields, grids, layout, templates, resources, styles
@@ -137,6 +137,34 @@ const query = entityQuery("app_user")
 const rows = await client.select(query);
 ```
 
+Колонки можно добавлять постепенно, включая агрегаты:
+
+```ts
+const totalsQuery = entityQuery("invoice")
+  .addAgragateColumn(EntityAggregationType.None, "CustomerId")
+  .addAgragateColumn(EntityAggregationType.Sum, "Amount", "totalAmount")
+  .addAgragateColumn(EntityAggregationType.Count, "Id", "invoiceCount")
+  .groupBy("CustomerId");
+```
+
+`addAgragateColumn` также принимает подзапрос:
+
+```ts
+const paidInvoiceAmounts = entityQuery("invoice")
+  .column("Amount")
+  .equal("CustomerId", "$parent.Id")
+  .equal("Status.Code", "Paid");
+
+const customerQuery = entityQuery("customer")
+  .column("Id")
+  .column("Name")
+  .addAgragateColumn(EntityAggregationType.Sum, paidInvoiceAmounts, "paidAmount");
+```
+
+В ESQ такая колонка уйдет как `{ aggregationType, alias, subQuery }`. Также доступны корректное имя `addAggregateColumn(...)`, alias `addAggregationColumn(...)` и короткие методы `.sum/.count/.avg/.min/.max`.
+
+`column` и `addColumn` принимают строку, готовый `ESQColumn` или options-объект: `.column("Amount", { alias: "total", aggregationType: EntityAggregationType.Sum })`.
+
 Группы фильтров можно собирать так:
 
 ```ts
@@ -144,6 +172,21 @@ const query = entityQuery("app_user")
   .select("Id", "Login")
   .and((filter) => filter.equal("IsActive", true).isNotNull("Login"));
 ```
+
+Если нужен готовый ESQ-фильтр без query builder, `entity-core` добавляет factory-методы в `Titanic`:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-core";
+
+const filters = Titanic.createFilterCollection([
+  Titanic.createIsEqualFilter("IsActive", true),
+  Titanic.createIsNullFilter("DeletedOn")
+]);
+```
+
+Доступны `createIsEqualFilter`, `createIsNotEqualFilter`, `createIsGreaterThanFilter`, `createIsGreaterThanOrEqualFilter`, `createIsLessThanFilter`, `createIsLessThanOrEqualFilter`, `createIsInFilter`, `createIsNotInFilter`, `createIsContainsFilter`, `createIsNullFilter`, `createIsNotNullFilter`, а также `createAndFilter`, `createOrFilter` и `createFilterCollection`.
+
+Для ручной типизации ESQ доступны типы `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection` и `ESQOrder`.
 
 ## React provider и несколько Entity API провайдеров
 

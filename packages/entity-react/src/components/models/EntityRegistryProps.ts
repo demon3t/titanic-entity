@@ -6,8 +6,8 @@ import type {
   EntityGridColumnSettingsClient,
   EntityQueryInput,
   EntityUserProfileDto,
-  ESQFilterJsonModel,
-  ESQOrderJsonModel
+  ESQFilter,
+  ESQOrder
 } from "@titanic-entity/entity-api";
 import type { EntityDataGridLabels, EntityDataGridRowAction, EntityDataGridSettings } from "../../grids";
 
@@ -36,8 +36,8 @@ export interface EntityRegistryType<TItem> {
   primaryKey?: string;
   query?: EntityQueryInput;
   columns?: string[];
-  filters?: ESQFilterJsonModel[];
-  orders?: ESQOrderJsonModel[];
+  filters?: ESQFilter[];
+  orders?: ESQOrder[];
   rowCount?: number;
   allColumns?: boolean;
   fields: EntityRegistryField<TItem>[];
