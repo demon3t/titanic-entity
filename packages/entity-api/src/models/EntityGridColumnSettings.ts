@@ -1,14 +1,17 @@
-import type {
-  GridColumnSetting,
-  GridColumnSettingsDto,
+import {
   GridColumnSettingsMode,
-  GridColumnSettingsSaveRequest,
-  GridModeColumnSettings,
-  GridModeSettingsMap
+  type GridColumnSetting,
+  type GridColumnSettingsDto,
+  type GridColumnSettingsSaveRequest,
+  type GridModeColumnSettings,
+  type GridModeSettingsMap
 } from "./GridColumnSettings";
 
 /** Legacy alias for {@link GridColumnSettingsMode}. */
 export type EntityGridColumnSettingsMode = GridColumnSettingsMode;
+
+/** Legacy value alias for {@link GridColumnSettingsMode}. */
+export const EntityGridColumnSettingsMode = GridColumnSettingsMode;
 
 /** Legacy alias for {@link GridColumnSetting}. */
 export type EntityGridColumnSetting = GridColumnSetting;

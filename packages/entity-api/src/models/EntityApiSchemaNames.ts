@@ -5,5 +5,6 @@ export const entityApiEnumNames = {
   EntityApiBatchExecutionMode: "EntityApiBatchExecutionMode",
   EntityApiOperationType: "EntityApiOperationType",
   EntityLogicalOperation: "EntityLogicalOperation",
-  EntityOrderDirection: "EntityOrderDirection"
+  EntityOrderDirection: "EntityOrderDirection",
+  GridColumnSettingsMode: "GridColumnSettingsMode"
 } as const;

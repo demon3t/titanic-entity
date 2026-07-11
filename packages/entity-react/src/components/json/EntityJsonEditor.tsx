@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type {
-  EntityJsonEditorLabels,
+import {
   EntityJsonEditorMode,
-  EntityJsonEditorOptions,
-  EntityJsonObject,
-  EntityJsonRequiredField,
-  EntityJsonValue,
+  EntityJsonValueKind,
+  type EntityJsonEditorLabels,
+  type EntityJsonEditorOptions,
+  type EntityJsonObject,
+  type EntityJsonRequiredField,
+  type EntityJsonValue
+} from "@titanic-entity/entity-core";
+
+export {
+  EntityJsonEditorMode,
   EntityJsonValueKind
 } from "@titanic-entity/entity-core";
 
 export type {
   EntityJsonEditorLabels,
-  EntityJsonEditorMode,
   EntityJsonEditorOptions,
   EntityJsonRequiredField,
-  EntityJsonValue,
-  EntityJsonValueKind
+  EntityJsonValue
 } from "@titanic-entity/entity-core";
 
 export interface EntityJsonEditorProps extends EntityJsonEditorOptions {
@@ -49,7 +52,14 @@ const defaultLabels: EntityJsonEditorLabels = {
   arrayType: "Array"
 };
 
-const typeOptions: readonly EntityJsonValueKind[] = ["string", "number", "boolean", "null", "object", "array"];
+const typeOptions: readonly EntityJsonValueKind[] = [
+  EntityJsonValueKind.String,
+  EntityJsonValueKind.Number,
+  EntityJsonValueKind.Boolean,
+  EntityJsonValueKind.Null,
+  EntityJsonValueKind.Object,
+  EntityJsonValueKind.Array
+];
 
 export function EntityJsonEditor({
   id,
@@ -58,7 +68,7 @@ export function EntityJsonEditor({
   disabled = false,
   required = false,
   className = "",
-  defaultMode = "text",
+  defaultMode = EntityJsonEditorMode.Text,
   minRows = 10,
   requiredFields = [],
   labels,
@@ -135,7 +145,7 @@ export function EntityJsonEditor({
       return;
     }
 
-    if (mode === "text") {
+    if (mode === EntityJsonEditorMode.Text) {
       const parsed = parseTextValue(textDraft);
       if (parsed.error) {
         setError(parsed.error);
@@ -143,10 +153,10 @@ export function EntityJsonEditor({
         return;
       }
 
-      emitValue(parsed.value, nextMode === "text");
+      emitValue(parsed.value, nextMode === EntityJsonEditorMode.Text);
     }
 
-    if (nextMode === "text") {
+    if (nextMode === EntityJsonEditorMode.Text) {
       setTextDraft(formatJson(documentValue));
     }
 
@@ -163,28 +173,28 @@ export function EntityJsonEditor({
     <div className={rootClassName}>
       <div className="titanic-json-editor__toolbar" role="tablist" aria-label={name ?? id}>
         <button
-          aria-selected={mode === "text"}
-          className={mode === "text" ? "titanic-json-editor__mode titanic-json-editor__mode_active" : "titanic-json-editor__mode"}
+          aria-selected={mode === EntityJsonEditorMode.Text}
+          className={mode === EntityJsonEditorMode.Text ? "titanic-json-editor__mode titanic-json-editor__mode_active" : "titanic-json-editor__mode"}
           disabled={disabled}
           role="tab"
           type="button"
-          onClick={() => switchMode("text")}
+          onClick={() => switchMode(EntityJsonEditorMode.Text)}
         >
           {resolvedLabels.textMode}
         </button>
         <button
-          aria-selected={mode === "fields"}
-          className={mode === "fields" ? "titanic-json-editor__mode titanic-json-editor__mode_active" : "titanic-json-editor__mode"}
+          aria-selected={mode === EntityJsonEditorMode.Fields}
+          className={mode === EntityJsonEditorMode.Fields ? "titanic-json-editor__mode titanic-json-editor__mode_active" : "titanic-json-editor__mode"}
           disabled={disabled}
           role="tab"
           type="button"
-          onClick={() => switchMode("fields")}
+          onClick={() => switchMode(EntityJsonEditorMode.Fields)}
         >
           {resolvedLabels.fieldsMode}
         </button>
       </div>
 
-      {mode === "text" ? (
+      {mode === EntityJsonEditorMode.Text ? (
         <textarea
           className="titanic-json-editor__textarea"
           disabled={disabled}
@@ -234,11 +244,11 @@ function JsonFieldsTree({
         {value.map((item, index) => (
           <JsonFieldRow
             disabled={disabled}
-          key={`${path.join(".")}.${index}`}
-          labels={labels}
-          parentIsArray={true}
-          path={[...path, String(index)]}
-          propertyName={String(index)}
+            key={`${path.join(".")}.${index}`}
+            labels={labels}
+            parentIsArray={true}
+            path={[...path, String(index)]}
+            propertyName={String(index)}
             requiredFieldMap={requiredFieldMap}
             value={item}
             onChange={onChange}
@@ -712,31 +722,39 @@ function addObjectField(value: EntityJsonValue): EntityJsonValue {
 
 function getValueKind(value: EntityJsonValue): EntityJsonValueKind {
   if (Array.isArray(value)) {
-    return "array";
+    return EntityJsonValueKind.Array;
   }
 
   if (isJsonObject(value)) {
-    return "object";
+    return EntityJsonValueKind.Object;
   }
 
   if (value === null) {
-    return "null";
+    return EntityJsonValueKind.Null;
   }
 
-  return typeof value as EntityJsonValueKind;
+  if (typeof value === "number") {
+    return EntityJsonValueKind.Number;
+  }
+
+  if (typeof value === "boolean") {
+    return EntityJsonValueKind.Boolean;
+  }
+
+  return EntityJsonValueKind.String;
 }
 
 function coerceValueToKind(value: EntityJsonValue, kind: EntityJsonValueKind): EntityJsonValue {
   switch (kind) {
-    case "number":
+    case EntityJsonValueKind.Number:
       return typeof value === "number" ? value : parseNumberValue(String(value ?? ""));
-    case "boolean":
+    case EntityJsonValueKind.Boolean:
       return typeof value === "boolean" ? value : Boolean(value);
-    case "null":
+    case EntityJsonValueKind.Null:
       return null;
-    case "object":
+    case EntityJsonValueKind.Object:
       return isJsonObject(value) ? value : {};
-    case "array":
+    case EntityJsonValueKind.Array:
       return Array.isArray(value) ? value : [];
     default:
       return typeof value === "string" ? value : String(value ?? "");
@@ -750,15 +768,15 @@ function parseNumberValue(value: string): number {
 
 function getTypeLabel(kind: EntityJsonValueKind, labels: EntityJsonEditorLabels): string {
   switch (kind) {
-    case "number":
+    case EntityJsonValueKind.Number:
       return labels.numberType;
-    case "boolean":
+    case EntityJsonValueKind.Boolean:
       return labels.booleanType;
-    case "null":
+    case EntityJsonValueKind.Null:
       return labels.nullType;
-    case "object":
+    case EntityJsonValueKind.Object:
       return labels.objectType;
-    case "array":
+    case EntityJsonValueKind.Array:
       return labels.arrayType;
     default:
       return labels.stringType;

@@ -1,4 +1,9 @@
-import type { EntityGridColumnSetting, EntityGridColumnSettingsMode, EntityGridModeSettingsMap } from "@titanic-entity/entity-api";
+import {
+  GridColumnSettingsMode,
+  type EntityGridColumnSetting,
+  type EntityGridColumnSettingsMode,
+  type EntityGridModeSettingsMap
+} from "@titanic-entity/entity-api";
 import { defaultEntityDataGridColumnSettingsLabels } from "../column-settings/resources/entityDataGridColumnSettingsLabels";
 
 export interface EntityDataGridLabels {
@@ -69,9 +74,12 @@ export interface EntityDataGridColumn<TRow = unknown> {
   render?: (row: TRow) => unknown;
 }
 
+export const EntityDataGridColumnSettingsMode = GridColumnSettingsMode;
+
+export type EntityDataGridColumnSettingsMode = EntityGridColumnSettingsMode;
+
 export type {
   EntityGridColumnSetting as EntityDataGridColumnSetting,
-  EntityGridColumnSettingsMode as EntityDataGridColumnSettingsMode,
   EntityGridModeSettingsMap as EntityDataGridModeSettingsMap
 };
 

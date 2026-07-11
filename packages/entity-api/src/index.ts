@@ -6,6 +6,7 @@ export * from "./client/EntityApiClient";
 export * from "./client/auth";
 export * from "./client/entityHelpers";
 export * from "./client/http";
+export * from "./client/queryHelpers";
 
 // Enums
 export * from "./enums/ConditionOperator";
@@ -46,14 +47,12 @@ export * from "./models/EntityPrimitive";
 export * from "./models/EntitySelectRequest";
 export * from "./models/EntityUserProfile";
 export * from "./models/EntityApiSchemaNames";
+export * from "./models/EntityQueryInput";
 export * from "./models/ESQ";
 export * from "./models/ESQColumn";
 export * from "./models/ESQFilter";
 export * from "./models/ESQFilterCollection";
 export * from "./models/ESQOrder";
-
-// Query
-export * from "./query";
 
 // Schemas
 export * from "./schemas";

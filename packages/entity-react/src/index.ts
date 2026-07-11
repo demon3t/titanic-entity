@@ -8,6 +8,10 @@ import { entityReactEntitySchemas, entityReactEnumSchemas, entityReactSchemas } 
 export * from "@titanic-entity/entity-base";
 export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
+export {
+  isEntityQueryJsonProvider,
+  toEntityQueryJson
+} from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-resources";
 export * from "@titanic-entity/entity-icons";
 export { Titanic } from "@titanic-entity/entity-core";
@@ -18,6 +22,7 @@ export {
 
 // React API
 export * from "./react/EntityApiProvider";
+export * from "./react/UiPackageProvider";
 export * from "./react/hooks";
 export * from "./react/models/AsyncState";
 export * from "./react/models/EntityApiProviderProps";

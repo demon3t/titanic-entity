@@ -1,4 +1,3 @@
-import type { ComponentType } from "react";
 import { Titanic } from "./Titanic";
 import {
   defineComponentSchema,
@@ -22,6 +21,7 @@ import {
 import type {
   UiPackageComponentLikeSchema,
   UiPackageComponentSchema,
+  UiPackageComponentType,
   UiPackageDescriptor,
   UiPackageEnumSchema,
   UiPackageEnumValues,
@@ -40,6 +40,7 @@ import type {
   UiPackageTemplateSchema,
   UiPackageWorkspaceSchema
 } from "./types";
+import { UiPackageResourceType } from "./types";
 
 export function createPackageRegistry(packages: readonly UiPackageDescriptor[] = []): UiPackageRegistry {
   const allPackages = getPackagesInDependencyOrder(packages);
@@ -47,15 +48,15 @@ export function createPackageRegistry(packages: readonly UiPackageDescriptor[] =
   const workspaceMap = new Map<string, UiPackageWorkspaceSchema>();
   const sectionMap = new Map<string, UiPackageSectionSchema>();
   const pageSchemaMap = new Map<string, UiPackagePageSchema>();
-  const pageMap = new Map<string, ComponentType<unknown>>();
+  const pageMap = new Map<string, UiPackageComponentType<unknown>>();
   const templateSchemaMap = new Map<string, UiPackageTemplateSchema>();
-  const templateMap = new Map<string, ComponentType<unknown>>();
+  const templateMap = new Map<string, UiPackageComponentType<unknown>>();
   const fieldSchemaMap = new Map<string, UiPackageFieldSchema>();
-  const fieldMap = new Map<string, ComponentType<unknown>>();
+  const fieldMap = new Map<string, UiPackageComponentType<unknown>>();
   const gridSchemaMap = new Map<string, UiPackageGridSchema>();
-  const gridMap = new Map<string, ComponentType<unknown>>();
+  const gridMap = new Map<string, UiPackageComponentType<unknown>>();
   const componentSchemaMap = new Map<string, UiPackageComponentSchema>();
-  const componentMap = new Map<string, ComponentType<unknown>>();
+  const componentMap = new Map<string, UiPackageComponentType<unknown>>();
   const enumSchemaMap = new Map<string, UiPackageEnumSchema>();
   const enumMap = new Map<string, UiPackageEnumValues>();
   const moduleSchemaMap = new Map<string, UiPackageModuleSchema>();
@@ -159,19 +160,19 @@ export function createPackageRegistry(packages: readonly UiPackageDescriptor[] =
     getWorkspace: (name) => workspaceMap.get(name),
     getSection: (name) => sectionMap.get(name),
     getPage: <TProps = unknown>(name: string) => pageMap.get(name) as
-      | ComponentType<TProps>
+      | UiPackageComponentType<TProps>
       | undefined,
     getTemplate: <TProps = unknown>(name: string) => templateMap.get(name) as
-      | ComponentType<TProps>
+      | UiPackageComponentType<TProps>
       | undefined,
     getField: <TProps = unknown>(name: string) => fieldMap.get(name) as
-      | ComponentType<TProps>
+      | UiPackageComponentType<TProps>
       | undefined,
     getGrid: <TProps = unknown>(name: string) => gridMap.get(name) as
-      | ComponentType<TProps>
+      | UiPackageComponentType<TProps>
       | undefined,
     getComponent: <TProps = unknown>(name: string) => componentMap.get(name) as
-      | ComponentType<TProps>
+      | UiPackageComponentType<TProps>
       | undefined,
     getEnum: <TValues extends UiPackageEnumValues = UiPackageEnumValues>(name: string) =>
       enumMap.get(name) as TValues | undefined,
@@ -253,14 +254,14 @@ function getPackagesInDependencyOrder(
 function registerComponentLike<TSchema extends UiPackageComponentLikeSchema>(
   schema: TSchema,
   schemaMap: Map<string, TSchema>,
-  componentMap: Map<string, ComponentType<unknown>>
+  componentMap: Map<string, UiPackageComponentType<unknown>>
 ): void {
   const baseComponent = findBaseComponent(schema, componentMap);
   const component = schema.extension
     ? schema.extension({
         name: schema.name,
         schema,
-        baseComponent: baseComponent as ComponentType<unknown> | undefined
+        baseComponent: baseComponent as UiPackageComponentType<unknown> | undefined
       })
     : schema.component;
 
@@ -268,7 +269,7 @@ function registerComponentLike<TSchema extends UiPackageComponentLikeSchema>(
     schemaMap.set(key, schema);
 
     if (component) {
-      componentMap.set(key, component as ComponentType<unknown>);
+      componentMap.set(key, component as UiPackageComponentType<unknown>);
     }
   }
 }
@@ -302,8 +303,8 @@ function registerModule(
 
 function findBaseComponent(
   schema: UiPackageComponentLikeSchema,
-  componentMap: Map<string, ComponentType<unknown>>
-): ComponentType<unknown> | undefined {
+  componentMap: Map<string, UiPackageComponentType<unknown>>
+): UiPackageComponentType<unknown> | undefined {
   const keys = new Set<string>();
 
   if (schema.replaces) {
@@ -446,7 +447,7 @@ function createSchemaFromDescriptor(
         values: schemaDescriptor.values
       });
     case "module":
-      if (schemaDescriptor.resourceType === "icons") {
+      if (schemaDescriptor.resourceType === UiPackageResourceType.Icons) {
         return defineIconModuleSchema({
           ...base,
           kind: "module",
@@ -455,7 +456,7 @@ function createSchemaFromDescriptor(
         });
       }
 
-      if (schemaDescriptor.resourceType === "localization") {
+      if (schemaDescriptor.resourceType === UiPackageResourceType.Localization) {
         return defineLocalizationModuleSchema({
           ...base,
           kind: "module",
@@ -516,7 +517,7 @@ function createComponentLikeSchemaFromDescriptor(
 function resolveComponent(
   schemaDescriptor: UiPackageManifestSchema,
   modules: Record<string, Record<string, unknown>>
-): ComponentType<unknown> | undefined {
+): UiPackageComponentType<unknown> | undefined {
   const exports = resolveModuleExports(schemaDescriptor, modules);
 
   if (!exports) {
@@ -524,7 +525,7 @@ function resolveComponent(
   }
 
   const exportName = schemaDescriptor.component ?? schemaDescriptor.exportName ?? "default";
-  return exports[exportName] as ComponentType<unknown> | undefined;
+  return exports[exportName] as UiPackageComponentType<unknown> | undefined;
 }
 
 function resolveModuleExports(
@@ -554,11 +555,14 @@ function resolveEntityBinding(schemaDescriptor: UiPackageManifestSchema) {
 }
 
 function isUiPackageIconModule(schema: UiPackageModuleSchema): schema is UiPackageIconModuleSchema {
-  return (schema as Partial<UiPackageIconModuleSchema>).resourceType === "icons";
+  return (schema as Partial<UiPackageIconModuleSchema>).resourceType === UiPackageResourceType.Icons;
 }
 
 function isUiPackageLocalizationModule(
   schema: UiPackageModuleSchema
 ): schema is UiPackageLocalizationModuleSchema {
-  return (schema as Partial<UiPackageLocalizationModuleSchema>).resourceType === "localization";
+  return (
+    (schema as Partial<UiPackageLocalizationModuleSchema>).resourceType ===
+    UiPackageResourceType.Localization
+  );
 }

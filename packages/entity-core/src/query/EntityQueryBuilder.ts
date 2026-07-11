@@ -1,12 +1,16 @@
-import { ConditionOperator } from "../enums/ConditionOperator";
-import { EntityAggregationType } from "../enums/EntityAggregationType";
-import { EntityLogicalOperation } from "../enums/EntityLogicalOperation";
-import { EntityOrderDirection } from "../enums/EntityOrderDirection";
-import type { ESQ } from "../models/ESQ";
-import type { ESQColumn } from "../models/ESQColumn";
-import type { ESQFilter } from "../models/ESQFilter";
-import type { ESQFilterCollection } from "../models/ESQFilterCollection";
-import type { ESQOrder } from "../models/ESQOrder";
+import {
+  ConditionOperator,
+  EntityAggregationType,
+  EntityLogicalOperation,
+  EntityOrderDirection,
+  type EntityQueryInput,
+  type EntityQueryJsonProvider,
+  type ESQ,
+  type ESQColumn,
+  type ESQFilter,
+  type ESQFilterCollection,
+  type ESQOrder
+} from "@titanic-entity/entity-api";
 
 /** Supported input for query source selection. */
 export type EntityQuerySource = string | Pick<ESQ, "tableName" | "entityTypeName">;
@@ -25,15 +29,6 @@ export type EntityQueryFilterInput =
   | ESQFilter
   | EntityFilterBuilder
   | ((builder: EntityFilterBuilder) => EntityFilterBuilder | void);
-
-/** Converts a builder-like object to an ESQ JSON payload. */
-export interface EntityQueryJsonProvider {
-  /** Builds an ESQ JSON payload. */
-  toJson(): ESQ;
-}
-
-/** Supported input for Entity API select queries. */
-export type EntityQueryInput = ESQ | EntityQueryJsonProvider;
 
 /** Supported input for an aggregated column source. */
 export type EntityQueryAggregateColumnInput = string | EntityQueryInput;
@@ -73,7 +68,10 @@ export function toEntityQueryJson(query: EntityQueryInput): ESQ {
  * @param value Candidate value.
  */
 export function isEntityQueryJsonProvider(value: EntityQueryInput): value is EntityQueryJsonProvider {
-  return typeof value === "object" && value !== null && "toJson" in value && typeof value.toJson === "function";
+  return typeof value === "object"
+    && value !== null
+    && "toJson" in value
+    && typeof (value as { toJson?: unknown }).toJson === "function";
 }
 
 /** Fluent builder for Entity API `ESQ` requests. */

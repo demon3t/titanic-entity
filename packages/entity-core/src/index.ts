@@ -9,6 +9,9 @@ export * from "./entity/filters";
 export * from "./entity/schema";
 export * from "./entity/systemEntities";
 
+// Query
+export * from "./query";
+
 // Entity columns
 export * from "./entity/columns/BooleanColumn";
 export * from "./entity/columns/ColumnSubscriber";

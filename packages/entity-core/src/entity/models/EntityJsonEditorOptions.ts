@@ -2,8 +2,20 @@ export type EntityJsonPrimitive = string | number | boolean | null;
 export type EntityJsonValue = EntityJsonPrimitive | EntityJsonObject | EntityJsonArray;
 export type EntityJsonObject = { [key: string]: EntityJsonValue };
 export type EntityJsonArray = EntityJsonValue[];
-export type EntityJsonEditorMode = "text" | "fields";
-export type EntityJsonValueKind = "string" | "number" | "boolean" | "null" | "object" | "array";
+
+export enum EntityJsonEditorMode {
+  Text = "text",
+  Fields = "fields"
+}
+
+export enum EntityJsonValueKind {
+  String = "string",
+  Number = "number",
+  Boolean = "boolean",
+  Null = "null",
+  Object = "object",
+  Array = "array"
+}
 
 export interface EntityJsonRequiredField {
   path: string;

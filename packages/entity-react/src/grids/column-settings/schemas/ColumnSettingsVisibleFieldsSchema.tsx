@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import type {
+import {
   EntityDataGridColumnSettingsMode,
-  EntityDataGridLabels
+  type EntityDataGridLabels
 } from "../../data-grid/EntityDataGridSettings";
 
 export interface ColumnSettingsVisibleFieldsSchemaProps {
@@ -30,7 +30,7 @@ export function ColumnSettingsVisibleFieldsSchema({
       </div>
 
       <div
-        className={mode === "list"
+        className={mode === EntityDataGridColumnSettingsMode.List
           ? "titanic-data-grid-column-modal__grid titanic-data-grid-column-modal__grid_list"
           : "titanic-data-grid-column-modal__grid titanic-data-grid-column-modal__grid_tile"}
         ref={gridRef}

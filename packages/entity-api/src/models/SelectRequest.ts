@@ -1,4 +1,4 @@
-import type { EntityQueryInput } from "../query";
+import type { EntityQueryInput } from "./EntityQueryInput";
 import type { ESQFilter } from "./ESQFilter";
 import type { ESQOrder } from "./ESQOrder";
 

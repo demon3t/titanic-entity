@@ -26,7 +26,10 @@ export interface GridColumnSetting {
 }
 
 /** Supported display modes for grid column settings. */
-export type GridColumnSettingsMode = "list" | "tile";
+export enum GridColumnSettingsMode {
+  List = "list",
+  Tile = "tile"
+}
 
 /** Column collection for a single grid display mode. */
 export interface GridModeColumnSettings {

@@ -6,6 +6,7 @@ import { EntityApiOperationType } from "../enums/EntityApiOperationType";
 import { EntityLogicalOperation } from "../enums/EntityLogicalOperation";
 import { EntityOrderDirection } from "../enums/EntityOrderDirection";
 import { entityApiEnumNames } from "../models/EntityApiSchemaNames";
+import { GridColumnSettingsMode } from "../models/GridColumnSettings";
 
 /** UI package schema for the `ConditionOperator` enum. */
 export const conditionOperatorEnumSchema = defineEnumSchema({
@@ -49,6 +50,13 @@ export const entityOrderDirectionEnumSchema = defineEnumSchema({
   values: Titanic.Package.toEnumValues(EntityOrderDirection)
 });
 
+/** UI package schema for the `GridColumnSettingsMode` enum. */
+export const gridColumnSettingsModeEnumSchema = defineEnumSchema({
+  kind: "enum",
+  name: entityApiEnumNames.GridColumnSettingsMode,
+  values: Titanic.Package.toEnumValues(GridColumnSettingsMode)
+});
+
 /** Complete list of enum schemas exposed by the `entity-api` package. */
 export const entityApiEnumSchemas = [
   conditionOperatorEnumSchema,
@@ -56,7 +64,8 @@ export const entityApiEnumSchemas = [
   entityApiBatchExecutionModeEnumSchema,
   entityApiOperationTypeEnumSchema,
   entityLogicalOperationEnumSchema,
-  entityOrderDirectionEnumSchema
+  entityOrderDirectionEnumSchema,
+  gridColumnSettingsModeEnumSchema
 ] as const;
 
 /** Backward-compatible alias for `entityApiEnumSchemas`. */

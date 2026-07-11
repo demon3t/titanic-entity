@@ -5,8 +5,8 @@ import { EntityField } from "./fields/EntityField";
 import type { EntityFieldProps } from "./fields/models/EntityFieldProps";
 import { EntityGrid } from "./layout/EntityGrid";
 import type { EntityGridProps } from "./layout/models/EntityGridProps";
-import { useUiComponent } from "@titanic-entity/entity-base";
 import { useEntityFormState } from "../headless/entityFormState";
+import { useUiComponent } from "../react/UiPackageProvider";
 
 export type { EntityFormProps } from "./models/EntityFormProps";
 

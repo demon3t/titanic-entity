@@ -5,7 +5,10 @@ export * from "../components/EntityRegistry";
 export * from "../components/EntityTable";
 export { entityReactGridNames } from "../model/entityReactUiPackageNames";
 export { createEntityDataGridColumnSettingsPackage } from "./column-settings/EntityDataGridColumnSettingsPackage";
-export { defaultEntityDataGridSettings } from "./data-grid/EntityDataGridSettings";
+export {
+  defaultEntityDataGridSettings,
+  EntityDataGridColumnSettingsMode
+} from "./data-grid/EntityDataGridSettings";
 
 export type {
   EntityDataGridPackage,
@@ -24,7 +27,6 @@ export type {
 export type {
   EntityDataGridColumn,
   EntityDataGridColumnSetting,
-  EntityDataGridColumnSettingsMode,
   EntityDataGridCulture,
   EntityDataGridLabels,
   EntityDataGridModeColumnSettings,

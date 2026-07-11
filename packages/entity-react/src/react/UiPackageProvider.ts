@@ -1,12 +1,24 @@
-import { createContext, createElement, useContext, useMemo, type ComponentType } from "react";
-import { createPackageRegistry } from "./packageRegistry";
-import type {
-  UiPackageDescriptor,
-  UiPackageEnumValues,
-  UiPackageModuleExports,
-  UiPackageProviderProps,
-  UiPackageRegistry
-} from "./types";
+import {
+  createContext,
+  createElement,
+  useContext,
+  useMemo,
+  type ComponentType,
+  type ReactNode
+} from "react";
+import {
+  createPackageRegistry,
+  type UiPackageDescriptor,
+  type UiPackageEnumValues,
+  type UiPackageModuleExports,
+  type UiPackageRegistry
+} from "@titanic-entity/entity-base";
+
+export interface UiPackageProviderProps {
+  packages?: readonly UiPackageDescriptor[];
+  registry?: UiPackageRegistry;
+  children: ReactNode;
+}
 
 const UiPackageRegistryContext = createContext<UiPackageRegistry | undefined>(undefined);
 
@@ -37,7 +49,7 @@ export function useUiPage<TProps = unknown>(
 ): ComponentType<TProps> | undefined;
 export function useUiPage<TProps = unknown>(name: string, fallback?: ComponentType<TProps>) {
   const registry = useUiPackageRegistry();
-  return registry?.getPage<TProps>(name) ?? fallback;
+  return (registry?.getPage<TProps>(name) as ComponentType<TProps> | undefined) ?? fallback;
 }
 
 export function useUiTemplate<TProps = unknown>(
@@ -53,7 +65,7 @@ export function useUiTemplate<TProps = unknown>(
   fallback?: ComponentType<TProps>
 ) {
   const registry = useUiPackageRegistry();
-  return registry?.getTemplate<TProps>(name) ?? fallback;
+  return (registry?.getTemplate<TProps>(name) as ComponentType<TProps> | undefined) ?? fallback;
 }
 
 export function useUiField<TProps = unknown>(
@@ -69,7 +81,7 @@ export function useUiField<TProps = unknown>(
   fallback?: ComponentType<TProps>
 ) {
   const registry = useUiPackageRegistry();
-  return registry?.getField<TProps>(name) ?? fallback;
+  return (registry?.getField<TProps>(name) as ComponentType<TProps> | undefined) ?? fallback;
 }
 
 export function useUiGrid<TProps = unknown>(
@@ -85,7 +97,7 @@ export function useUiGrid<TProps = unknown>(
   fallback?: ComponentType<TProps>
 ) {
   const registry = useUiPackageRegistry();
-  return registry?.getGrid<TProps>(name) ?? fallback;
+  return (registry?.getGrid<TProps>(name) as ComponentType<TProps> | undefined) ?? fallback;
 }
 
 export function useUiComponent<TProps = unknown>(
@@ -101,7 +113,7 @@ export function useUiComponent<TProps = unknown>(
   fallback?: ComponentType<TProps>
 ) {
   const registry = useUiPackageRegistry();
-  return registry?.getComponent<TProps>(name) ?? fallback;
+  return (registry?.getComponent<TProps>(name) as ComponentType<TProps> | undefined) ?? fallback;
 }
 
 export function useUiEnum<TValues extends UiPackageEnumValues = UiPackageEnumValues>(

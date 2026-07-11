@@ -4,8 +4,8 @@ import { EntityField } from "../../components/fields/EntityField";
 import type { EntityFieldProps } from "../../components/fields/models/EntityFieldProps";
 import { EntityGrid } from "../../components/layout/EntityGrid";
 import type { EntityGridProps } from "../../components/layout/models/EntityGridProps";
-import { useUiComponent } from "@titanic-entity/entity-base";
 import { useEntityEditPageController } from "../../headless/entityEditPageState";
+import { useUiComponent } from "../../react/UiPackageProvider";
 import type {
   EntityEditPageAction,
   EntityEditPageActionsDiffItem,

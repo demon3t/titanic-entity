@@ -1,14 +1,20 @@
 // Общие настройки системных стилей, которые хранятся в Entity ORM API.
 import {
   createEntityGuid,
-  entityQuery,
   getEntityValue,
   type EntityApiClient,
   type EntityApiEntity
 } from "@titanic-entity/entity-api";
 import type { EntityDataGridColumn } from "../grids";
 import type { EntityRecordPageConfig } from "../components/records/EntityRecordsPage";
-import { EntityFieldKind, type EntityJsonRequiredField, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
+import {
+  EntityFieldKind,
+  EntityJsonEditorMode,
+  entityQuery,
+  type EntityJsonRequiredField,
+  type EntitySchema,
+  type EntityValues
+} from "@titanic-entity/entity-core";
 
 export const systemStyleTableName = "sys_style";
 export const systemStyleOrderColumn = "SortOrder";
@@ -113,7 +119,7 @@ export function createSystemStyleSchema(labels: SystemStyleFieldLabels, title: s
         gridSpan: 24,
         defaultValue: "{}",
         jsonEditor: {
-          defaultMode: "fields",
+          defaultMode: EntityJsonEditorMode.Fields,
           requiredFields: systemStyleRequiredJsonFields
         }
       },

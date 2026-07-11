@@ -16,6 +16,7 @@ export const entityReactGridSchemas = entityUiGridSchemas;
 
 export {
   createEntityDataGridColumnSettingsPackage as createDataGridColumnSettingsPackage,
+  EntityDataGridColumnSettingsMode as DataGridColumnSettingsMode,
   defaultEntityDataGridSettings as defaultDataGridSettings
 } from "@titanic-entity/entity-react/grids";
 
@@ -25,7 +26,6 @@ export type {
   EntityDataGridColumnSetting as DataGridColumnSetting,
   EntityDataGridColumnSettingsDialogContext as DataGridColumnSettingsDialogContext,
   EntityDataGridColumnSettingsDialogRenderer as DataGridColumnSettingsDialogRenderer,
-  EntityDataGridColumnSettingsMode as DataGridColumnSettingsMode,
   EntityDataGridCulture as DataGridCulture,
   EntityDataGridEntityDescriptor as DataGridEntityDescriptor,
   EntityDataGridLabels as DataGridLabels,

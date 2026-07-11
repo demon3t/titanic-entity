@@ -1,16 +1,19 @@
 import type { DragEvent } from "react";
-import type {
-  EntityDataGridColumn,
-  EntityDataGridColumnSetting,
+import {
   EntityDataGridColumnSettingsMode,
-  EntityDataGridModeSettingsMap
+  type EntityDataGridColumn,
+  type EntityDataGridColumnSetting,
+  type EntityDataGridModeSettingsMap
 } from "../../data-grid/EntityDataGridSettings";
 
 export const columnEditorGap = 8;
 export const columnEditorRowHeight = 56;
 export const columnWidthUnit = 42;
 const defaultGridColumns = 24;
-const columnSettingsModes = ["list", "tile"] as const;
+const columnSettingsModes = [
+  EntityDataGridColumnSettingsMode.List,
+  EntityDataGridColumnSettingsMode.Tile
+] as const;
 
 export type EditorDraftSettingsByMode = Partial<Record<EntityDataGridColumnSettingsMode, EntityDataGridColumnSetting[]>>;
 

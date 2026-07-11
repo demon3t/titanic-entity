@@ -1,4 +1,6 @@
-import type { ComponentType, ReactNode } from "react";
+export type UiPackageComponentType<TProps = unknown> =
+  | ((props: TProps) => unknown)
+  | (new (props: TProps) => unknown);
 
 export type UiPackageEntityBinding =
   | string
@@ -44,7 +46,7 @@ export interface UiPackageSectionSchema<TProps = unknown> extends UiPackageSchem
   workspaceName?: string;
   pageName?: string;
   page?: string;
-  component?: ComponentType<TProps>;
+  component?: UiPackageComponentType<TProps>;
   icon?: string;
   order?: number;
 }
@@ -52,15 +54,15 @@ export interface UiPackageSectionSchema<TProps = unknown> extends UiPackageSchem
 export interface UiPackageComponentLikeExtensionContext<TProps = unknown> {
   name: string;
   schema: UiPackageComponentLikeSchema<TProps>;
-  baseComponent?: ComponentType<TProps>;
+  baseComponent?: UiPackageComponentType<TProps>;
 }
 
 export type UiPackageComponentLikeExtension<TProps = unknown> = (
   context: UiPackageComponentLikeExtensionContext<TProps>
-) => ComponentType<TProps>;
+) => UiPackageComponentType<TProps>;
 
 export interface UiPackageComponentLikeSchema<TProps = unknown> extends UiPackageSchemaBase {
-  component?: ComponentType<TProps>;
+  component?: UiPackageComponentType<TProps>;
   extension?: UiPackageComponentLikeExtension<TProps>;
 }
 
@@ -113,7 +115,10 @@ export interface UiPackageEnumSchema<TValues extends UiPackageEnumValues = UiPac
 
 export type UiPackageModuleExports = Record<string, unknown>;
 
-export type UiPackageResourceType = "icons" | "localization";
+export enum UiPackageResourceType {
+  Icons = "icons",
+  Localization = "localization"
+}
 
 export interface UiPackageModuleSchema<TExports extends UiPackageModuleExports = UiPackageModuleExports>
   extends UiPackageSchemaBase {
@@ -124,14 +129,14 @@ export interface UiPackageModuleSchema<TExports extends UiPackageModuleExports =
 export interface UiPackageIconModuleSchema<
   TExports extends UiPackageModuleExports = UiPackageModuleExports
 > extends UiPackageModuleSchema<TExports> {
-  resourceType: "icons";
+  resourceType: UiPackageResourceType.Icons;
   groupName?: string;
 }
 
 export interface UiPackageLocalizationModuleSchema<
   TExports extends UiPackageModuleExports = UiPackageModuleExports
 > extends UiPackageModuleSchema<TExports> {
-  resourceType: "localization";
+  resourceType: UiPackageResourceType.Localization;
   groupName?: string;
   defaultLocale?: string;
 }
@@ -207,11 +212,11 @@ export interface UiPackageRegistry {
   localizations: readonly UiPackageLocalizationModuleSchema[];
   getWorkspace(name: string): UiPackageWorkspaceSchema | undefined;
   getSection(name: string): UiPackageSectionSchema | undefined;
-  getPage<TProps = unknown>(name: string): ComponentType<TProps> | undefined;
-  getTemplate<TProps = unknown>(name: string): ComponentType<TProps> | undefined;
-  getField<TProps = unknown>(name: string): ComponentType<TProps> | undefined;
-  getGrid<TProps = unknown>(name: string): ComponentType<TProps> | undefined;
-  getComponent<TProps = unknown>(name: string): ComponentType<TProps> | undefined;
+  getPage<TProps = unknown>(name: string): UiPackageComponentType<TProps> | undefined;
+  getTemplate<TProps = unknown>(name: string): UiPackageComponentType<TProps> | undefined;
+  getField<TProps = unknown>(name: string): UiPackageComponentType<TProps> | undefined;
+  getGrid<TProps = unknown>(name: string): UiPackageComponentType<TProps> | undefined;
+  getComponent<TProps = unknown>(name: string): UiPackageComponentType<TProps> | undefined;
   getEnum<TValues extends UiPackageEnumValues = UiPackageEnumValues>(
     name: string
   ): TValues | undefined;
@@ -224,10 +229,4 @@ export interface UiPackageRegistry {
   getLocalizationModule<TExports extends UiPackageModuleExports = UiPackageModuleExports>(
     name: string
   ): UiPackageLocalizationModuleSchema<TExports> | undefined;
-}
-
-export interface UiPackageProviderProps {
-  packages?: readonly UiPackageDescriptor[];
-  registry?: UiPackageRegistry;
-  children: ReactNode;
 }

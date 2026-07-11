@@ -3,6 +3,7 @@ import { ConditionOperator } from "../enums/ConditionOperator";
 import type { EntityApiClient } from "../client/EntityApiClient";
 import type { EntityApiEntity } from "../models/EntityApiEntity";
 import type { EntityGridColumnSettingsDto, EntityGridColumnSettingsSaveRequest } from "../models/EntityGridColumnSettings";
+import { GridColumnSettingsMode } from "../models/GridColumnSettings";
 
 /** Service contract for persisting per-user grid column settings. */
 export interface EntityGridColumnSettingsClient {
@@ -23,6 +24,7 @@ export interface EntityGridColumnSettingsClient {
 }
 
 type EntityGridColumnSettingsTransport = Pick<EntityApiClient, "save" | "selectRows">;
+const gridColumnSettingsModes = [GridColumnSettingsMode.List, GridColumnSettingsMode.Tile] as const;
 
 const gridColumnSettingsEntity = {
   name: "sys_user_grid_column_setting",
@@ -210,7 +212,7 @@ function normalizeEntityGridModeSettings(value: unknown): EntityGridColumnSettin
   const payload = value as Record<string, unknown>;
   const modeSettings: EntityGridColumnSettingsDto["modeSettings"] = {};
 
-  (["list", "tile"] as const).forEach((mode) => {
+  gridColumnSettingsModes.forEach((mode) => {
     const modePayload = payload[mode];
     const rawColumns = Array.isArray(modePayload)
       ? modePayload
@@ -240,11 +242,16 @@ function getEntityGridModeColumns(
     return modeSettings[mode].columns;
   }
 
-  return modeSettings?.list?.columns ?? modeSettings?.tile?.columns ?? [];
+  return modeSettings?.[GridColumnSettingsMode.List]?.columns ??
+    modeSettings?.[GridColumnSettingsMode.Tile]?.columns ??
+    [];
 }
 
 function hasEntityGridModeSettings(modeSettings: EntityGridColumnSettingsDto["modeSettings"]): boolean {
-  return Boolean(modeSettings?.list?.columns.length || modeSettings?.tile?.columns.length);
+  return Boolean(
+    modeSettings?.[GridColumnSettingsMode.List]?.columns.length ||
+    modeSettings?.[GridColumnSettingsMode.Tile]?.columns.length
+  );
 }
 
 function normalizeEntityGridColumnSettings(value: readonly unknown[]): EntityGridColumnSettingsDto["columns"] {
@@ -283,7 +290,15 @@ function normalizeEntityGridColumnSettings(value: readonly unknown[]): EntityGri
 }
 
 function toColumnSettingsMode(value: unknown): EntityGridColumnSettingsDto["columnSettingsMode"] {
-  return value === "list" || value === "tile" ? value : undefined;
+  if (value === GridColumnSettingsMode.List) {
+    return GridColumnSettingsMode.List;
+  }
+
+  if (value === GridColumnSettingsMode.Tile) {
+    return GridColumnSettingsMode.Tile;
+  }
+
+  return undefined;
 }
 
 function toPositiveNumber(value: unknown): number | undefined {

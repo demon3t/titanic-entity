@@ -1,3 +1,5 @@
 export const entityCoreEnumNames = {
-  EntityFieldKind: "EntityFieldKind"
+  EntityFieldKind: "EntityFieldKind",
+  EntityJsonEditorMode: "EntityJsonEditorMode",
+  EntityJsonValueKind: "EntityJsonValueKind"
 } as const;

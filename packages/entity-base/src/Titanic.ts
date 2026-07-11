@@ -7,6 +7,7 @@ import type {
   UiPackageModuleExports,
   UiPackageSchema
 } from "./types";
+import { UiPackageResourceType } from "./types";
 import {
   getUiPackageEnumRegistryKeys,
   resolveUiPackageEnumSchema
@@ -770,13 +771,13 @@ export class Titanic {
 function isIconModuleSchema(
   schema: UiPackageSchema
 ): schema is UiPackageIconModuleSchema<TitanicIconModuleExports> {
-  return schema.kind === "module" && "resourceType" in schema && schema.resourceType === "icons";
+  return schema.kind === "module" && "resourceType" in schema && schema.resourceType === UiPackageResourceType.Icons;
 }
 
 function isLocalizationModuleSchema(
   schema: UiPackageSchema
 ): schema is UiPackageLocalizationModuleSchema<TitanicLocalizationModuleExports> {
-  return schema.kind === "module" && "resourceType" in schema && schema.resourceType === "localization";
+  return schema.kind === "module" && "resourceType" in schema && schema.resourceType === UiPackageResourceType.Localization;
 }
 
 function isEnumSchema(schema: UiPackageSchema): schema is UiPackageEnumSchema {

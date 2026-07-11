@@ -1,10 +1,10 @@
 import {
-  entityQuery,
   type EntityApiColumnValueResponse,
   type EntityApiEntity,
   type ESQ,
   type ESQFilterCollection
 } from "@titanic-entity/entity-api";
+import { entityQuery } from "../query";
 import { createIsEqualFilter } from "./filters";
 import type { EntityDisplayValues } from "./models/EntityDisplayValues";
 import type { EntityLookupOptionsSource } from "./models/EntityLookupOptionsSource";

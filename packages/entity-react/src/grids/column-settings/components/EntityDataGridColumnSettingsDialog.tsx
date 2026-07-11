@@ -7,10 +7,10 @@ import {
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent
 } from "react";
-import type {
-  EntityDataGridColumn,
-  EntityDataGridColumnSetting,
-  EntityDataGridColumnSettingsMode
+import {
+  EntityDataGridColumnSettingsMode,
+  type EntityDataGridColumn,
+  type EntityDataGridColumnSetting
 } from "../../data-grid/EntityDataGridSettings";
 import {
   ColumnSettingsDialogLayout,
@@ -490,7 +490,7 @@ export function EntityDataGridColumnSettingsDialog<TRow>({
     } as CSSProperties;
     const fieldClassName = [
       "titanic-data-grid-column-modal__field",
-      mode === "list" ? "titanic-data-grid-column-modal__field_list" : "titanic-data-grid-column-modal__field_tile",
+      mode === EntityDataGridColumnSettingsMode.List ? "titanic-data-grid-column-modal__field_list" : "titanic-data-grid-column-modal__field_tile",
       draggingKey === setting.key ? "titanic-data-grid-column-modal__field_dragging" : "",
       resizingKey === setting.key ? "titanic-data-grid-column-modal__field_resizing" : ""
     ].filter(Boolean).join(" ");

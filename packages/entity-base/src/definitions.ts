@@ -22,6 +22,7 @@ import type {
   UiPackageTemplateSchema,
   UiPackageWorkspaceSchema
 } from "./types";
+import { UiPackageResourceType } from "./types";
 
 /** Registers a UI package descriptor in the global Titanic registry. */
 export function definePackage<TDescriptor extends UiPackageDescriptor>(
@@ -166,13 +167,13 @@ export function defineIconModuleSchema<
 >(
   schema: Omit<UiPackageIconModuleSchema<TExports>, "kind" | "resourceType"> & {
     kind?: "module";
-    resourceType?: "icons";
+    resourceType?: UiPackageResourceType.Icons | "icons";
   }
 ): UiPackageIconModuleSchema<TExports> {
   return {
     ...schema,
     kind: "module",
-    resourceType: "icons"
+    resourceType: UiPackageResourceType.Icons
   };
 }
 
@@ -225,13 +226,13 @@ export function defineLocalizationModuleSchema<
 >(
   schema: Omit<UiPackageLocalizationModuleSchema<TExports>, "kind" | "resourceType"> & {
     kind?: "module";
-    resourceType?: "localization";
+    resourceType?: UiPackageResourceType.Localization | "localization";
   }
 ): UiPackageLocalizationModuleSchema<TExports> {
   return {
     ...schema,
     kind: "module",
-    resourceType: "localization"
+    resourceType: UiPackageResourceType.Localization
   };
 }
 

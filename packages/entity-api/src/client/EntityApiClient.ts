@@ -1,3 +1,4 @@
+import { ConditionOperator } from "../enums/ConditionOperator";
 import { EntityApiOperationType } from "../enums/EntityApiOperationType";
 import { EntityApiError } from "../errors/EntityApiError";
 import type { ApiBatchRequest } from "../models/ApiBatchRequest";
@@ -7,11 +8,13 @@ import type { ApiDeleteResult } from "../models/ApiDeleteResult";
 import type { ApiEntity } from "../models/ApiEntity";
 import type { ApiManagerStructureResponse } from "../models/ApiManagerStructureResponse";
 import type { ApiRequest } from "../models/ApiRequest";
+import type { EntityQueryInput } from "../models/EntityQueryInput";
+import type { ESQ } from "../models/ESQ";
 import type { ESQFilter } from "../models/ESQFilter";
 import type { ESQFilterCollection } from "../models/ESQFilterCollection";
 import type { ESQOrder } from "../models/ESQOrder";
 import type { SelectRequest } from "../models/SelectRequest";
-import { entityQuery, toEntityQueryJson, type EntityQueryInput } from "../query";
+import { toEntityQueryJson } from "./queryHelpers";
 
 /** HTTP client for interacting with the Entity API manager endpoint. */
 export class EntityApiClient {
@@ -100,12 +103,14 @@ export class EntityApiClient {
     allColumns,
     query
   }: SelectRequest): Promise<ApiEntity[]> {
-    return this.select(query ?? entityQuery(tableName)
-      .allColumns(allColumns ?? !columns?.length)
-      .columns(...(columns ?? []))
-      .take(rowCount)
-      .filters(filters)
-      .orders(...(orders ?? [])));
+    return this.select(query ?? createSelectQuery({
+      tableName,
+      columns,
+      filters,
+      orders,
+      rowCount,
+      allColumns
+    }));
   }
 
   /**
@@ -182,10 +187,20 @@ export class EntityApiClient {
    * @param primaryColumn Primary key column name.
    */
   async loadById(tableName: string, id: unknown, columns: string[] = ["*"], primaryColumn = "Id"): Promise<ApiEntity | null> {
-    const rows = await this.select(entityQuery(tableName)
-      .columns(...columns)
-      .where(primaryColumn, id)
-      .take(1));
+    const rows = await this.select({
+      tableName,
+      columns: columns.map((path) => ({ path })),
+      filters: {
+        items: [
+          {
+            path: primaryColumn,
+            comparisonType: ConditionOperator.Equal,
+            value: id
+          }
+        ]
+      },
+      rowCount: 1
+    });
 
     return rows[0] ?? null;
   }
@@ -237,6 +252,38 @@ export class EntityApiClient {
 
     return `Entity API request failed with ${status}`;
   }
+}
+
+function createSelectQuery({
+  tableName,
+  columns,
+  filters = [],
+  orders,
+  rowCount,
+  allColumns
+}: SelectRequest): ESQ {
+  const query: ESQ = {
+    tableName,
+    allColumns: allColumns ?? !columns?.length
+  };
+
+  if (columns?.length) {
+    query.columns = columns.map((path) => ({ path }));
+  }
+
+  if (filters.length) {
+    query.filters = { items: filters };
+  }
+
+  if (orders?.length) {
+    query.orders = orders;
+  }
+
+  if (rowCount !== undefined) {
+    query.rowCount = rowCount;
+  }
+
+  return query;
 }
 
 function isESQFilterCollection(filter: Record<string, unknown> | ESQFilterCollection): filter is ESQFilterCollection {

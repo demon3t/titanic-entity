@@ -1,7 +1,6 @@
 import { isValidElement, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import {
   EntityGridColumnSettingsApiClient,
-  entityQuery,
   getEntityValue,
   toEntityQueryJson,
   type EntityApiEntity,
@@ -12,7 +11,7 @@ import {
   type ESQColumn,
   type ESQFilter
 } from "@titanic-entity/entity-api";
-import { getCellDisplayValue, toEntityValues } from "@titanic-entity/entity-core";
+import { entityQuery, getCellDisplayValue, toEntityValues } from "@titanic-entity/entity-core";
 import { Titanic } from "@titanic-entity/entity-base";
 import { defaultEntityDataGridCulture, getEntityDataGridLabels } from "../../resources/EntityDataGrid";
 import { EntityDataGridRowContextMenu } from "../context-menus/EntityDataGridRowContextMenu";
@@ -36,9 +35,9 @@ import type {
   EntityDataGridRowActionContext
 } from "../../grids";
 import {
+  EntityDataGridColumnSettingsMode,
   defaultEntityDataGridSettings,
   type EntityDataGridColumn,
-  type EntityDataGridColumnSettingsMode,
   type EntityDataGridColumnSetting,
   type EntityDataGridLabels,
   type EntityDataGridModeSettingsMap,
@@ -92,7 +91,11 @@ const rowMenuGap = 4;
 const rowMenuPadding = 4;
 const rowMenuRightInset = 12;
 const rowMenuViewportMargin = 12;
-const defaultColumnSettingsMode: EntityDataGridColumnSettingsMode = "list";
+const defaultColumnSettingsMode: EntityDataGridColumnSettingsMode = EntityDataGridColumnSettingsMode.List;
+const columnSettingsModes = [
+  EntityDataGridColumnSettingsMode.List,
+  EntityDataGridColumnSettingsMode.Tile
+] as const;
 const relatedColumnMaxDepth = 3;
 
 export function EntityDataGrid<TRow = EntityApiEntity>({
@@ -357,13 +360,13 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
     return nextColumns;
   }, [availableColumns, effectiveColumnSettings]);
   const dataGridTemplate = useMemo(
-    () => effectiveColumnSettingsMode === "tile"
+    () => effectiveColumnSettingsMode === EntityDataGridColumnSettingsMode.Tile
       ? getTileGridTemplate(effectiveGridWidth)
       : getColumnGridTemplate(visibleColumns, effectiveGridWidth),
     [effectiveColumnSettingsMode, effectiveGridWidth, visibleColumns]
   );
   const getCellStyle = useCallback((column: VisibleGridColumn<TRow>) =>
-    effectiveColumnSettingsMode === "tile"
+    effectiveColumnSettingsMode === EntityDataGridColumnSettingsMode.Tile
       ? ({
           "--titanic-data-grid-cell-span": String(getColumnRenderSpan(column, effectiveGridWidth))
         } as CSSProperties)
@@ -377,7 +380,7 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
 
   const effectiveLoading = loading || structureLoading || columnSettingsLoading || (internalLoading && renderedRows.length === 0);
   const loadingMoreRows = internalLoading && renderedRows.length > 0;
-  const showColumnHeader = effectiveColumnSettingsMode === "list";
+  const showColumnHeader = effectiveColumnSettingsMode === EntityDataGridColumnSettingsMode.List;
   const rootClassName = [
     "titanic-data-grid",
     `titanic-data-grid_layout_${effectiveColumnSettingsMode}`,
@@ -1036,7 +1039,7 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
                           role="cell"
                           style={getCellStyle(column)}
                         >
-                          {effectiveColumnSettingsMode === "tile" ? (
+                          {effectiveColumnSettingsMode === EntityDataGridColumnSettingsMode.Tile ? (
                             <>
                               <span className="titanic-data-grid__cell-field-label">{cellLabel}</span>
                               <span className="titanic-data-grid__cell-field-value">{cellValue}</span>
@@ -2362,7 +2365,7 @@ function normalizeStoredGridModeSettings(value: unknown): EntityDataGridModeSett
   const payload = value as Record<string, unknown>;
   const modeSettings: EntityDataGridModeSettingsMap = {};
 
-  (["list", "tile"] as const).forEach((mode) => {
+  columnSettingsModes.forEach((mode) => {
     const modePayload = payload[mode];
     const rawColumns = Array.isArray(modePayload)
       ? modePayload
@@ -2389,7 +2392,7 @@ function normalizeStoredGridModeSettings(value: unknown): EntityDataGridModeSett
 function normalizeGridModeSettingsPayload(modeSettings: EntityDataGridModeSettingsMap | undefined): EntityDataGridModeSettingsMap | undefined {
   const nextModeSettings: EntityDataGridModeSettingsMap = {};
 
-  (["list", "tile"] as const).forEach((mode) => {
+  columnSettingsModes.forEach((mode) => {
     const columns = modeSettings?.[mode]?.columns;
 
     if (columns?.length) {
@@ -2407,7 +2410,7 @@ function normalizeGridModeSettingsForStorage<TRow>(
 ): EntityDataGridModeSettingsMap | undefined {
   const nextModeSettings: EntityDataGridModeSettingsMap = {};
 
-  (["list", "tile"] as const).forEach((mode) => {
+  columnSettingsModes.forEach((mode) => {
     const sourceSettings = modeSettings?.[mode]?.columns;
 
     if (!sourceSettings?.some((setting) => setting.visible !== false)) {
@@ -2447,8 +2450,8 @@ function getGridUserSettingsColumnKeys(settings: EntityDataGridUserSettings | nu
 
 function getGridModeSettingsColumnKeys(modeSettings: EntityDataGridModeSettingsMap | undefined): string[] {
   return [
-    ...(modeSettings?.list?.columns.map(getColumnSettingPath) ?? []),
-    ...(modeSettings?.tile?.columns.map(getColumnSettingPath) ?? [])
+    ...(modeSettings?.[EntityDataGridColumnSettingsMode.List]?.columns.map(getColumnSettingPath) ?? []),
+    ...(modeSettings?.[EntityDataGridColumnSettingsMode.Tile]?.columns.map(getColumnSettingPath) ?? [])
   ];
 }
 
@@ -2460,15 +2463,28 @@ function getGridModeColumns(
     return modeSettings[mode].columns;
   }
 
-  return modeSettings?.list?.columns ?? modeSettings?.tile?.columns ?? [];
+  return modeSettings?.[EntityDataGridColumnSettingsMode.List]?.columns
+    ?? modeSettings?.[EntityDataGridColumnSettingsMode.Tile]?.columns
+    ?? [];
 }
 
 function hasGridModeSettings(modeSettings: EntityDataGridModeSettingsMap | undefined): boolean {
-  return Boolean(modeSettings?.list?.columns.length || modeSettings?.tile?.columns.length);
+  return Boolean(
+    modeSettings?.[EntityDataGridColumnSettingsMode.List]?.columns.length
+    || modeSettings?.[EntityDataGridColumnSettingsMode.Tile]?.columns.length
+  );
 }
 
 function normalizeColumnSettingsMode(value: unknown): EntityDataGridColumnSettingsMode | undefined {
-  return value === "list" || value === "tile" ? value : undefined;
+  if (value === EntityDataGridColumnSettingsMode.List) {
+    return EntityDataGridColumnSettingsMode.List;
+  }
+
+  if (value === EntityDataGridColumnSettingsMode.Tile) {
+    return EntityDataGridColumnSettingsMode.Tile;
+  }
+
+  return undefined;
 }
 
 function normalizeStoredColumnSetting(value: unknown): EntityDataGridColumnSetting | null {
