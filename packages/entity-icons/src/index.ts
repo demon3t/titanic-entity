@@ -1,5 +1,6 @@
 import { definePackage } from "@titanic-entity/entity-base";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
+import { entityIconPackageNames } from "./model";
 import { entityIconSchemas } from "./schemas";
 
 export * from "./assets";
@@ -8,7 +9,7 @@ export * from "./model";
 export * from "./schemas";
 
 export const titanicEntityIconsPackage = definePackage({
-  name: "Titanic.EntityIcons",
+  name: entityIconPackageNames.Package,
   version: "0.1.0",
   dependsOn: [
     titanicEntityResourcesPackage.name

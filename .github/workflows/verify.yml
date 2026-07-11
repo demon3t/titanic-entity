@@ -1,0 +1,63 @@
+name: Verify titanic-entity
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify npm packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify @titanic-entity/entity-base
+        run: |
+          npm run typecheck -w @titanic-entity/entity-base
+          npm run build -w @titanic-entity/entity-base
+
+      - name: Verify @titanic-entity/entity-api
+        run: |
+          npm run typecheck -w @titanic-entity/entity-api
+          npm run build -w @titanic-entity/entity-api
+
+      - name: Verify @titanic-entity/entity-core
+        run: |
+          npm run typecheck -w @titanic-entity/entity-core
+          npm run build -w @titanic-entity/entity-core
+
+      - name: Verify @titanic-entity/entity-resources
+        run: |
+          npm run typecheck -w @titanic-entity/entity-resources
+          npm run build -w @titanic-entity/entity-resources
+
+      - name: Verify @titanic-entity/entity-icons
+        run: |
+          npm run typecheck -w @titanic-entity/entity-icons
+          npm run build -w @titanic-entity/entity-icons
+
+      - name: Verify @titanic-entity/entity-react
+        run: |
+          npm run typecheck -w @titanic-entity/entity-react
+          npm run build -w @titanic-entity/entity-react
+
+      - name: Verify @titanic-entity/entity-ui
+        run: |
+          npm run typecheck -w @titanic-entity/entity-ui
+          npm run build -w @titanic-entity/entity-ui

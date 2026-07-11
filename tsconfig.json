@@ -19,6 +19,8 @@
       "@titanic-entity/entity-api/*": ["packages/entity-api/src/*"],
       "@titanic-entity/entity-core": ["packages/entity-core/src/index.ts"],
       "@titanic-entity/entity-core/*": ["packages/entity-core/src/*"],
+      "@titanic-entity/entity-icons": ["packages/entity-icons/src/index.ts"],
+      "@titanic-entity/entity-icons/*": ["packages/entity-icons/src/*"],
       "@titanic-entity/entity-resources": ["packages/entity-resources/src/index.ts"],
       "@titanic-entity/entity-resources/*": ["packages/entity-resources/src/*"],
       "@titanic-entity/entity-icons": ["packages/entity-icons/src/index.ts"],
