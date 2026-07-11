@@ -39,6 +39,7 @@ src/
     entity-core/       Entity-модели, схемы и React provider
     entity-api/        HTTP-клиент, ESQ и API-схемы
     entity-resources/  ресурсы и иконки
+    entity-icons/      расширяемые коллекции иконок
     entity-react/      React headless hooks, components, fields, grids, layout, templates, resources, styles
     entity-ui/         UI package schemas: components, fields, grids, templates
 ```
@@ -196,7 +197,7 @@ Root import `@titanic-entity/entity-react` остается совместимы
 
 ## Ресурсы и иконки
 
-Ресурсы живут в `@titanic-entity/entity-resources`. Для иконок используйте явный entrypoint:
+Системные ресурсы и базовые SVG descriptors живут в `@titanic-entity/entity-resources`. Для прямого доступа к ним используйте явный entrypoint:
 
 ```ts
 import {
@@ -207,6 +208,23 @@ import {
 ```
 
 Каждая иконка лежит прямо в `src/assets/icons/<icon-name>/` с `index.ts` для runtime-кода и `icon.svg` для прямого просмотра. После регистрации `titanicEntityResourcesPackage` иконки можно получать через `Titanic.Icons.get("close")` или через свойство `Titanic.Icons.close`. Если иконка не найдена, `Titanic.Icons.get(...)` возвращает `unknownIcon`; реальное наличие проверяйте через `Titanic.Icons.has(...)` или `Titanic.Icons.find(...)`. Для замены иконки используйте `Titanic.Icons.override("close", appCloseIcon)` или повторную регистрацию плоского набора через `Titanic.Icons.overrideIcons(...)`. Иконку по умолчанию можно заменить через `Titanic.Icons.overrideDefault(appUnknownIcon)` или `Titanic.Icons.override("unknown", appUnknownIcon)`.
+
+Расширяемые наборы иконок публикуются отдельными пакетами, начиная с `@titanic-entity/entity-icons`:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-base";
+import {
+  entityIcons,
+  titanicEntityIconsPackage
+} from "@titanic-entity/entity-icons";
+
+Titanic.registerPackage(titanicEntityIconsPackage);
+
+const calendar = Titanic.Icons.get("calendar");
+const sameCalendar = Titanic.Icons.get("Titanic.EntityIcons.calendar");
+```
+
+`entity-icons` не переносит системные SVG из `entity-resources`; он описывает коллекцию через package schema, чтобы приложения могли подключать, расширять и переопределять наборы независимо от базовых ресурсов.
 
 Темы по умолчанию применяются через CSS: большинство иконок использует `currentColor`, поэтому достаточно выдать нужный className элементу или его контейнеру. Для иконок с реальными тематическими вариантами можно использовать `themes` в ресурсе и получать вариант через `Titanic.Icons.get(path, { theme })` или prop `theme` у `ResourceSvgIcon`.
 

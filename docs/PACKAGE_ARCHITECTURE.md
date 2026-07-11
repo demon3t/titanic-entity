@@ -100,6 +100,36 @@ Titanic.Icons.overrideDefault(appUnknownIcon);
 
 Основной сценарий темизации иконок - CSS-класс темы и `currentColor`. Если конкретной иконке нужен другой vector resource для темы, она может объявить `themes`, а потребитель может получить вариант через `Titanic.Icons.get("path.to.icon", { theme })` или `ResourceSvgIcon` с prop `theme`. `ResourceSvgIcon` принимает как ресурс, так и строковый путь; для `undefined` или отсутствующего пути будет отрисована default-иконка.
 
+## Границы `entity-icons`
+
+`@titanic-entity/entity-icons` содержит расширяемые коллекции иконок. Пакет может переиспользовать descriptors из `entity-resources`, но не владеет системными SVG-файлами: базовые UI icon resources остаются в `entity-resources`, а новые прикладные наборы публикуются как отдельные icon packages.
+
+Стабильные entrypoints:
+
+| entrypoint | Назначение |
+| --- | --- |
+| `@titanic-entity/entity-icons` | Root-фасад, descriptor `titanicEntityIconsPackage`, коллекции и схемы |
+| `@titanic-entity/entity-icons/icons` | Плоский typed icon map `entityIcons` и direct icon exports |
+| `@titanic-entity/entity-icons/assets` | Общий facade assets |
+| `@titanic-entity/entity-icons/assets/icons` | Icon collection assets |
+| `@titanic-entity/entity-icons/schemas` | Package schemas коллекции иконок |
+| `@titanic-entity/entity-icons/model` | Имена package и icon module |
+
+Коллекция описывается через `defineIconResources`, поэтому она совместима с глобальным registry:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-base";
+import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
+
+Titanic.registerPackage(titanicEntityIconsPackage);
+
+const shortPath = Titanic.Icons.get("calendar");
+const packagePath = Titanic.Icons.get("Titanic.EntityIcons.calendar");
+const modulePath = Titanic.Icons.get("Titanic.EntityIcons.Icons.calendar");
+```
+
+Для новых прикладных или продуктовых наборов используйте такую же форму: typed flat icon map, schema через `defineIconResources`, package descriptor через `definePackage` или `defineIconPackage`, отдельные стабильные entrypoints для runtime imports.
+
 ## Границы `entity-react`
 
 `@titanic-entity/entity-react` отвечает только за React-слой поверх `entity-base`, `entity-core`, `entity-api` и `entity-resources`.
