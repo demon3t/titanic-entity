@@ -1419,6 +1419,15 @@ textarea.titanic-field__control {
   flex: 0 0 16px;
 }
 
+.titanic-data-grid__row-menu-icon-placeholder {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .titanic-data-grid__row-menu-action:hover:not(:disabled) {
   background: #eef4ff;
 }
@@ -1889,6 +1898,12 @@ textarea.titanic-field__control {
   width: 40px;
   height: 40px;
   padding: 0;
+}
+
+.titanic-data-grid__settings-dropdown_text .titanic-icon-dropdown__trigger {
+  width: auto;
+  max-width: min(220px, calc(100vw - 32px));
+  padding: 0 12px;
 }
 
 .titanic-data-grid__settings-dropdown .titanic-icon-dropdown__menu {

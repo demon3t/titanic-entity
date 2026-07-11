@@ -19,14 +19,7 @@ import { EntityDataGridRowContextMenu } from "../context-menus/EntityDataGridRow
 import { RandomGifLoader } from "../feedback/RandomGifLoader";
 import { SiteIconDropdown } from "../site/SiteIconDropdown";
 import { createEntityDataGridColumnSettingsPackage } from "../../grids";
-import {
-  closeIcon,
-  columnsIcon,
-  copyIcon,
-  dataGridRowActionDeleteIcon,
-  dataGridRowActionOpenIcon,
-  totalsIcon
-} from "@titanic-entity/entity-resources";
+import { closeIcon } from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 import type {
   EntityDataGridColumnPickerLabels,
@@ -732,7 +725,6 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
       nextActions.push({
         key: "open",
         label: gridSettings.labels.openRecord,
-        icon: dataGridRowActionOpenIcon,
         onClick: ({ row }) => {
           if (onRowDoubleClick) {
             onRowDoubleClick(row);
@@ -747,7 +739,6 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
     nextActions.push({
       key: "copy",
       label: gridSettings.labels.copyRecord,
-      icon: copyIcon,
       onClick: async ({ row }) => {
         await writeTextToClipboard(serializeGridRow(row));
       }
@@ -758,7 +749,6 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
         key: "delete",
         label: gridSettings.labels.deleteRecord,
         danger: true,
-        icon: dataGridRowActionDeleteIcon,
         hidden: ({ row, rowIndex }) => getGridRowPrimaryValue(row, rowIndex, getRowKey, resolvedEntity.primaryColumn) == null,
         onClick: async ({ row, rowIndex }) => {
           const rowPrimaryValue = getGridRowPrimaryValue(row, rowIndex, getRowKey, resolvedEntity.primaryColumn);
@@ -868,16 +858,14 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
         {title ? <h2>{title}</h2> : <span />}
         {availableColumns.length > 0 ? (
           <SiteIconDropdown
-            className="titanic-data-grid__settings-dropdown"
+            className="titanic-data-grid__settings-dropdown titanic-data-grid__settings-dropdown_text"
             label={gridSettings.labels.gridSettings}
             options={[
               {
-                icon: columnsIcon,
                 label: gridSettings.labels.configureColumns,
                 value: "columns"
               },
               {
-                icon: totalsIcon,
                 label: gridSettings.labels.configureTotals,
                 value: "totals"
               }

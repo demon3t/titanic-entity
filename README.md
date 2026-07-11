@@ -205,7 +205,7 @@ import {
 } from "@titanic-entity/entity-resources/icons";
 ```
 
-Каждая иконка лежит прямо в `src/assets/icons/<icon-name>/` с `index.ts` для runtime-кода и `icon.svg` для прямого просмотра. После регистрации `titanicEntityResourcesPackage` иконки можно получать через `Titanic.Icons.get("close")` или через свойство `Titanic.Icons.close`.
+Каждая иконка лежит прямо в `src/assets/icons/<icon-name>/` с `index.ts` для runtime-кода и `icon.svg` для прямого просмотра. После регистрации `titanicEntityResourcesPackage` иконки можно получать через `Titanic.Icons.get("close")` или через свойство `Titanic.Icons.close`. Для замены иконки используйте `Titanic.Icons.override("close", appCloseIcon)` или повторную регистрацию плоского набора через `Titanic.Icons.overrideIcons(...)`.
 
 Темы по умолчанию применяются через CSS: большинство иконок использует `currentColor`, поэтому достаточно выдать нужный className элементу или его контейнеру. Для иконок с реальными тематическими вариантами можно использовать `themes` в ресурсе и получать вариант через `Titanic.Icons.get(path, { theme })` или prop `theme` у `ResourceSvgIcon`.
 

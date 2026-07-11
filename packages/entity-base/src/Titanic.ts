@@ -169,6 +169,42 @@ export class TitanicIconRegistry {
     return icons;
   }
 
+  /** Overrides a single icon at its public path. */
+  override(path: string, icon: TitanicIconResource): TitanicIconResource {
+    const iconPath = normalizeIconPath(path);
+
+    if (!iconPath || !isIconResource(icon)) {
+      return icon;
+    }
+
+    this.all[iconPath] = icon;
+    setIconPath(this.groups, iconPath.split("."), icon);
+
+    const pathParts = iconPath.split(".");
+    if (pathParts.length === 1) {
+      attachIconProperty(this, pathParts[0], icon, this.directIconPropertyNames);
+    } else {
+      const groupName = pathParts[0];
+      if (groupName && this.groups[groupName]) {
+        this[groupName] = this.groups[groupName];
+      }
+    }
+
+    return icon;
+  }
+
+  /** Overrides icons by registering them over existing public paths. */
+  overrideIcons<TIcons extends TitanicIconTree = TitanicIconTree>(
+    icons: TIcons,
+    options: TitanicIconRegistrationOptions = {}
+  ): TIcons {
+    if (options.groupName) {
+      return this.register(options.groupName, icons, options);
+    }
+
+    return this.registerIcons(icons, options);
+  }
+
   /** Registers every top-level key of a grouped icon tree as an icon group. */
   registerGroups<TIcons extends TitanicIconTree = TitanicIconTree>(
     icons: TIcons,
@@ -729,6 +765,51 @@ function mergeIconTrees(
   return nextTarget;
 }
 
+function setIconPath(
+  target: Record<string, TitanicIconTree>,
+  pathParts: readonly string[],
+  icon: TitanicIconResource
+): void {
+  const [head, ...tail] = pathParts;
+
+  if (!head || tail.length === 0) {
+    return;
+  }
+
+  const currentValue = target[head];
+  const nextTree = currentValue && !isIconResource(currentValue)
+    ? { ...currentValue }
+    : {};
+
+  setIconTreePath(nextTree, tail, icon);
+  target[head] = nextTree;
+}
+
+function setIconTreePath(
+  target: Record<string, TitanicIconResource | TitanicIconTree>,
+  pathParts: readonly string[],
+  icon: TitanicIconResource
+): void {
+  const [head, ...tail] = pathParts;
+
+  if (!head) {
+    return;
+  }
+
+  if (tail.length === 0) {
+    target[head] = icon;
+    return;
+  }
+
+  const currentValue = target[head];
+  const nextTree = currentValue && !isIconResource(currentValue)
+    ? { ...currentValue }
+    : {};
+
+  setIconTreePath(nextTree, tail, icon);
+  target[head] = nextTree;
+}
+
 function flattenIconTree(
   target: Record<string, TitanicIconResource>,
   icons: TitanicIconTree,
@@ -764,13 +845,22 @@ function attachIconTreeProperties(
   propertyNames: Set<string>
 ): void {
   Object.entries(icons).forEach(([key, value]) => {
-    if (key in registry && !propertyNames.has(key)) {
-      return;
-    }
-
-    propertyNames.add(key);
-    registry[key] = value;
+    attachIconProperty(registry, key, value, propertyNames);
   });
+}
+
+function attachIconProperty(
+  registry: TitanicIconRegistry,
+  key: string,
+  value: TitanicIconResource | TitanicIconTree,
+  propertyNames: Set<string>
+): void {
+  if (key in registry && !propertyNames.has(key)) {
+    return;
+  }
+
+  propertyNames.add(key);
+  registry[key] = value;
 }
 
 function resolveIconPath(
@@ -812,6 +902,10 @@ function toIconGroupName(exportName: string): string {
 
 function normalizeIconPathPart(value: string): string {
   return value.trim().replace(/^[^a-zA-Z_$]+/, "");
+}
+
+function normalizeIconPath(value: string): string {
+  return value.split(".").map((pathPart) => pathPart.trim()).filter(Boolean).join(".");
 }
 
 function isLocalizationResource(value: unknown): value is TitanicLocalizationResource {

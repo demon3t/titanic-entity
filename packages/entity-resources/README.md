@@ -61,6 +61,17 @@ const sameIcon = Titanic.Icons.close;
 
 At runtime, registered icons are also exposed as properties on `Titanic.Icons`, for example `Titanic.Icons.close`.
 
+Registered icons can be overridden by public path:
+
+```ts
+Titanic.Icons.override("close", appCloseIcon);
+Titanic.Icons.overrideIcons({
+  close: appCloseIcon
+});
+```
+
+Later `registerIcons(...)` calls with the same flat icon name also replace the existing icon.
+
 ## Reusable Icon Packages
 
 Other projects can register their own icon resources without hand-writing module schemas.

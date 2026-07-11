@@ -52,7 +52,7 @@ export function EntityDataGridRowContextMenu<TRow = unknown>({
             type="button"
             onClick={() => onActionClick(action)}
           >
-            <RowActionIcon icon={action.icon} />
+            <RowActionIcon icon={action.icon} label={action.label} />
           </button>
         );
       })}
@@ -69,10 +69,14 @@ function resolveRowActionDisabled<TRow>(
     : Boolean(action.disabled);
 }
 
-function RowActionIcon({ icon }: { icon?: ResourceSvgIconResource }) {
+function RowActionIcon({ icon, label }: { icon?: ResourceSvgIconResource; label: string }) {
   if (!icon) {
-    return <span aria-hidden="true" className="titanic-data-grid__row-menu-icon-placeholder" />;
+    return <span aria-hidden="true" className="titanic-data-grid__row-menu-icon-placeholder">{getRowActionFallback(label)}</span>;
   }
 
   return <ResourceSvgIcon className="titanic-data-grid__row-menu-icon" icon={icon} />;
+}
+
+function getRowActionFallback(label: string): string {
+  return label.trim().charAt(0).toUpperCase();
 }
