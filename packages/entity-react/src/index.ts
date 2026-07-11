@@ -2,12 +2,14 @@ import { definePackage } from "@titanic-entity/entity-base";
 import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
 import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
+import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
 import { entityReactEntitySchemas, entityReactEnumSchemas, entityReactSchemas } from "./schemas";
 
 export * from "@titanic-entity/entity-base";
 export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
 export * from "@titanic-entity/entity-resources";
+export * from "@titanic-entity/entity-icons";
 export { Titanic } from "@titanic-entity/entity-core";
 export {
   entityReactEntitySchemas,
@@ -83,7 +85,8 @@ export const titanicEntityReactUiPackage = definePackage({
   dependsOn: [
     titanicEntityCorePackage.name,
     titanicEntityApiPackage.name,
-    titanicEntityResourcesPackage.name
+    titanicEntityResourcesPackage.name,
+    titanicEntityIconsPackage.name
   ],
   schemas: entityReactSchemas
 });

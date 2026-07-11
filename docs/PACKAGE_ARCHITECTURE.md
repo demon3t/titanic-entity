@@ -380,7 +380,7 @@ Resources/
 - `ResourceSvgIconMap`
 - `GifCollectionResource`
 
-Расширяемые и прикладные коллекции иконок нужно выносить в отдельные ресурсные пакеты, чтобы не перегружать базовый `@titanic-entity/entity-resources` и подключать коллекции выборочно. Целевая модель: отдельный workspace/npm-пакет, например `@titanic-entity/entity-icons`, зависит только от `@titanic-entity/entity-base`, экспортирует typed icon maps и `defineIconModuleSchema` descriptor, регистрируется через обычную регистрацию пакетов и работает с lookup в `Titanic.icons` по коротким и package-qualified путям. Базовый `entity-resources` остается местом для системных UI-иконок, флагов культур и GIF/media resources.
+Расширяемые и прикладные коллекции иконок вынесены в отдельные ресурсные пакеты, чтобы не перегружать базовый `@titanic-entity/entity-resources` и подключать коллекции выборочно. Общая UI-коллекция живет в `@titanic-entity/entity-icons`: пакет зависит от `@titanic-entity/entity-base` и `@titanic-entity/entity-resources`, экспортирует typed icon maps через стабильные entrypoints и регистрирует `defineIconResources` descriptor обычной регистрацией пакетов. После регистрации lookup работает через `Titanic.Icons.get(...)` и совместимый alias `Titanic.icons.get(...)` по коротким путям вроде `dataGrid.columns`, а также по package-qualified путям вроде `Titanic.EntityIcons.dataGrid.columns` и `Titanic.EntityIcons.Icons.dataGrid.columns`. Базовый `entity-resources` остается местом для системных UI-иконок, fallback-ресурсов, флагов культур и GIF/media primitives.
 
 ## EntityDataGrid как общий грид
 

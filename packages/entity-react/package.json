@@ -75,6 +75,7 @@
     "@titanic-entity/entity-api": "file:../entity-api",
     "@titanic-entity/entity-base": "file:../entity-base",
     "@titanic-entity/entity-core": "file:../entity-core",
+    "@titanic-entity/entity-icons": "file:../entity-icons",
     "@titanic-entity/entity-resources": "file:../entity-resources"
   },
   "peerDependencies": {
