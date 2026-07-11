@@ -20,15 +20,39 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./components": {
+      "types": "./dist/components.d.ts",
+      "import": "./dist/components.js"
+    },
+    "./fields": {
+      "types": "./dist/fields.d.ts",
+      "import": "./dist/fields.js"
+    },
     "./grids": {
-      "types": "./dist/grids/index.d.ts",
-      "import": "./dist/grids/index.js"
+      "types": "./dist/grids.d.ts",
+      "import": "./dist/grids.js"
+    },
+    "./templates": {
+      "types": "./dist/templates.d.ts",
+      "import": "./dist/templates.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas.d.ts",
+      "import": "./dist/schemas.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./*/icons": {
+      "types": "./dist/*/icons/index.d.ts",
+      "import": "./dist/*/icons/index.js"
+    },
+    "./*/resources": {
+      "types": "./dist/*/resources/index.d.ts",
+      "import": "./dist/*/resources/index.js"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js"
-    },
-    "./styles.css": "./dist/styles.css"
+      "types": "./dist/*/index.d.ts",
+      "import": "./dist/*/index.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node ../../scripts/copy-css.mjs ./src/styles.css ./dist/styles.css",

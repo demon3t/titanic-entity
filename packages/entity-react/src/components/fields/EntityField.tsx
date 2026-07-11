@@ -21,6 +21,8 @@ export function EntityField({
   column,
   values,
   displayValues,
+  validationError,
+  validationErrors,
   onChange,
   disabled = false,
   className = "",
@@ -38,9 +40,16 @@ export function EntityField({
   const displayValue = displayValues?.[key];
   const fieldId = `titanic-field-${key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const readOnly = disabled || Boolean(resolvedColumn.readOnly);
+  const resolvedValidationError = validationError ?? validationErrors?.[key] ?? null;
+  const fieldClassName = [
+    "titanic-field",
+    `titanic-field_${kind}`,
+    resolvedValidationError ? "titanic-field_error" : "",
+    className
+  ].filter(Boolean).join(" ");
 
   return (
-    <div className={`titanic-field titanic-field_${kind} ${className}`} style={getGridSpanStyle(resolvedColumn.gridSpan ?? 12)}>
+    <div className={fieldClassName} style={getGridSpanStyle(resolvedColumn.gridSpan ?? 12)}>
       <label className="titanic-field__label" htmlFor={fieldId}>
         {resolvedColumn.label ?? resolvedColumn.path}
         {resolvedColumn.required ? <span className="titanic-field__required">*</span> : null}
@@ -51,10 +60,16 @@ export function EntityField({
         keyName={key}
         value={value}
         displayValue={displayValue}
+        validationError={resolvedValidationError}
         readOnly={readOnly}
         manualCommitDelayMs={manualCommitDelayMs}
         onChange={onChange}
       />
+      {resolvedValidationError && kind !== EntityFieldKind.Date ? (
+        <div className="titanic-field__error" id={`${fieldId}-error`}>
+          {resolvedValidationError}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -71,6 +86,7 @@ interface EntityFieldControlProps {
   keyName: string;
   value: unknown;
   displayValue?: string;
+  validationError?: string | null;
   readOnly: boolean;
   manualCommitDelayMs: number;
   onChange: EntityFieldProps["onChange"];
@@ -117,7 +133,7 @@ function JsonControl({ column, fieldId, keyName, value, readOnly, onChange }: En
   );
 }
 
-function DeferredStringControl({ column, fieldId, keyName, value, readOnly, manualCommitDelayMs, onChange }: EntityFieldControlProps) {
+function DeferredStringControl({ column, fieldId, keyName, value, validationError, readOnly, manualCommitDelayMs, onChange }: EntityFieldControlProps) {
   const { draft, setDraft, commitNow, handleBlur, handleFocus } = useDeferredManualCommit({
     value: toStringDraft(value),
     delayMs: manualCommitDelayMs,
@@ -126,7 +142,7 @@ function DeferredStringControl({ column, fieldId, keyName, value, readOnly, manu
 
   return (
     <input
-      {...getCommonControlProps(column, fieldId, readOnly)}
+      {...getCommonControlProps(column, fieldId, readOnly, validationError)}
       type="text"
       maxLength={column.maxLength}
       value={draft}
@@ -138,7 +154,7 @@ function DeferredStringControl({ column, fieldId, keyName, value, readOnly, manu
   );
 }
 
-function DeferredTextAreaControl({ column, fieldId, keyName, value, readOnly, manualCommitDelayMs, onChange }: EntityFieldControlProps) {
+function DeferredTextAreaControl({ column, fieldId, keyName, value, validationError, readOnly, manualCommitDelayMs, onChange }: EntityFieldControlProps) {
   const { draft, setDraft, handleBlur, handleFocus } = useDeferredManualCommit({
     value: toStringDraft(value),
     delayMs: manualCommitDelayMs,
@@ -147,7 +163,7 @@ function DeferredTextAreaControl({ column, fieldId, keyName, value, readOnly, ma
 
   return (
     <textarea
-      {...getCommonControlProps(column, fieldId, readOnly)}
+      {...getCommonControlProps(column, fieldId, readOnly, validationError)}
       maxLength={column.maxLength}
       value={draft}
       onBlur={handleBlur}
@@ -157,7 +173,7 @@ function DeferredTextAreaControl({ column, fieldId, keyName, value, readOnly, ma
   );
 }
 
-function DeferredNumberControl({ column, fieldId, keyName, value, readOnly, manualCommitDelayMs, onChange }: EntityFieldControlProps) {
+function DeferredNumberControl({ column, fieldId, keyName, value, validationError, readOnly, manualCommitDelayMs, onChange }: EntityFieldControlProps) {
   const { draft, setDraft, commitNow, handleBlur, handleFocus } = useDeferredManualCommit({
     value: toNumberDraft(value),
     delayMs: manualCommitDelayMs,
@@ -166,7 +182,7 @@ function DeferredNumberControl({ column, fieldId, keyName, value, readOnly, manu
 
   return (
     <input
-      {...getCommonControlProps(column, fieldId, readOnly)}
+      {...getCommonControlProps(column, fieldId, readOnly, validationError)}
       type="number"
       value={draft}
       onBlur={handleBlur}
@@ -177,9 +193,10 @@ function DeferredNumberControl({ column, fieldId, keyName, value, readOnly, manu
   );
 }
 
-function BooleanControl({ fieldId, keyName, value, readOnly, onChange }: EntityFieldControlProps) {
+function BooleanControl({ fieldId, keyName, value, validationError, readOnly, onChange }: EntityFieldControlProps) {
   return (
     <input
+      {...getValidationControlProps(fieldId, validationError)}
       id={fieldId}
       name={keyName}
       disabled={readOnly}
@@ -191,19 +208,20 @@ function BooleanControl({ fieldId, keyName, value, readOnly, onChange }: EntityF
   );
 }
 
-function DateControl({ column, fieldId, keyName, value, readOnly, onChange }: EntityFieldControlProps) {
+function DateControl({ column, fieldId, keyName, value, validationError, readOnly, onChange }: EntityFieldControlProps) {
   const DateInputComponent = useUiField<DateInputProps>("DateInput", DateInput);
 
   return (
     <DateInputComponent
-      {...getCommonControlProps(column, fieldId, readOnly)}
+      {...getCommonControlProps(column, fieldId, readOnly, validationError)}
+      validationError={validationError}
       value={formatDate(value)}
       onChange={(nextValue) => onChange(keyName, nextValue)}
     />
   );
 }
 
-function DateTimeControl({ fieldId, keyName, value, readOnly, onChange }: EntityFieldControlProps) {
+function DateTimeControl({ fieldId, keyName, value, validationError, readOnly, onChange }: EntityFieldControlProps) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const dateValue = formatDate(value);
@@ -265,6 +283,7 @@ function DateTimeControl({ fieldId, keyName, value, readOnly, onChange }: Entity
   return (
     <div className="titanic-datetime" ref={wrapperRef}>
       <button
+        {...getValidationControlProps(fieldId, validationError)}
         aria-expanded={open}
         aria-haspopup="dialog"
         className="titanic-field__control titanic-datetime__button"
@@ -324,10 +343,10 @@ function DateTimeControl({ fieldId, keyName, value, readOnly, onChange }: Entity
   );
 }
 
-function ColorControl({ column, fieldId, keyName, value, readOnly, onChange }: EntityFieldControlProps) {
+function ColorControl({ column, fieldId, keyName, value, validationError, readOnly, onChange }: EntityFieldControlProps) {
   return (
     <input
-      {...getCommonControlProps(column, fieldId, readOnly)}
+      {...getCommonControlProps(column, fieldId, readOnly, validationError)}
       type="color"
       value={String(value || "#1f6feb")}
       onChange={(event) => onChange(keyName, event.target.value)}
@@ -335,7 +354,7 @@ function ColorControl({ column, fieldId, keyName, value, readOnly, onChange }: E
   );
 }
 
-function LookupControl({ column, displayValue: loadedDisplayValue, fieldId, keyName, value, readOnly, onChange }: EntityFieldControlProps) {
+function LookupControl({ column, displayValue: loadedDisplayValue, fieldId, keyName, value, validationError, readOnly, onChange }: EntityFieldControlProps) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const lookupOptions = useEntityLookupOptions(column, { enabled: false });
@@ -396,6 +415,7 @@ function LookupControl({ column, displayValue: loadedDisplayValue, fieldId, keyN
   return (
     <div className="titanic-lookup" ref={wrapperRef}>
       <button
+        {...getValidationControlProps(fieldId, validationError)}
         aria-expanded={open}
         aria-haspopup="listbox"
         className="titanic-field__control titanic-lookup__button"
@@ -541,15 +561,25 @@ function useDeferredManualCommit<TDraft>({ value, delayMs, onCommit }: DeferredM
   };
 }
 
-function getCommonControlProps(column: EntityFieldProps["column"], fieldId: string, readOnly: boolean) {
+function getCommonControlProps(column: EntityFieldProps["column"], fieldId: string, readOnly: boolean, validationError?: string | null) {
   return {
     id: fieldId,
     name: getColumnKey(column),
     disabled: readOnly,
     required: column.required,
     placeholder: column.placeholder,
-    className: CONTROL_CLASS_NAME
+    className: CONTROL_CLASS_NAME,
+    ...getValidationControlProps(fieldId, validationError)
   };
+}
+
+function getValidationControlProps(fieldId: string, validationError?: string | null) {
+  return validationError
+    ? {
+        "aria-errormessage": `${fieldId}-error`,
+        "aria-invalid": true
+      }
+    : {};
 }
 
 function getFieldValue(values: EntityFieldProps["values"], key: string, defaultValue: unknown): unknown {
