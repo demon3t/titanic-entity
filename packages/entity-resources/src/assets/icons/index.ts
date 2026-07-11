@@ -10,6 +10,7 @@ import { systemDesignerIcon } from "./system-designer";
 import { themeDarkIcon } from "./theme-dark";
 import { themeGreenIcon } from "./theme-green";
 import { themeLightIcon } from "./theme-light";
+import { unknownIcon } from "./unknown";
 import { chevronLeftIcon } from "./chevron-left";
 import { chevronRightIcon } from "./chevron-right";
 
@@ -27,6 +28,7 @@ export { systemDesignerIcon } from "./system-designer";
 export { themeDarkIcon } from "./theme-dark";
 export { themeGreenIcon } from "./theme-green";
 export { themeLightIcon } from "./theme-light";
+export { unknownIcon } from "./unknown";
 
 /** Public icon names exported by @titanic-entity/entity-resources. */
 export type EntityResourceIconName =
@@ -42,7 +44,8 @@ export type EntityResourceIconName =
   | "systemDesigner"
   | "themeDark"
   | "themeGreen"
-  | "themeLight";
+  | "themeLight"
+  | "unknown";
 
 /** Complete flat icon set exported by the resources package. */
 export const entityResourceIcons = {
@@ -58,7 +61,8 @@ export const entityResourceIcons = {
   systemDesigner: systemDesignerIcon,
   themeDark: themeDarkIcon,
   themeGreen: themeGreenIcon,
-  themeLight: themeLightIcon
+  themeLight: themeLightIcon,
+  unknown: unknownIcon
 } satisfies ResourceSvgIconMap<EntityResourceIconName>;
 
 /** Short alias for flat resource icons. */

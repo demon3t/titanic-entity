@@ -201,11 +201,12 @@ Root import `@titanic-entity/entity-react` остается совместимы
 ```ts
 import {
   closeIcon,
-  entityResourceIcons
+  entityResourceIcons,
+  unknownIcon
 } from "@titanic-entity/entity-resources/icons";
 ```
 
-Каждая иконка лежит прямо в `src/assets/icons/<icon-name>/` с `index.ts` для runtime-кода и `icon.svg` для прямого просмотра. После регистрации `titanicEntityResourcesPackage` иконки можно получать через `Titanic.Icons.get("close")` или через свойство `Titanic.Icons.close`. Для замены иконки используйте `Titanic.Icons.override("close", appCloseIcon)` или повторную регистрацию плоского набора через `Titanic.Icons.overrideIcons(...)`.
+Каждая иконка лежит прямо в `src/assets/icons/<icon-name>/` с `index.ts` для runtime-кода и `icon.svg` для прямого просмотра. После регистрации `titanicEntityResourcesPackage` иконки можно получать через `Titanic.Icons.get("close")` или через свойство `Titanic.Icons.close`. Если иконка не найдена, `Titanic.Icons.get(...)` возвращает `unknownIcon`; реальное наличие проверяйте через `Titanic.Icons.has(...)` или `Titanic.Icons.find(...)`. Для замены иконки используйте `Titanic.Icons.override("close", appCloseIcon)` или повторную регистрацию плоского набора через `Titanic.Icons.overrideIcons(...)`. Иконку по умолчанию можно заменить через `Titanic.Icons.overrideDefault(appUnknownIcon)` или `Titanic.Icons.override("unknown", appUnknownIcon)`.
 
 Темы по умолчанию применяются через CSS: большинство иконок использует `currentColor`, поэтому достаточно выдать нужный className элементу или его контейнеру. Для иконок с реальными тематическими вариантами можно использовать `themes` в ресурсе и получать вариант через `Titanic.Icons.get(path, { theme })` или prop `theme` у `ResourceSvgIcon`.
 

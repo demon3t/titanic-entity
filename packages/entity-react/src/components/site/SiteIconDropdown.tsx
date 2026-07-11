@@ -4,7 +4,7 @@ import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 
 export interface SiteIconDropdownOption {
-  icon?: ResourceSvgIconResource;
+  icon?: ResourceSvgIconResource | string | null;
   label: string;
   value: string;
 }
@@ -105,7 +105,7 @@ export function SiteIconDropdown({
         type="button"
         onClick={() => setOpen((currentValue) => !currentValue)}
       >
-        {selectedOption?.icon ? <ResourceSvgIcon className={iconClassName} icon={selectedOption.icon} /> : null}
+        <ResourceSvgIcon className={iconClassName} icon={selectedOption?.icon} />
         {triggerLabelClassName && triggerLabel ? (
           <span className={triggerLabelClassName}>{triggerLabel}</span>
         ) : null}
@@ -128,7 +128,7 @@ export function SiteIconDropdown({
                 type="button"
                 onClick={() => selectOption(option.value)}
               >
-                {option.icon ? <ResourceSvgIcon className={iconClassName} icon={option.icon} /> : null}
+                <ResourceSvgIcon className={iconClassName} icon={option.icon} />
                 <span>{option.label}</span>
               </button>
             );

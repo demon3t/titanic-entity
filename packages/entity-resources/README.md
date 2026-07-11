@@ -8,6 +8,7 @@ Shared resource package for Titanic.Entity UI packages. This package ships reusa
 import {
   closeIcon,
   entityResourceIcons,
+  unknownIcon,
   type ResourceSvgIconResource
 } from "@titanic-entity/entity-resources/icons";
 
@@ -42,6 +43,7 @@ The flat icon map and individual icons are exported from `src/assets/icons/index
 - `entityResourceIcons`
 - `closeIcon`
 - `calendarIcon`
+- `unknownIcon`
 - `ruRuIcon`
 - `enUsIcon`
 
@@ -59,7 +61,7 @@ const closeIcon = Titanic.Icons.get("close");
 const sameIcon = Titanic.Icons.close;
 ```
 
-At runtime, registered icons are also exposed as properties on `Titanic.Icons`, for example `Titanic.Icons.close`.
+At runtime, registered icons are also exposed as properties on `Titanic.Icons`, for example `Titanic.Icons.close`. Missing icon paths resolve to the default `unknownIcon`; use `Titanic.Icons.has(path)` or `Titanic.Icons.find(path)` when you need to know whether a path is actually registered.
 
 Registered icons can be overridden by public path:
 
@@ -68,6 +70,7 @@ Titanic.Icons.override("close", appCloseIcon);
 Titanic.Icons.overrideIcons({
   close: appCloseIcon
 });
+Titanic.Icons.overrideDefault(appUnknownIcon);
 ```
 
 Later `registerIcons(...)` calls with the same flat icon name also replace the existing icon.

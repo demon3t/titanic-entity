@@ -1,3 +1,5 @@
+import { unknownIcon } from "./unknown";
+
 /** Numeric or string length value accepted by SVG attributes. */
 export type ResourceSvgLength = number | string;
 
@@ -15,6 +17,7 @@ export type ResourceSvgIconShape =
       rx?: ResourceSvgLength;
       fill?: string;
       stroke?: string;
+      strokeWidth?: ResourceSvgLength;
     }
   | {
       kind: "circle";
@@ -55,12 +58,14 @@ export interface ResolveResourceSvgIconOptions {
 
 /** Resolves a theme-specific icon resource when one is defined. */
 export function resolveResourceSvgIcon(
-  icon: ResourceSvgIconResource,
+  icon: ResourceSvgIconResource | null | undefined,
   options: ResolveResourceSvgIconOptions = {}
 ): ResourceSvgIconResource {
+  const resolvedIcon: ResourceSvgIconResource = icon ?? unknownIcon;
+
   if (!options.theme) {
-    return icon;
+    return resolvedIcon;
   }
 
-  return icon.themes?.[options.theme] ?? icon;
+  return resolvedIcon.themes?.[options.theme] ?? resolvedIcon;
 }

@@ -115,10 +115,47 @@ export interface TitanicLocalizationTextOptions extends TitanicLocalizationResol
   fallback?: string;
 }
 
+const defaultTitanicIconResource = {
+  viewBox: "0 0 24 24",
+  shapes: [
+    {
+      kind: "rect",
+      x: 3,
+      y: 3,
+      width: 18,
+      height: 18,
+      rx: 4,
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8
+    },
+    {
+      kind: "path",
+      d: "M9.7 9.2a2.7 2.7 0 0 1 4.6-1.9c1.1 1 1.1 2.8-.1 3.7-.9.7-1.7 1.2-1.7 2.4",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8,
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    },
+    {
+      kind: "circle",
+      cx: 12,
+      cy: 17,
+      r: 1,
+      fill: "currentColor"
+    }
+  ]
+} satisfies TitanicIconResource;
+
 /** Registers and resolves icon resources contributed by Titanic packages. */
 export class TitanicIconRegistry {
   [key: string]: unknown;
 
+  /** Built-in fallback icon returned when an icon path is not registered. */
+  defaultIcon: TitanicIconResource = defaultTitanicIconResource;
+  /** Public icon path used as the default fallback when it is registered. */
+  defaultIconPath = "unknown";
   /** Flat icon lookup table keyed by icon path and aliases. */
   readonly all: Record<string, TitanicIconResource> = {};
   /** Icon lookup tree grouped by public package resource names. */
@@ -193,6 +230,16 @@ export class TitanicIconRegistry {
     return icon;
   }
 
+  /** Replaces the fallback icon returned when a lookup path is missing. */
+  overrideDefault(icon: TitanicIconResource): TitanicIconResource {
+    if (isIconResource(icon)) {
+      this.defaultIcon = icon;
+      this.override(this.defaultIconPath, icon);
+    }
+
+    return icon;
+  }
+
   /** Overrides icons by registering them over existing public paths. */
   overrideIcons<TIcons extends TitanicIconTree = TitanicIconTree>(
     icons: TIcons,
@@ -255,15 +302,12 @@ export class TitanicIconRegistry {
   }
 
   /** Gets an icon by path and resolves a themed variant when one is available. */
-  get(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource | undefined {
-    return resolveTitanicIconResource(
-      this.all[path] ?? resolveIconPath(this.groups, path),
-      options
-    );
+  get(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource {
+    return this.find(path, options) ?? this.getDefault(options);
   }
 
   /** Resolves an icon by path and returns the base icon when the theme has no variant. */
-  resolve(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource | undefined {
+  resolve(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource {
     return this.get(path, options);
   }
 
@@ -274,7 +318,21 @@ export class TitanicIconRegistry {
 
   /** Returns true when an icon exists for the provided path. */
   has(path: string): boolean {
-    return Boolean(this.get(path));
+    return Boolean(this.find(path));
+  }
+
+  /** Gets the fallback icon used when a lookup path is missing. */
+  getDefault(options: TitanicIconResolveOptions = {}): TitanicIconResource {
+    return resolveTitanicIconResource(this.find(this.defaultIconPath) ?? this.defaultIcon, options) ?? this.defaultIcon;
+  }
+
+  /** Gets an icon by path without falling back to the default icon. */
+  find(path: string, options: TitanicIconResolveOptions = {}): TitanicIconResource | undefined {
+    const iconPath = normalizeIconPath(path);
+    return resolveTitanicIconResource(
+      this.all[iconPath] ?? resolveIconPath(this.groups, iconPath),
+      options
+    );
   }
 
   /** Removes all registered icons, groups and lookup aliases. */

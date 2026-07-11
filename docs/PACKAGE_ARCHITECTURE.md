@@ -87,7 +87,7 @@ const closeIcon = Titanic.Icons.get("close");
 const sameIcon = Titanic.Icons.close;
 ```
 
-В runtime зарегистрированные иконки также доступны как динамические свойства самого registry, например `Titanic.Icons.close`.
+В runtime зарегистрированные иконки также доступны как динамические свойства самого registry, например `Titanic.Icons.close`. Если путь не найден, `Titanic.Icons.get(...)` возвращает default-иконку `unknown`; реальное наличие проверяется через `Titanic.Icons.has(...)` или `Titanic.Icons.find(...)`.
 Иконки можно переопределять по публичному пути:
 
 ```ts
@@ -95,9 +95,10 @@ Titanic.Icons.override("close", appCloseIcon);
 Titanic.Icons.overrideIcons({
   close: appCloseIcon
 });
+Titanic.Icons.overrideDefault(appUnknownIcon);
 ```
 
-Основной сценарий темизации иконок - CSS-класс темы и `currentColor`. Если конкретной иконке нужен другой vector resource для темы, она может объявить `themes`, а потребитель может получить вариант через `Titanic.Icons.get("path.to.icon", { theme })` или `ResourceSvgIcon` с prop `theme`.
+Основной сценарий темизации иконок - CSS-класс темы и `currentColor`. Если конкретной иконке нужен другой vector resource для темы, она может объявить `themes`, а потребитель может получить вариант через `Titanic.Icons.get("path.to.icon", { theme })` или `ResourceSvgIcon` с prop `theme`. `ResourceSvgIcon` принимает как ресурс, так и строковый путь; для `undefined` или отсутствующего пути будет отрисована default-иконка.
 
 ## Границы `entity-react`
 
