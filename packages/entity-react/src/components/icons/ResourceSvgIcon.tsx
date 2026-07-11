@@ -1,19 +1,34 @@
-// Компонент иконки 'ResourceSvgIcon', читающий графику из ресурсов пакета.
-import type { ResourceSvgIconResource, ResourceSvgIconShape } from "@titanic-entity/entity-resources";
+import {
+  resolveResourceSvgIcon,
+  type ResourceSvgIconResource,
+  type ResourceSvgIconShape,
+  type ResourceSvgIconTheme
+} from "@titanic-entity/entity-resources";
+import { Titanic } from "@titanic-entity/entity-base";
 
+/** Icon value accepted by ResourceSvgIcon and icon-bearing React components. */
+export type ResourceSvgIconInput = ResourceSvgIconResource | string | null | undefined;
+
+/** Props for rendering a serializable resource SVG icon. */
 export interface ResourceSvgIconProps {
+  /** Optional CSS class applied to the rendered SVG element. */
   className?: string;
-  icon?: ResourceSvgIconResource;
+  /** Icon resource descriptor or registered icon path. */
+  icon?: ResourceSvgIconInput;
+  /** Optional explicit theme variant. Most icons inherit theme colors from CSS currentColor. */
+  theme?: ResourceSvgIconTheme;
 }
 
-export function ResourceSvgIcon({ className, icon }: ResourceSvgIconProps) {
-  if (!icon) {
-    return null;
-  }
+/** Renders an SVG icon from Titanic resource descriptors. */
+export function ResourceSvgIcon({ className, icon, theme }: ResourceSvgIconProps) {
+  const iconResource = typeof icon === "string"
+    ? Titanic.Icons.get(icon, { theme })
+    : icon ?? Titanic.Icons.getDefault({ theme });
+  const resolvedIcon = resolveResourceSvgIcon(iconResource as ResourceSvgIconResource | null | undefined, { theme });
 
   return (
-    <svg className={className} aria-hidden="true" viewBox={icon.viewBox} focusable="false">
-      {icon.shapes.map(renderIconShape)}
+    <svg className={className} aria-hidden="true" viewBox={resolvedIcon.viewBox} focusable="false">
+      {resolvedIcon.shapes.map(renderIconShape)}
     </svg>
   );
 }

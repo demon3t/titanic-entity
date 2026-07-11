@@ -1,10 +1,9 @@
 // Базовая иконочная кнопка сайта с ресурсной SVG-иконкой и всплывающей подписью.
-import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
-import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
+import { ResourceSvgIcon, type ResourceSvgIconInput } from "../icons/ResourceSvgIcon";
 
 export interface SiteIconButtonProps {
   buttonClassName: string;
-  icon: ResourceSvgIconResource;
+  icon: ResourceSvgIconInput;
   iconClassName: string;
   label: string;
   tooltipClassName?: string;

@@ -13,16 +13,12 @@ import {
   type ESQJsonModel
 } from "@titanic-entity/entity-api";
 import { getCellDisplayValue, toEntityValues } from "@titanic-entity/entity-core";
+import { Titanic } from "@titanic-entity/entity-base";
 import { defaultEntityDataGridCulture, getEntityDataGridLabels } from "../../resources/EntityDataGrid";
 import { EntityDataGridRowContextMenu } from "../context-menus/EntityDataGridRowContextMenu";
 import { RandomGifLoader } from "../feedback/RandomGifLoader";
 import { SiteIconDropdown } from "../site/SiteIconDropdown";
 import { createEntityDataGridColumnSettingsPackage } from "../../grids";
-import {
-  entityCommonIcons,
-  entityDataGridRowActionIcons,
-  entityDataGridSettingsIcons
-} from "@titanic-entity/entity-resources";
 import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
 import type {
   EntityDataGridColumnPickerLabels,
@@ -728,7 +724,6 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
       nextActions.push({
         key: "open",
         label: gridSettings.labels.openRecord,
-        icon: entityDataGridRowActionIcons.open,
         onClick: ({ row }) => {
           if (onRowDoubleClick) {
             onRowDoubleClick(row);
@@ -743,7 +738,6 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
     nextActions.push({
       key: "copy",
       label: gridSettings.labels.copyRecord,
-      icon: entityDataGridRowActionIcons.copy,
       onClick: async ({ row }) => {
         await writeTextToClipboard(serializeGridRow(row));
       }
@@ -754,7 +748,6 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
         key: "delete",
         label: gridSettings.labels.deleteRecord,
         danger: true,
-        icon: entityDataGridRowActionIcons.delete,
         hidden: ({ row, rowIndex }) => getGridRowPrimaryValue(row, rowIndex, getRowKey, resolvedEntity.primaryColumn) == null,
         onClick: async ({ row, rowIndex }) => {
           const rowPrimaryValue = getGridRowPrimaryValue(row, rowIndex, getRowKey, resolvedEntity.primaryColumn);
@@ -864,16 +857,14 @@ export function EntityDataGrid<TRow = EntityApiEntity>({
         {title ? <h2>{title}</h2> : <span />}
         {availableColumns.length > 0 ? (
           <SiteIconDropdown
-            className="titanic-data-grid__settings-dropdown"
+            className="titanic-data-grid__settings-dropdown titanic-data-grid__settings-dropdown_text"
             label={gridSettings.labels.gridSettings}
             options={[
               {
-                icon: entityDataGridSettingsIcons.columns,
                 label: gridSettings.labels.configureColumns,
                 value: "columns"
               },
               {
-                icon: entityDataGridSettingsIcons.totals,
                 label: gridSettings.labels.configureTotals,
                 value: "totals"
               }
@@ -1191,7 +1182,7 @@ function EntityDataGridColumnSettingsModal<TRow>({
             type="button"
             onClick={onClose}
           >
-            <CloseIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon="close" />
           </button>
         </header>
 
@@ -1345,7 +1336,7 @@ function EntityDataGridTotalsSettingsModal({
             type="button"
             onClick={onClose}
           >
-            <CloseIcon />
+            <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon="close" />
           </button>
         </header>
         <p className="titanic-data-grid-column-modal__empty">{labels.totalsEmpty}</p>
@@ -1362,12 +1353,13 @@ function mergeGridSettings(
   settings: Partial<EntityDataGridSettings> | undefined,
   labels: EntityDataGridProps["labels"]
 ): ResolvedEntityDataGridSettings {
-  const culture = settings?.culture ?? detectEntityDataGridCulture();
+  const culture = settings?.locale ?? settings?.culture ?? detectEntityDataGridCulture();
 
   return {
     ...defaultEntityDataGridSettings,
     ...settings,
     culture,
+    locale: culture,
     labels: {
       ...getEntityDataGridLabels(culture),
       ...settings?.labels,
@@ -1539,23 +1531,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 }
 
 function detectEntityDataGridCulture(): string {
-  if (typeof document !== "undefined") {
-    const documentCulture = document.documentElement.lang?.trim();
-
-    if (documentCulture) {
-      return documentCulture;
-    }
-  }
-
-  if (typeof navigator !== "undefined") {
-    const browserCulture = navigator.language?.trim();
-
-    if (browserCulture) {
-      return browserCulture;
-    }
-  }
-
-  return defaultEntityDataGridCulture;
+  return Titanic.Localization.getCurrentLocale() || defaultEntityDataGridCulture;
 }
 
 function toGridColumn<TRow>(
@@ -2513,8 +2489,4 @@ function getColumnSettingPath(setting: Pick<EntityDataGridColumnSetting, "key" |
 function normalizeColumnPath(value: unknown): string | undefined {
   const path = typeof value === "string" ? value.trim() : "";
   return path || undefined;
-}
-
-function CloseIcon() {
-  return <ResourceSvgIcon className="titanic-data-grid-column-modal__close-icon" icon={entityCommonIcons.close} />;
 }

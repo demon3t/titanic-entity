@@ -1,10 +1,9 @@
 ﻿// Базовый иконочный dropdown сайта для выбора значения из ресурсных SVG-иконок.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ResourceSvgIcon } from "../icons/ResourceSvgIcon";
-import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
+import { ResourceSvgIcon, type ResourceSvgIconInput } from "../icons/ResourceSvgIcon";
 
 export interface SiteIconDropdownOption {
-  icon: ResourceSvgIconResource;
+  icon?: ResourceSvgIconInput;
   label: string;
   value: string;
 }
@@ -54,6 +53,12 @@ export function SiteIconDropdown({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const selectedOption = options.find((option) => option.value === value) ?? options[0];
   const rootClassName = ["titanic-icon-dropdown", className].filter(Boolean).join(" ");
+  const triggerLabelClassName = selectedLabelClassName ?? (!selectedOption?.icon ? "titanic-icon-dropdown__value" : undefined);
+  const triggerLabel = selectedLabelClassName
+    ? selectedOption?.label
+    : selectedOption?.icon
+      ? undefined
+      : label;
 
   useEffect(() => {
     if (!open) {
@@ -95,17 +100,17 @@ export function SiteIconDropdown({
         aria-label={label}
         className={triggerClassName}
         disabled={disabled}
-        title={selectedOption?.label ?? label}
+        title={triggerLabel ?? selectedOption?.label ?? label}
         type="button"
         onClick={() => setOpen((currentValue) => !currentValue)}
       >
         <ResourceSvgIcon className={iconClassName} icon={selectedOption?.icon} />
-        {selectedLabelClassName && selectedOption ? (
-          <span className={selectedLabelClassName}>{selectedOption.label}</span>
+        {triggerLabelClassName && triggerLabel ? (
+          <span className={triggerLabelClassName}>{triggerLabel}</span>
         ) : null}
         {chevronClassName ? <span className={chevronClassName} aria-hidden="true">{chevron ?? "v"}</span> : null}
         {tooltipClassName && selectedOption ? (
-          <span className={tooltipClassName} role="tooltip">{selectedOption.label}</span>
+          <span className={tooltipClassName} role="tooltip">{triggerLabel ?? selectedOption.label}</span>
         ) : null}
       </button>
       {open ? (

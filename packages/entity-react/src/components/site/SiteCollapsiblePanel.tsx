@@ -1,6 +1,6 @@
 // Базовая сворачиваемая панель сайта: HTML панели находится в общем UI-пакете.
 import type { ReactNode } from "react";
-import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
+import type { ResourceSvgIconInput } from "../icons/ResourceSvgIcon";
 import { SitePanelToggleButton } from "./SitePanelToggleButton";
 
 export interface SiteCollapsiblePanelProps {
@@ -13,7 +13,7 @@ export interface SiteCollapsiblePanelProps {
   expandedIconDirection: "left" | "right";
   expandLabel: string;
   header?: ReactNode;
-  icon: ResourceSvgIconResource;
+  icon: ResourceSvgIconInput;
   togglePlacement?: "after-content" | "after-header";
   toggleClassName: string;
   toggleIconClassName: (direction: "left" | "right") => string;

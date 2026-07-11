@@ -5,6 +5,8 @@ import {
   defineEnumSchema,
   defineFieldSchema,
   defineGridSchema,
+  defineIconModuleSchema,
+  defineLocalizationModuleSchema,
   defineModuleSchema,
   definePackage,
   definePageSchema,
@@ -26,6 +28,7 @@ import type {
   UiPackageFieldSchema,
   UiPackageGridSchema,
   UiPackageIconModuleSchema,
+  UiPackageLocalizationModuleSchema,
   UiPackageManifestDescriptor,
   UiPackageManifestSchema,
   UiPackageModuleExports,
@@ -58,6 +61,7 @@ export function createPackageRegistry(packages: readonly UiPackageDescriptor[] =
   const moduleSchemaMap = new Map<string, UiPackageModuleSchema>();
   const moduleMap = new Map<string, UiPackageModuleExports>();
   const iconModuleMap = new Map<string, UiPackageIconModuleSchema>();
+  const localizationModuleMap = new Map<string, UiPackageLocalizationModuleSchema>();
 
   for (const pkg of allPackages) {
     for (const schema of pkg.schemas ?? []) {
@@ -122,7 +126,13 @@ export function createPackageRegistry(packages: readonly UiPackageDescriptor[] =
           break;
         }
         case "module":
-          registerModule(normalizedSchema, moduleSchemaMap, moduleMap, iconModuleMap);
+          registerModule(
+            normalizedSchema,
+            moduleSchemaMap,
+            moduleMap,
+            iconModuleMap,
+            localizationModuleMap
+          );
           break;
         default:
           break;
@@ -145,6 +155,7 @@ export function createPackageRegistry(packages: readonly UiPackageDescriptor[] =
     enums: [...enumSchemaMap.values()],
     modules: [...moduleSchemaMap.values()],
     icons: [...iconModuleMap.values()],
+    localizations: [...localizationModuleMap.values()],
     getWorkspace: (name) => workspaceMap.get(name),
     getSection: (name) => sectionMap.get(name),
     getPage: <TProps = unknown>(name: string) => pageMap.get(name) as
@@ -170,6 +181,11 @@ export function createPackageRegistry(packages: readonly UiPackageDescriptor[] =
       name: string
     ) => iconModuleMap.get(name) as
       | UiPackageIconModuleSchema<TExports>
+      | undefined,
+    getLocalizationModule: <TExports extends UiPackageModuleExports = UiPackageModuleExports>(
+      name: string
+    ) => localizationModuleMap.get(name) as
+      | UiPackageLocalizationModuleSchema<TExports>
       | undefined
   };
 }
@@ -261,9 +277,11 @@ function registerModule(
   schema: UiPackageModuleSchema,
   schemaMap: Map<string, UiPackageModuleSchema>,
   moduleMap: Map<string, UiPackageModuleExports>,
-  iconModuleMap: Map<string, UiPackageIconModuleSchema>
+  iconModuleMap: Map<string, UiPackageIconModuleSchema>,
+  localizationModuleMap: Map<string, UiPackageLocalizationModuleSchema>
 ): void {
   const isIconModule = isUiPackageIconModule(schema);
+  const isLocalizationModule = isUiPackageLocalizationModule(schema);
 
   for (const key of getRegistryKeys(schema)) {
     schemaMap.set(key, schema);
@@ -274,6 +292,10 @@ function registerModule(
 
     if (isIconModule) {
       iconModuleMap.set(key, schema);
+    }
+
+    if (isLocalizationModule) {
+      localizationModuleMap.set(key, schema);
     }
   }
 }
@@ -424,6 +446,25 @@ function createSchemaFromDescriptor(
         values: schemaDescriptor.values
       });
     case "module":
+      if (schemaDescriptor.resourceType === "icons") {
+        return defineIconModuleSchema({
+          ...base,
+          kind: "module",
+          groupName: schemaDescriptor.groupName,
+          exports: resolveModuleExports(schemaDescriptor, modules)
+        });
+      }
+
+      if (schemaDescriptor.resourceType === "localization") {
+        return defineLocalizationModuleSchema({
+          ...base,
+          kind: "module",
+          groupName: schemaDescriptor.groupName,
+          defaultLocale: schemaDescriptor.defaultLocale,
+          exports: resolveModuleExports(schemaDescriptor, modules)
+        });
+      }
+
       return defineModuleSchema({
         ...base,
         kind: "module",
@@ -514,4 +555,10 @@ function resolveEntityBinding(schemaDescriptor: UiPackageManifestSchema) {
 
 function isUiPackageIconModule(schema: UiPackageModuleSchema): schema is UiPackageIconModuleSchema {
   return (schema as Partial<UiPackageIconModuleSchema>).resourceType === "icons";
+}
+
+function isUiPackageLocalizationModule(
+  schema: UiPackageModuleSchema
+): schema is UiPackageLocalizationModuleSchema {
+  return (schema as Partial<UiPackageLocalizationModuleSchema>).resourceType === "localization";
 }

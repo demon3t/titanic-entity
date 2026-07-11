@@ -3,7 +3,6 @@ import type {
   EntityDataGridRowAction,
   EntityDataGridRowActionContext
 } from "../../grids";
-import type { ResourceSvgIconResource } from "@titanic-entity/entity-resources";
 
 export interface EntityDataGridRowContextMenuProps<TRow = unknown> {
   actions: readonly EntityDataGridRowAction<TRow>[];
@@ -52,7 +51,7 @@ export function EntityDataGridRowContextMenu<TRow = unknown>({
             type="button"
             onClick={() => onActionClick(action)}
           >
-            <RowActionIcon icon={action.icon} />
+            <ResourceSvgIcon className="titanic-data-grid__row-menu-icon" icon={action.icon} />
           </button>
         );
       })}
@@ -67,12 +66,4 @@ function resolveRowActionDisabled<TRow>(
   return typeof action.disabled === "function"
     ? action.disabled(context)
     : Boolean(action.disabled);
-}
-
-function RowActionIcon({ icon }: { icon?: ResourceSvgIconResource }) {
-  if (!icon) {
-    return <span aria-hidden="true" className="titanic-data-grid__row-menu-icon-placeholder" />;
-  }
-
-  return <ResourceSvgIcon className="titanic-data-grid__row-menu-icon" icon={icon} />;
 }

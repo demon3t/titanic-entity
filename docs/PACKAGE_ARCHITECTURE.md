@@ -55,6 +55,51 @@ Schema - единица регистрации внутри пакета. Сей
 
 Доменные Entity API модели, готовые UI-компоненты, ресурсы, стили и бизнес-логика остаются в профильных пакетах. Для npm-пакета публичными entrypoints считаются корневой импорт `@titanic-entity/entity-base`, а также совместимые subpath-импорты `@titanic-entity/entity-base/enumValues` и `@titanic-entity/entity-base/Titanic`. Внутренние файлы `src/*` не считаются публичным API.
 
+## Границы `entity-resources`
+
+`@titanic-entity/entity-resources` содержит сериализуемые ресурсы, которые могут потребляться React-компонентами, package registry и прикладными пакетами.
+
+Стабильные entrypoints:
+
+| entrypoint | Назначение |
+| --- | --- |
+| `@titanic-entity/entity-resources` | Совместимый root-фасад, descriptor `titanicEntityResourcesPackage`, схемы и ресурсы |
+| `@titanic-entity/entity-resources/icons` | SVG icon resources, сгруппированные icon maps и helper-типы |
+| `@titanic-entity/entity-resources/media` | Медиа-ресурсы |
+| `@titanic-entity/entity-resources/assets` | Общий facade ресурсов |
+| `@titanic-entity/entity-resources/schemas` | Package schemas ресурсов |
+| `@titanic-entity/entity-resources/model` | Имена модулей и package constants |
+
+Иконки лежат по одной в папке. В каждой папке есть `index.ts` с serializable resource descriptor и `icon.svg` с тем же вектором для прямого просмотра:
+
+```text
+src/assets/icons/close/
+  index.ts
+  icon.svg
+```
+
+После регистрации `titanicEntityResourcesPackage` иконки доступны через `Titanic.Icons`:
+
+```ts
+Titanic.registerPackage(titanicEntityResourcesPackage);
+
+const closeIcon = Titanic.Icons.get("close");
+const sameIcon = Titanic.Icons.close;
+```
+
+В runtime зарегистрированные иконки также доступны как динамические свойства самого registry, например `Titanic.Icons.close`. Если путь не найден, `Titanic.Icons.get(...)` возвращает default-иконку `unknown`; реальное наличие проверяется через `Titanic.Icons.has(...)` или `Titanic.Icons.find(...)`.
+Иконки можно переопределять по публичному пути:
+
+```ts
+Titanic.Icons.override("close", appCloseIcon);
+Titanic.Icons.overrideIcons({
+  close: appCloseIcon
+});
+Titanic.Icons.overrideDefault(appUnknownIcon);
+```
+
+Основной сценарий темизации иконок - CSS-класс темы и `currentColor`. Если конкретной иконке нужен другой vector resource для темы, она может объявить `themes`, а потребитель может получить вариант через `Titanic.Icons.get("path.to.icon", { theme })` или `ResourceSvgIcon` с prop `theme`. `ResourceSvgIcon` принимает как ресурс, так и строковый путь; для `undefined` или отсутствующего пути будет отрисована default-иконка.
+
 ## Границы `entity-react`
 
 `@titanic-entity/entity-react` отвечает только за React-слой поверх `entity-base`, `entity-core`, `entity-api` и `entity-resources`.

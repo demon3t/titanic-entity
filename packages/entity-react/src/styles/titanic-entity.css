@@ -1412,8 +1412,7 @@ textarea.titanic-field__control {
   transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-.titanic-data-grid__row-menu-icon,
-.titanic-data-grid__row-menu-icon-placeholder {
+.titanic-data-grid__row-menu-icon {
   width: 16px;
   height: 16px;
   flex: 0 0 16px;
@@ -1889,6 +1888,12 @@ textarea.titanic-field__control {
   width: 40px;
   height: 40px;
   padding: 0;
+}
+
+.titanic-data-grid__settings-dropdown_text .titanic-icon-dropdown__trigger {
+  width: auto;
+  max-width: min(220px, calc(100vw - 32px));
+  padding: 0 12px;
 }
 
 .titanic-data-grid__settings-dropdown .titanic-icon-dropdown__menu {
