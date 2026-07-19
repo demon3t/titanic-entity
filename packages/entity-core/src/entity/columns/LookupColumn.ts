@@ -1,15 +1,20 @@
 import type { ReferenceValue } from "../models/ReferenceValue";
-import { EntityColumn } from "./EntityColumn";
+import { EntityColumnKind } from "../enums/EntityColumnKind";
+import { EntityColumn, type EntityColumnOptions } from "./EntityColumn";
 
 /**
- * Runtime-колонка ссылочного значения с displayValue.
+ * Активная колонка ссылочного значения с displayValue.
  */
 export class LookupColumn extends EntityColumn<ReferenceValue | null> {
   /**
    * Создать lookup-колонку.
    */
-  constructor(name: string, value: ReferenceValue | null = null) {
-    super(name, value);
+  constructor(
+    name: string,
+    value: ReferenceValue | null = null,
+    options: EntityColumnOptions<ReferenceValue | null> = {}
+  ) {
+    super(name, value, { kind: EntityColumnKind.Lookup, ...options });
   }
 
   /** @inheritdoc */

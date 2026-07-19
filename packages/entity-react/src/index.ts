@@ -1,20 +1,55 @@
 import { definePackage } from "@titanic-entity/entity-base";
-import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
-import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
+import {
+  createEntityRecordQuery,
+  titanicEntityCorePackage,
+  toEntityDisplayValues,
+  toEntityValues
+} from "@titanic-entity/entity-core";
+import {
+  EntityOrderDirection,
+  entityQuery,
+  getEntityValue,
+  titanicEntityApiPackage,
+  toEntityQueryJson
+} from "@titanic-entity/entity-api";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
 import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
+import { useEntityEditPageController } from "./headless/entityEditPageState";
+import { useOptionalEntityApiClient } from "./react/EntityApiProvider";
 import { entityReactEntitySchemas, entityReactEnumSchemas, entityReactSchemas } from "./schemas";
+import { Titanic } from "./templates/entityTemplateDsl";
 
 export * from "@titanic-entity/entity-base";
 export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
 export * from "@titanic-entity/entity-resources";
 export * from "@titanic-entity/entity-icons";
-export { Titanic } from "@titanic-entity/entity-core";
+export { Titanic };
 export {
   entityReactEntitySchemas,
   entityReactEnumSchemas
 };
+
+Object.assign(Titanic, {
+  EntityCore: {
+    ...((Titanic as any).EntityCore ?? {}),
+    createEntityRecordQuery,
+    toEntityDisplayValues,
+    toEntityValues
+  },
+  EntityApi: {
+    ...((Titanic as any).EntityApi ?? {}),
+    EntityOrderDirection,
+    entityQuery,
+    getEntityValue,
+    toEntityQueryJson
+  },
+  EntityReact: {
+    ...((Titanic as any).EntityReact ?? {}),
+    useEntityEditPageController,
+    useOptionalEntityApiClient
+  }
+});
 
 // React API
 export * from "./react/EntityApiProvider";
@@ -26,49 +61,8 @@ export * from "./react/models/UseEntityQueryOptions";
 // Headless
 export * from "./headless";
 
-// Components
-export * from "./components/EntityForm";
-export * from "./components/EntityRegistry";
-export * from "./components/EntityOrmList";
-export * from "./components/EntityRecordDetails";
-export * from "./components/EntityTable";
-export * from "./components/actions/EntityPageActionButton";
-export * from "./components/actions/EntityPageActions";
-export * from "./components/context-menus/EntityDataGridRowContextMenu";
-export * from "./components/feedback/RandomGifLoader";
-export * from "./components/fields/EntityField";
-export * from "./components/grid/EntityDataGrid";
-export * from "./components/inputs/DateInput";
-export * from "./components/inputs/InputFieldFrame";
-export * from "./components/inputs/models/BaseInputField";
-export * from "./components/inputs/LookupInput";
-export * from "./components/inputs/NumberInput";
-export * from "./components/icons/ResourceSvgIcon";
-export * from "./components/icons/titanicIcons";
-export * from "./components/json/EntityJsonEditor";
-export * from "./components/layout/EntityGrid";
-export * from "./components/records/EntityRecordsPage";
-export * from "./components/site/PackageSiteShell";
-export * from "./components/site/SiteCollapsiblePanel";
-export * from "./components/site/SiteIconButton";
-export * from "./components/site/SiteIconDropdown";
-export * from "./components/site/SiteLayout";
-export * from "./components/site/SitePanelToggleButton";
-
-// Fields
-export * from "./fields";
-
-// Grids
-export * from "./grids";
-
-// Layout
-export * from "./layout";
-
 // Templates
 export * from "./templates";
-
-// Resources
-export * from "./resources";
 
 // Schemas
 export * from "./schemas";

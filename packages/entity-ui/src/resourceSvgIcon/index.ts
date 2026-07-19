@@ -1,3 +1,3 @@
-export * from "./ResourceSvgIcon";
+export * from "./resource-svg-icon";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

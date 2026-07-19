@@ -11,6 +11,7 @@ export * from "./schemas";
 
 // Package
 export * from "./model";
+export * from "./resource-context";
 
 export const titanicEntityResourcesPackage = definePackage({
   name: "Titanic.EntityResources",

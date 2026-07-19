@@ -55,13 +55,12 @@ import {
 } from "@titanic-entity/entity-api";
 import {
   EntityApiProvider,
-  EntityFieldKind,
+  EntityColumnKind,
   useEntityQuery,
   type EntitySchema
 } from "@titanic-entity/entity-core";
-import { EntityForm } from "@titanic-entity/entity-react/components";
-import { EntityTable } from "@titanic-entity/entity-react/grids";
-import "@titanic-entity/entity-react/styles.css";
+import { EntityDataGrid, EntityForm } from "@titanic-entity/entity-ui";
+import "@titanic-entity/entity-ui/styles.css";
 
 const client = new EntityApiClient({
   baseUrl: "http://localhost:5006",
@@ -76,8 +75,8 @@ const departmentSchema: EntitySchema = {
   title: "Отдел",
   columns: [
     { path: "Id", label: "Id", readOnly: true, hidden: true },
-    { path: "Name", label: "Название", kind: EntityFieldKind.String, required: true, gridSpan: 12 },
-    { path: "Description", label: "Описание", kind: EntityFieldKind.Text, gridSpan: 24 }
+    { path: "Name", label: "Название", kind: EntityColumnKind.String, required: true, gridSpan: 12 },
+    { path: "Description", label: "Описание", kind: EntityColumnKind.Text, gridSpan: 24 }
   ]
 };
 
@@ -93,7 +92,19 @@ function DepartmentList() {
     return <div>{error.message}</div>;
   }
 
-  return <EntityTable schema={departmentSchema} rows={data ?? []} loading={loading} />;
+  return (
+    <EntityDataGrid
+      gridId="department-list"
+      tableName={departmentSchema.tableName}
+      primaryColumn={departmentSchema.primaryColumn}
+      rows={data ?? []}
+      columns={[
+        { key: "Name", path: "Name", label: "Название" },
+        { key: "Description", path: "Description", label: "Описание" }
+      ]}
+      loading={loading}
+    />
+  );
 }
 
 export function App() {
@@ -213,11 +224,8 @@ const personalClient = useEntityApiClient("personalData");
 
 - `EntityForm` - форма по `EntitySchema`.
 - `EntityField` - базовое поле для одной колонки.
-- `EntityTable` - простая таблица по `EntitySchema` и строкам Entity API.
+- `LookupInput` - lookup/select input для ссылочных значений.
 - `EntityDataGrid` - унифицированный грид с загрузкой структуры провайдера, выбором колонок и сохранением настроек.
-- `EntityOrmList` - список с кастомным маппингом строк Entity API в DTO.
-- `EntityRegistry` - базовая поверхность реестра записей.
-- `EntityRecordDetails` - карточка просмотра одной Entity API записи.
 - `EntityPageActions` и `EntityPageActionButton` - базовые action-кнопки страницы.
 - `RandomGifLoader` - loader с рандомным проигрыванием GIF из коллекции ресурсов.
 - `ResourceSvgIcon` - отрисовка SVG-иконок из ресурсов пакета.
@@ -316,12 +324,12 @@ const { values, setValue, getValues } = useEntityFormState({
 
 ## Пакетная архитектура
 
-Библиотека содержит базовый UI-пакет `titanicEntityUiPackage`. Он регистрирует UI-элементы как пакетные схемы и зависит от `titanicEntityReactUiPackage`:
+Библиотека содержит базовый UI-пакет `titanicUIPackage`. Он регистрирует UI-элементы как пакетные схемы и зависит от `titanicEntityReactUiPackage`:
 
 - `template` - шаблоны страниц, например `editPage`.
-- `field` - поля, например `field`, `numberInput`, `lookupInput`.
-- `grid` - гриды и списки, например `dataGrid`, `table`, `ormList`.
-- `enum` - перечисления регистрируются в профильных пакетах, например `EntityFieldKind` в `Titanic.Entity`, `ConditionOperator` в `Titanic.EntityApi`.
+- `field` - поля, например `field`, `dateInput`, `lookupInput`, `numberInput`.
+- `grid` - гриды и списки, например `dataGrid` и `grid`.
+- `enum` - перечисления регистрируются в профильных пакетах, например `EntityColumnKind` в `Titanic.Entity`, `ConditionOperator` в `Titanic.EntityApi`.
 - `component` - общий fallback для компонентов, которые не относятся к более узкому типу.
 
 Для нового кода у `@titanic-entity/entity-ui` есть явные schema entrypoints: `/components`, `/fields`, `/grids`, `/templates` и `/schemas`. Конкретные UI-объекты доступны напрямую от корня пакета, например `/form`, `/field`, `/dataGrid` и `/editPage`. Root import остается совместимым фасадом, а runtime-стили компонентов принадлежат `entity-react` и доступны через `entity-react/styles.css` или совместимый `entity-ui/styles.css`.
@@ -333,12 +341,12 @@ const { values, setValue, getValues } = useEntityFormState({
 ```tsx
 const customPackage = definePackage({
   name: "Titanic.Custom",
-  dependsOn: ["Titanic.EntityUi"],
+  dependsOn: ["Titanic.UI"],
   schemas: [
     defineFieldSchema<EntityFieldProps>({
       kind: "field",
       name: "EntityField",
-      replaces: "Titanic.EntityUi.EntityField",
+      replaces: "Titanic.UI.EntityField",
       extension: ({ baseComponent: BaseField }) => (props) => (
         <div className="custom-field-shell">
           {BaseField ? <BaseField {...props} /> : null}

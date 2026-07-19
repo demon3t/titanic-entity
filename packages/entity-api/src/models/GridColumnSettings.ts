@@ -28,6 +28,21 @@ export interface GridColumnSetting {
 /** Supported display modes for grid column settings. */
 export type GridColumnSettingsMode = "list" | "tile";
 
+/** Supported persisted grid sort directions. */
+export type GridSortDirection = "asc" | "desc";
+
+/** Persisted grid sort setting. */
+export interface GridSortSetting {
+  /** Logical column key used by the UI. */
+  key: string;
+
+  /** Optional entity path used to build the ESQ order. */
+  path?: string;
+
+  /** Sort direction selected by the user. */
+  direction: GridSortDirection;
+}
+
 /** Column collection for a single grid display mode. */
 export interface GridModeColumnSettings {
   /** Columns configured for the mode. */
@@ -63,6 +78,9 @@ export interface GridColumnSettingsDto {
   /** Optional per-mode column settings payload. */
   modeSettings?: GridModeSettingsMap;
 
+  /** Optional persisted sort setting. */
+  sort?: GridSortSetting;
+
   /** Indicates whether the record is the default layout for the grid. */
   isDefault: boolean;
 
@@ -92,6 +110,9 @@ export interface GridColumnSettingsSaveRequest {
 
   /** Optional per-mode column settings payload. */
   modeSettings?: GridModeSettingsMap;
+
+  /** Optional sort setting selected by the user. */
+  sort?: GridSortSetting;
 
   /** Indicates whether the saved record should become the default layout. */
   isDefault?: boolean;

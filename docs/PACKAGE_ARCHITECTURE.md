@@ -20,7 +20,7 @@
 export const packageDescriptor = definePackage({
   name: "Titanic.Main",
   version: "0.1.0",
-  dependsOn: ["Titanic.EntityUi"],
+  dependsOn: ["Titanic.UI"],
   schemas: []
 });
 ```
@@ -225,7 +225,7 @@ const query = entityQuery("invoice")
 
 ## Базовый UI-пакет
 
-`packages/entity-ui/src/index.ts` экспортирует `titanicEntityUiPackage`. Он регистрирует набор UI-элементов библиотеки и зависит от пакетов `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` и `Titanic.EntityReact`.
+`packages/entity-ui/src/index.ts` экспортирует `titanicUIPackage`. Он регистрирует набор UI-элементов библиотеки и зависит от пакетов `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` и `Titanic.EntityReact`.
 
 Файлы UI-объектов внутри `packages/entity-ui/src` лежат сразу на верхнем уровне: `form`, `field`, `dataGrid`, `editPage` и так далее. Runtime может жить в соседнем пакете, например в `packages/entity-react/src/grids`, а `packages/entity-ui/src/dataGrid` регистрирует его в пакетных schema-дескрипторах.
 
@@ -247,7 +247,7 @@ dataGrid/
 
 | entrypoint | Назначение |
 | --- | --- |
-| `@titanic-entity/entity-ui` | Root-фасад, descriptor `titanicEntityUiPackage` и совместимые re-export'ы |
+| `@titanic-entity/entity-ui` | Root-фасад, descriptor `titanicUIPackage` и совместимые re-export'ы |
 | `@titanic-entity/entity-ui/components` | Агрегированный набор component schemas |
 | `@titanic-entity/entity-ui/fields` | Агрегированный набор field schemas |
 | `@titanic-entity/entity-ui/grids` | Агрегированный набор grid schemas, настройки и публичные grid-типы |
@@ -269,20 +269,17 @@ dataGrid/
 - `dateInput`
 - `field`
 - `jsonEditor`
-- `numberInput`
 - `lookupInput`
+- `numberInput`
 
 ### Grid
 
 - `dataGrid`
 - `grid`
-- `ormList`
-- `registry`
-- `table`
 
 ### Enum
 
-Enum регистрируются в профильных пакетах: `EntityFieldKind` в `Titanic.Entity`, API enum в `Titanic.EntityApi`.
+Enum регистрируются в профильных пакетах: `EntityColumnKind` в `Titanic.Entity`, API enum в `Titanic.EntityApi`.
 
 ### Component
 
@@ -294,7 +291,7 @@ Enum регистрируются в профильных пакетах: `Entit
 const Field = useUiField("EntityField", EntityField);
 const Grid = useUiGrid("EntityDataGrid", EntityDataGrid);
 const Template = useUiTemplate("EntityEditPage", EntityEditPage);
-const fieldKinds = useUiEnum("EntityFieldKind", EntityFieldKind);
+const columnKinds = useUiEnum("EntityColumnKind", EntityColumnKind);
 ```
 
 Если компонент обязателен и fallback не нужен, можно использовать registry напрямую:
@@ -315,7 +312,7 @@ import type { EntityFieldProps } from "@titanic-entity/entity-react/fields";
 export const strictFieldSchema = defineFieldSchema<EntityFieldProps>({
   kind: "field",
   name: "EntityField",
-  replaces: "Titanic.EntityUi.EntityField",
+  replaces: "Titanic.UI.EntityField",
   extension: ({ baseComponent: BaseField }) => function StrictField(props) {
     return (
       <div className="strict-field">
@@ -333,18 +330,18 @@ export const strictFieldSchema = defineFieldSchema<EntityFieldProps>({
 Enum можно заменить или дополнить через `extension`.
 
 ```ts
-const customFieldKindSchema = defineEnumSchema({
+const customColumnKindSchema = defineEnumSchema({
   kind: "enum",
-  name: "EntityFieldKind",
-  replaces: "Titanic.Entity.EntityFieldKind",
+  name: "EntityColumnKind",
+  replaces: "Titanic.Entity.EntityColumnKind",
   extension: ({ baseValues }) => ({
     ...(baseValues ?? {}),
-    File: "file"
+    File: 10
   })
 });
 ```
 
-В registry enum сохраняется под коротким именем и полным именем пакета. Например, `EntityFieldKind` и `Titanic.Entity.EntityFieldKind`.
+В registry enum сохраняется под коротким именем и полным именем пакета. Например, `EntityColumnKind` и `Titanic.Entity.EntityColumnKind`.
 
 ## Descriptor JSON
 
@@ -354,7 +351,7 @@ const customFieldKindSchema = defineEnumSchema({
 {
   "name": "Titanic.Main",
   "version": "0.1.0",
-  "dependsOn": ["Titanic.EntityUi"],
+  "dependsOn": ["Titanic.UI"],
   "schemas": [
     {
       "kind": "page",

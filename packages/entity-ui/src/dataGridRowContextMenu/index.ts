@@ -1,3 +1,3 @@
-export * from "./DataGridRowContextMenu";
+export * from "./data-grid-row-context-menu";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

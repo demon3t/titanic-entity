@@ -1,30 +1,11 @@
+import { EntityColumnKind } from "./EntityColumnKind";
+
 /**
- * Тип UI-поля для отображения колонки сущности.
+ * @deprecated Use EntityColumnKind. Field kind is now part of the EntityColumn contract.
  */
-export enum EntityFieldKind {
-  /** Однострочное текстовое поле. */
-  String = "string",
+export const EntityFieldKind = EntityColumnKind;
 
-  /** Многострочное текстовое поле. */
-  Text = "text",
-
-  /** Числовое поле. */
-  Number = "number",
-
-  /** Логический флаг в виде флажка. */
-  Boolean = "boolean",
-
-  /** Поле даты. */
-  Date = "date",
-
-  /** Поле даты и времени. */
-  DateTime = "datetime",
-
-  /** Lookup/select поле. */
-  Lookup = "lookup",
-
-  /** Поле выбора цвета. */
-  Color = "color",
-
-  Json = "json"
-}
+/**
+ * @deprecated Use EntityColumnKind. Field kind is now part of the EntityColumn contract.
+ */
+export type EntityFieldKind = EntityColumnKind;

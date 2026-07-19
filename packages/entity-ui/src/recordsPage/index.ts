@@ -1,3 +1,4 @@
-export * from "./RecordsPage";
+export * from "./records-page";
+export * from "../baseSection";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

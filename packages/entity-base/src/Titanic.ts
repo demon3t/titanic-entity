@@ -399,7 +399,7 @@ export class TitanicLocalizationRegistry {
     return this.locale ?? this.getUserLocale() ?? this.defaultLocale;
   }
 
-  /** Reads the user locale from document and navigator when a browser runtime is available. */
+  /** Reads the user locale from document and navigator when a browser environment is available. */
   getUserLocale(): string | undefined {
     if (typeof document !== "undefined") {
       const documentLocale = normalizeLocalizationLocale(document.documentElement.lang);
@@ -714,6 +714,9 @@ export class TitanicPackageTools {
   }
 }
 
+/** Dynamic current-user payload shared by applications through Titanic.CurrentUser. */
+export type TitanicCurrentUser = Record<string, unknown>;
+
 /** Public facade for package resource registration and shared Titanic helpers. */
 export class Titanic {
   /** Package schema helper methods. */
@@ -728,6 +731,21 @@ export class Titanic {
   static readonly localization = Titanic.Localization;
   /** Shared enum registry exposed to packages and consumers. */
   static readonly enums = new TitanicEnumRegistry();
+  /** Dynamic current-user object resolved by the host application. */
+  static CurrentUser: TitanicCurrentUser | null | undefined;
+
+  /** Stores current user data on the shared facade and returns it for reuse. */
+  static setCurrentUser<TCurrentUser extends TitanicCurrentUser | null | undefined>(
+    currentUser: TCurrentUser
+  ): TCurrentUser {
+    this.CurrentUser = currentUser;
+    return currentUser;
+  }
+
+  /** Clears current user data from the shared facade. */
+  static clearCurrentUser(): void {
+    this.CurrentUser = undefined;
+  }
 
   /** Registers all schemas exposed by a package descriptor. */
   static registerPackage(packageDescriptor: UiPackageDescriptor): void {

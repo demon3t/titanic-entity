@@ -1,3 +1,3 @@
-export * from "./SiteIconDropdown";
+export * from "./site-icon-dropdown";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

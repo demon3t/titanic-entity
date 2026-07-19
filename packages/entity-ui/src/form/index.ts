@@ -1,3 +1,3 @@
-export * from "./Form";
+export * from "./form";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

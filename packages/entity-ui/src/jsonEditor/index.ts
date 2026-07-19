@@ -1,3 +1,3 @@
-export * from "./JsonEditor";
+export * from "./json-editor";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

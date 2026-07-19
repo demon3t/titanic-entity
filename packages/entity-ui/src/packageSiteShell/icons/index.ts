@@ -9,7 +9,7 @@ export const titanicPackageSiteShellIconGroups = {
 } as const;
 
 export const packageSiteShellIconModuleSchema = defineIconModuleSchema({
-  name: "Titanic.EntityUi.PackageSiteShell.Icons",
+  name: "Titanic.UI.PackageSiteShell.Icons",
   exports: {
     icons: titanicPackageSiteShellIconGroups,
     titanicCultureIcons,

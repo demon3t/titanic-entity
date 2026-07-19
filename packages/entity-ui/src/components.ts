@@ -1,48 +1,62 @@
+import {
+  buttonComponentSchema,
+  siteIconButtonComponentSchema,
+  siteIconDropdownComponentSchema,
+  sitePanelToggleButtonComponentSchema
+} from "./button";
+import { baseModalPageComponentSchema } from "./baseModalPage";
+import { baseSectionComponentSchema } from "./baseSection";
+import { containerComponentSchema } from "./container";
 import { dataGridComponentSchema } from "./dataGrid";
+import { dataGridSettingsModalPageComponentSchemas } from "./dataGridSettingsModalPage/component-schema";
 import { dataGridRowContextMenuComponentSchema } from "./dataGridRowContextMenu";
 import { dateInputComponentSchema } from "./dateInput";
-import { editPageComponentSchema } from "./editPage";
+import { dateTimeInputComponentSchema } from "./dateTimeInput";
+import { dragDropItemComponentSchema } from "./dragDrop";
+import { baseEntityPageComponentSchema } from "./editPage";
+import { expanderComponentSchema } from "./expander";
 import { fieldComponentSchema } from "./field";
 import { formComponentSchema } from "./form";
 import { gridComponentSchema } from "./grid";
 import { jsonEditorComponentSchema } from "./jsonEditor";
+import { labelComponentSchema } from "./label";
+import { lookupInputComponentSchema } from "./lookupInput";
 import { numberInputComponentSchema } from "./numberInput";
-import { ormListComponentSchema } from "./ormList";
 import { packageSiteShellComponentSchema } from "./packageSiteShell";
 import { pageActionButtonComponentSchema } from "./pageActionButton";
 import { pageActionsComponentSchema } from "./pageActions";
 import { randomGifLoaderComponentSchema } from "./randomGifLoader";
-import { recordDetailsComponentSchema } from "./recordDetails";
 import { recordsPageComponentSchema } from "./recordsPage";
-import { registryComponentSchema } from "./registry";
 import { resourceSvgIconComponentSchema } from "./resourceSvgIcon";
-import { lookupInputComponentSchema } from "./lookupInput";
 import { siteCollapsiblePanelComponentSchema } from "./siteCollapsiblePanel";
-import { siteIconButtonComponentSchema } from "./siteIconButton";
-import { siteIconDropdownComponentSchema } from "./siteIconDropdown";
 import { siteLayoutComponentSchema } from "./siteLayout";
-import { sitePanelToggleButtonComponentSchema } from "./sitePanelToggleButton";
-import { tableComponentSchema } from "./table";
+import { timeInputComponentSchema } from "./timeInput";
 
 export const entityUiComponentSchemas = [
-  editPageComponentSchema,
+  buttonComponentSchema,
+  containerComponentSchema,
+  dragDropItemComponentSchema,
+  expanderComponentSchema,
+  labelComponentSchema,
+  baseModalPageComponentSchema,
+  baseEntityPageComponentSchema,
   dataGridComponentSchema,
+  ...dataGridSettingsModalPageComponentSchemas,
   gridComponentSchema,
   fieldComponentSchema,
   dateInputComponentSchema,
+  dateTimeInputComponentSchema,
+  timeInputComponentSchema,
   jsonEditorComponentSchema,
-  numberInputComponentSchema,
   lookupInputComponentSchema,
+  numberInputComponentSchema,
   formComponentSchema,
-  ormListComponentSchema,
-  recordDetailsComponentSchema,
-  registryComponentSchema,
-  tableComponentSchema,
   pageActionButtonComponentSchema,
   pageActionsComponentSchema,
   siteIconDropdownComponentSchema,
   dataGridRowContextMenuComponentSchema,
   recordsPageComponentSchema,
+  baseSectionComponentSchema,
   packageSiteShellComponentSchema,
   siteCollapsiblePanelComponentSchema,
   siteIconButtonComponentSchema,

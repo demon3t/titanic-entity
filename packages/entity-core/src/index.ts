@@ -18,6 +18,7 @@ export * from "./entity/columns/NumberColumn";
 export * from "./entity/columns/StringColumn";
 
 // Entity enums
+export * from "./entity/enums/EntityColumnKind";
 export * from "./entity/enums/EntityFieldKind";
 
 // Entity models

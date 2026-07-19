@@ -22,7 +22,7 @@ export const titanicDataGridIconGroups = {
 } as const;
 
 export const dataGridIconModuleSchema = defineIconModuleSchema({
-  name: "Titanic.EntityUi.DataGrid.Icons",
+  name: "Titanic.UI.DataGrid.Icons",
   exports: {
     icons: titanicDataGridIconGroups,
     titanicDataGridCommonIcons,

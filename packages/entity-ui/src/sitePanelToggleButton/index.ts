@@ -1,3 +1,3 @@
-export * from "./SitePanelToggleButton";
+export * from "./site-panel-toggle-button";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

@@ -1,3 +1,3 @@
-export * from "./PackageSiteShell";
+export * from "./package-site-shell";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

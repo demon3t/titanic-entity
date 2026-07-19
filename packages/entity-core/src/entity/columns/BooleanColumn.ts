@@ -1,14 +1,15 @@
-import { EntityColumn } from "./EntityColumn";
+import { EntityColumnKind } from "../enums/EntityColumnKind";
+import { EntityColumn, type EntityColumnOptions } from "./EntityColumn";
 
 /**
- * Runtime-колонка boolean-значения.
+ * Активная колонка boolean-значения.
  */
 export class BooleanColumn extends EntityColumn<boolean> {
   /**
    * Создать boolean-колонку.
    */
-  constructor(name: string, value = false) {
-    super(name, value);
+  constructor(name: string, value = false, options: EntityColumnOptions<boolean> = {}) {
+    super(name, value, { kind: EntityColumnKind.Boolean, ...options });
   }
 
   /** @inheritdoc */

@@ -1,3 +1,3 @@
-export * from "./RandomGifLoader";
+export * from "./random-gif-loader";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

@@ -7,38 +7,38 @@ import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
 import { entityUiSchemas } from "./schemas";
 
 export * from "./dataGrid";
+export * from "./baseModalPage";
+export * from "./container";
+export * from "./dataGridSettingsModalPage";
 export * from "./dataGridRowContextMenu";
 export * from "./dateInput";
+export * from "./dateTimeInput";
+export * from "./dragDrop";
+export * from "./baseSection";
+export * from "./button";
 export * from "./editPage";
+export * from "./expander";
 export * from "./field";
 export * from "./form";
 export * from "./grid";
+export * from "./inputFieldFrame";
 export * from "./jsonEditor";
+export * from "./label";
+export * from "./lookupInput";
 export * from "./numberInput";
-export * from "./ormList";
 export * from "./packageSiteShell";
 export * from "./pageActionButton";
 export * from "./pageActions";
 export * from "./randomGifLoader";
-export * from "./recordDetails";
 export * from "./recordsPage";
-export * from "./registry";
 export * from "./resourceSvgIcon";
-export * from "./lookupInput";
 export * from "./siteCollapsiblePanel";
-export * from "./siteIconButton";
-export * from "./siteIconDropdown";
 export * from "./siteLayout";
-export * from "./sitePanelToggleButton";
-export * from "./table";
-export * from "./components";
-export * from "./fields";
-export * from "./grids";
-export * from "./templates";
+export * from "./timeInput";
 export { entityReactUiSchemas, entityUiSchemas } from "./schemas";
 
-export const titanicEntityUiPackage = definePackage({
-  name: "Titanic.EntityUi",
+export const titanicUIPackage = definePackage({
+  name: "Titanic.UI",
   version: "0.1.0",
   dependsOn: [
     titanicEntityCorePackage.name,
@@ -50,4 +50,4 @@ export const titanicEntityUiPackage = definePackage({
   schemas: entityUiSchemas
 });
 
-export default titanicEntityUiPackage;
+export default titanicUIPackage;

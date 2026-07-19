@@ -1,49 +1,60 @@
 export const entityReactComponentNames = {
-  EntityEditPage: "EntityEditPage",
+  BaseEntityPage: "BaseEntityPage",
+  BaseModalPage: "BaseModalPage",
+  BaseSection: "BaseSection",
+  BaseEntitySection: "BaseSection",
+  Button: "Button",
+  EntityEditPage: "BaseEntityPage",
   EntityDataGrid: "EntityDataGrid",
   EntityDataGridRowContextMenu: "EntityDataGridRowContextMenu",
+  EntityContainer: "EntityContainer",
+  EntityDragDropItem: "EntityDragDropItem",
+  EntityExpander: "EntityExpander",
   EntityField: "EntityField",
   EntityForm: "EntityForm",
   EntityGrid: "EntityGrid",
   EntityJsonEditor: "EntityJsonEditor",
-  EntityOrmList: "EntityOrmList",
+  EntityLabel: "EntityLabel",
+  LookupInput: "LookupInput",
   EntityPageActionButton: "EntityPageActionButton",
   EntityPageActions: "EntityPageActions",
   EntityRecordsPage: "EntityRecordsPage",
-  EntityRecordDetails: "EntityRecordDetails",
-  EntityRegistry: "EntityRegistry",
-  EntityTable: "EntityTable",
+  EntityRecordsSection: "BaseSection",
   DateInput: "DateInput",
+  DateTimeInput: "DateTimeInput",
   NumberInput: "NumberInput",
   PackageSiteShell: "PackageSiteShell",
   RandomGifLoader: "RandomGifLoader",
   ResourceSvgIcon: "ResourceSvgIcon",
-  LookupInput: "LookupInput",
   SiteCollapsiblePanel: "SiteCollapsiblePanel",
   SiteIconButton: "SiteIconButton",
   SiteIconDropdown: "SiteIconDropdown",
   SiteLayout: "SiteLayout",
-  SitePanelToggleButton: "SitePanelToggleButton"
+  SitePanelToggleButton: "SitePanelToggleButton",
+  TimeInput: "TimeInput"
 } as const;
 
 export const entityReactTemplateNames = {
-  EntityEditPage: entityReactComponentNames.EntityEditPage
+  BaseEntityPage: entityReactComponentNames.BaseEntityPage,
+  BaseEntitySection: entityReactComponentNames.BaseSection,
+  BaseSection: entityReactComponentNames.BaseSection,
+  EntityEditPage: entityReactComponentNames.BaseEntityPage,
+  EntityRecordsSection: entityReactComponentNames.BaseSection
 } as const;
 
 export const entityReactFieldNames = {
   EntityField: entityReactComponentNames.EntityField,
   DateInput: entityReactComponentNames.DateInput,
+  DateTimeInput: entityReactComponentNames.DateTimeInput,
   EntityJsonEditor: entityReactComponentNames.EntityJsonEditor,
+  LookupInput: entityReactComponentNames.LookupInput,
   NumberInput: entityReactComponentNames.NumberInput,
-  LookupInput: entityReactComponentNames.LookupInput
+  TimeInput: entityReactComponentNames.TimeInput
 } as const;
 
 export const entityReactGridNames = {
   EntityDataGrid: entityReactComponentNames.EntityDataGrid,
-  EntityGrid: entityReactComponentNames.EntityGrid,
-  EntityOrmList: entityReactComponentNames.EntityOrmList,
-  EntityRegistry: entityReactComponentNames.EntityRegistry,
-  EntityTable: entityReactComponentNames.EntityTable
+  EntityGrid: entityReactComponentNames.EntityGrid
 } as const;
 
 export const entityReactEnumNames = {

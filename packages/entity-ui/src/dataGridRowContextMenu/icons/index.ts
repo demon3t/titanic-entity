@@ -8,7 +8,7 @@ export const titanicDataGridRowContextMenuIconGroups = {
 } as const;
 
 export const dataGridRowContextMenuIconModuleSchema = defineIconModuleSchema({
-  name: "Titanic.EntityUi.DataGridRowContextMenu.Icons",
+  name: "Titanic.UI.DataGridRowContextMenu.Icons",
   exports: {
     icons: titanicDataGridRowContextMenuIconGroups,
     titanicDataGridRowContextMenuIconGroups,

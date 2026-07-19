@@ -1,3 +1,3 @@
-export * from "./PageActionButton";
+export * from "./page-action-button";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

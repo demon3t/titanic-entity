@@ -15,11 +15,26 @@ export interface EntityGridColumnSettingsClient {
   getEntityGridColumnDefaultSettings(gridId: string, userId: string): Promise<EntityGridColumnSettingsDto | null>;
 
   /**
+   * Loads the personal settings for a grid and user pair.
+   *
+   * @param gridId Grid identifier.
+   * @param userId User identifier.
+   */
+  getEntityGridColumnPersonalSettings?(gridId: string, userId: string): Promise<EntityGridColumnSettingsDto | null>;
+
+  /**
    * Saves the default settings for a grid and user pair.
    *
    * @param request Settings payload to persist.
    */
   saveEntityGridColumnDefaultSettings(request: EntityGridColumnSettingsSaveRequest): Promise<EntityGridColumnSettingsDto>;
+
+  /**
+   * Saves the personal settings for a grid and user pair.
+   *
+   * @param request Settings payload to persist.
+   */
+  saveEntityGridColumnPersonalSettings?(request: EntityGridColumnSettingsSaveRequest): Promise<EntityGridColumnSettingsDto>;
 }
 
 type EntityGridColumnSettingsTransport = Pick<EntityApiClient, "save" | "selectRows">;
@@ -53,6 +68,24 @@ export class EntityGridColumnSettingsApiClient implements EntityGridColumnSettin
    * @param userId User identifier.
    */
   async getEntityGridColumnDefaultSettings(gridId: string, userId: string): Promise<EntityGridColumnSettingsDto | null> {
+    return this.getEntityGridColumnSettingsByDefaultState(gridId, userId, true);
+  }
+
+  /**
+   * Loads the personal settings for a grid and user pair.
+   *
+   * @param gridId Grid identifier.
+   * @param userId User identifier.
+   */
+  async getEntityGridColumnPersonalSettings(gridId: string, userId: string): Promise<EntityGridColumnSettingsDto | null> {
+    return this.getEntityGridColumnSettingsByDefaultState(gridId, userId, false);
+  }
+
+  private async getEntityGridColumnSettingsByDefaultState(
+    gridId: string,
+    userId: string,
+    isDefault: boolean
+  ): Promise<EntityGridColumnSettingsDto | null> {
     const columns = gridColumnSettingsEntity.columns;
     const safeGridId = normalizeEntityProfileKey(gridId);
     const safeUserId = normalizeEntityProfileKey(userId);
@@ -70,7 +103,7 @@ export class EntityGridColumnSettingsApiClient implements EntityGridColumnSettin
       {
         path: columns.isDefault,
         comparisonType: ConditionOperator.Equal,
-        value: true
+        value: isDefault
       }
     ], undefined, 1, [
       columns.id,
@@ -91,22 +124,39 @@ export class EntityGridColumnSettingsApiClient implements EntityGridColumnSettin
    * @param request Settings payload to persist.
    */
   async saveEntityGridColumnDefaultSettings(request: EntityGridColumnSettingsSaveRequest): Promise<EntityGridColumnSettingsDto> {
+    return this.saveEntityGridColumnSettingsByDefaultState(request, true);
+  }
+
+  /**
+   * Saves the personal settings for a grid and user pair.
+   *
+   * @param request Settings payload to persist.
+   */
+  async saveEntityGridColumnPersonalSettings(request: EntityGridColumnSettingsSaveRequest): Promise<EntityGridColumnSettingsDto> {
+    return this.saveEntityGridColumnSettingsByDefaultState(request, false);
+  }
+
+  private async saveEntityGridColumnSettingsByDefaultState(
+    request: EntityGridColumnSettingsSaveRequest,
+    isDefault: boolean
+  ): Promise<EntityGridColumnSettingsDto> {
     const columns = gridColumnSettingsEntity.columns;
     const safeGridId = normalizeEntityProfileKey(request.gridId);
     const safeUserId = normalizeEntityProfileKey(request.userId);
-    const existing = await this.getEntityGridColumnDefaultSettings(safeGridId, safeUserId);
+    const existing = await this.getEntityGridColumnSettingsByDefaultState(safeGridId, safeUserId, isDefault);
     const values = {
       [columns.id]: existing?.id ?? createEntityGuid(),
       [columns.userId]: safeUserId,
       [columns.gridId]: safeGridId,
-      [columns.name]: request.name?.trim() || "Default",
+      [columns.name]: request.name?.trim() || (isDefault ? "Default" : "Personal"),
       [columns.columnsJson]: JSON.stringify(normalizeEntityGridColumnSettingsPayload({
         columns: request.columns,
         displayMode: request.displayMode,
         columnSettingsMode: request.columnSettingsMode,
-        modeSettings: request.modeSettings
+        modeSettings: request.modeSettings,
+        sort: request.sort
       })),
-      [columns.isDefault]: request.isDefault ?? true,
+      [columns.isDefault]: isDefault,
       [columns.updatedAt]: new Date().toISOString()
     };
 
@@ -129,6 +179,7 @@ function mapEntityGridColumnSettingsRow(row: EntityApiEntity): EntityGridColumnS
     ...(parsedSettings.displayMode ? { displayMode: parsedSettings.displayMode } : {}),
     ...(parsedSettings.columnSettingsMode ? { columnSettingsMode: parsedSettings.columnSettingsMode } : {}),
     ...(parsedSettings.modeSettings ? { modeSettings: parsedSettings.modeSettings } : {}),
+    ...(parsedSettings.sort ? { sort: parsedSettings.sort } : {}),
     isDefault: toBoolean(getEntityValue<unknown>(row, columns.isDefault)),
     updatedAt: getEntityValue<string>(row, columns.updatedAt) ?? ""
   };
@@ -139,6 +190,7 @@ type ParsedEntityGridColumnSettings = {
   displayMode?: EntityGridColumnSettingsDto["displayMode"];
   columnSettingsMode?: EntityGridColumnSettingsDto["columnSettingsMode"];
   modeSettings?: EntityGridColumnSettingsDto["modeSettings"];
+  sort?: EntityGridColumnSettingsDto["sort"];
 };
 
 function parseEntityGridColumnSettings(value: string | null): ParsedEntityGridColumnSettings {
@@ -158,6 +210,7 @@ function parseEntityGridColumnSettings(value: string | null): ParsedEntityGridCo
       const displayMode = toColumnSettingsMode(payload.displayMode) ?? toColumnSettingsMode(payload.columnSettingsMode);
       const columnSettingsMode = toColumnSettingsMode(payload.columnSettingsMode) ?? displayMode;
       const modeSettings = normalizeEntityGridModeSettings(payload.modeSettings);
+      const sort = normalizeEntityGridSortSetting(payload.sort);
       const columns = Array.isArray(payload.columns)
         ? normalizeEntityGridColumnSettings(payload.columns)
         : getEntityGridModeColumns(modeSettings, displayMode ?? columnSettingsMode);
@@ -166,7 +219,8 @@ function parseEntityGridColumnSettings(value: string | null): ParsedEntityGridCo
         columns,
         ...(displayMode ? { displayMode } : {}),
         ...(columnSettingsMode ? { columnSettingsMode } : {}),
-        ...(modeSettings ? { modeSettings } : {})
+        ...(modeSettings ? { modeSettings } : {}),
+        ...(sort ? { sort } : {})
       };
     }
 
@@ -181,15 +235,19 @@ function normalizeEntityGridColumnSettingsPayload(value: {
   displayMode?: unknown;
   columnSettingsMode?: unknown;
   modeSettings?: unknown;
+  sort?: unknown;
 }): ParsedEntityGridColumnSettings {
   const displayMode = toColumnSettingsMode(value.displayMode) ?? toColumnSettingsMode(value.columnSettingsMode);
   const columnSettingsMode = toColumnSettingsMode(value.columnSettingsMode) ?? displayMode;
   const columns = normalizeEntityGridColumnSettings(value.columns);
   const modeSettings = normalizeEntityGridModeSettings(value.modeSettings);
-  const nextModeSettings = displayMode
+  const sort = normalizeEntityGridSortSetting(value.sort);
+  const activeMode = columnSettingsMode ?? displayMode;
+
+  const nextModeSettings = activeMode
     ? {
         ...modeSettings,
-        [displayMode]: { columns }
+        [activeMode]: { columns }
       }
     : modeSettings;
   const normalizedModeSettings = normalizeEntityGridModeSettings(nextModeSettings);
@@ -198,7 +256,8 @@ function normalizeEntityGridColumnSettingsPayload(value: {
     columns,
     ...(displayMode ? { displayMode } : {}),
     ...(columnSettingsMode ? { columnSettingsMode } : {}),
-    ...(normalizedModeSettings ? { modeSettings: normalizedModeSettings } : {})
+    ...(normalizedModeSettings ? { modeSettings: normalizedModeSettings } : {}),
+    ...(sort ? { sort } : {})
   };
 }
 
@@ -284,6 +343,29 @@ function normalizeEntityGridColumnSettings(value: readonly unknown[]): EntityGri
 
 function toColumnSettingsMode(value: unknown): EntityGridColumnSettingsDto["columnSettingsMode"] {
   return value === "list" || value === "tile" ? value : undefined;
+}
+
+function normalizeEntityGridSortSetting(value: unknown): EntityGridColumnSettingsDto["sort"] {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const payload = value as Record<string, unknown>;
+  const path = toPositiveString(payload.path);
+  const key = toPositiveString(payload.key) ?? path;
+
+  if (!key) {
+    return undefined;
+  }
+
+  const rawDirection = typeof payload.direction === "string" ? payload.direction.toLowerCase() : "";
+  const direction = rawDirection === "desc" || rawDirection === "descending" ? "desc" : "asc";
+
+  return {
+    key,
+    ...(path ? { path } : {}),
+    direction
+  };
 }
 
 function toPositiveNumber(value: unknown): number | undefined {

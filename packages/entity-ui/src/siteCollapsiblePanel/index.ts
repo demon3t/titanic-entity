@@ -1,3 +1,3 @@
-export * from "./SiteCollapsiblePanel";
+export * from "./site-collapsible-panel";
 export * from "./icons";
-export * from "./resources";
+export * from "./lcz";

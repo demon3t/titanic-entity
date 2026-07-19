@@ -14,7 +14,7 @@ export const titanicDateInputIconGroups = {
 } as const;
 
 export const dateInputIconModuleSchema = defineIconModuleSchema({
-  name: "Titanic.EntityUi.DateInput.Icons",
+  name: "Titanic.UI.DateInput.Icons",
   exports: {
     icons: titanicDateInputIconGroups,
     titanicDateInputCommonIcons,
