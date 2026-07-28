@@ -490,12 +490,12 @@ npm run build
 Ручной dry-run можно запустить из GitHub UI:
 
 ```text
-Actions -> Publish npm packages -> Run workflow -> dry_run: true, npm_tag: beta
+Actions -> Publish npm packages -> Run workflow -> dry_run: true, npm_tag: latest
 ```
 
-Реальная beta-публикация запускается двумя способами:
+Реальная stable-публикация запускается двумя способами:
 
 - автоматически при merge/push в ветку `main`;
-- вручную через `Run workflow` с `dry_run: false` и `npm_tag: beta`.
+- вручную через `Run workflow` с `dry_run: false` и `npm_tag: latest`.
 
-Workflow выполняет `npm ci`, `npm run typecheck`, `npm run build`, временно заменяет внутренние `file:../...` зависимости на версии workspace-пакетов и публикует пакеты в npm в правильном порядке. Для первого релиза используется версия `0.1.0-beta.0`, чтобы пакеты устанавливались через `npm install @titanic-entity/entity-react@beta`.
+Workflow выполняет `npm ci`, `npm run typecheck`, `npm run build`, временно заменяет внутренние `file:../...` зависимости на версии workspace-пакетов и публикует пакеты в npm в правильном порядке. Для stable-релиза используется версия `0.1.0`, чтобы пакеты устанавливались через `npm install @titanic-entity/entity-react`.

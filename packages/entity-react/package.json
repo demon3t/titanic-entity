@@ -1,6 +1,6 @@
 {
   "name": "@titanic-entity/entity-react",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0",
   "description": "React TypeScript client and UI primitives for Titanic.Entity HTTP API.",
   "type": "module",
   "license": "MIT",

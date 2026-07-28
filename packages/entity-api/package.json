@@ -1,6 +1,6 @@
 {
   "name": "@titanic-entity/entity-api",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0",
   "description": "Entity API client, request models, and query helpers for Titanic.Entity.",
   "type": "module",
   "license": "MIT",
