@@ -32,15 +32,15 @@ jobs:
           npm run typecheck -w @titanic-entity/entity-base
           npm run build -w @titanic-entity/entity-base
 
-      - name: Verify @titanic-entity/entity-api
-        run: |
-          npm run typecheck -w @titanic-entity/entity-api
-          npm run build -w @titanic-entity/entity-api
-
       - name: Verify @titanic-entity/entity-core
         run: |
           npm run typecheck -w @titanic-entity/entity-core
           npm run build -w @titanic-entity/entity-core
+
+      - name: Verify @titanic-entity/entity-api
+        run: |
+          npm run typecheck -w @titanic-entity/entity-api
+          npm run build -w @titanic-entity/entity-api
 
       - name: Verify @titanic-entity/entity-resources
         run: |
