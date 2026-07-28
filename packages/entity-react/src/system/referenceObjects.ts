@@ -1,12 +1,11 @@
 // Контракт и загрузчик справочных объектов системного дизайнера из Entity ORM API.
 import {
-  entityQuery,
   getEntityValue,
   type EntityApiClient,
   type EntityApiEntity,
   type EntityApiStructureColumnResponse
 } from "@titanic-entity/entity-api";
-import { EntityColumnKind, type EntitySchema } from "@titanic-entity/entity-core";
+import { entityQuery, EntityColumnKind, type EntitySchema } from "@titanic-entity/entity-core";
 import type { EntityDataGridColumn } from "./types";
 
 export interface ReferenceObjectFieldConfig {

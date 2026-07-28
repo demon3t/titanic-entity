@@ -1,18 +1,21 @@
-import {
-  entityQuery,
-  EntityLogicalOperation,
-  type EntityApiColumnValueResponse,
-  type EntityApiEntity,
-  type ESQ,
-  type ESQFilter,
-  type ESQFilterCollection
-} from "@titanic-entity/entity-api";
+import { entityQuery } from "../query";
+import { EntityLogicalOperation } from "./enums/EntityLogicalOperation";
+import type { EntityQuery } from "./models/EntityQuery";
+import type { EntityQueryFilter } from "./models/EntityQueryFilter";
+import type { EntityQueryFilterCollection } from "./models/EntityQueryFilterCollection";
 import { createFilterCollection, createGroupFilter, createIsContainsFilter, createIsEqualFilter } from "./filters";
 import type { EntityDisplayValues } from "./models/EntityDisplayValues";
 import type { EntityLookupOptionsSource } from "./models/EntityLookupOptionsSource";
 import type { EntitySchema } from "./models/EntitySchema";
 import type { EntityValues } from "./models/EntityValues";
 import type { LookupOption } from "./models/LookupOption";
+
+export interface EntityApiColumnValueResponse<T = unknown> {
+  value: T | null;
+  displayValue: unknown | null;
+}
+
+export type EntityApiEntity = Record<string, EntityApiColumnValueResponse>;
 
 export function getCellValue<T = unknown>(row: EntityApiEntity, key: string): T | null {
   const cell = row[key];
@@ -42,7 +45,7 @@ export function toApiEntity(values: EntityValues): EntityApiEntity {
   );
 }
 
-export function createSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ESQ {
+export function createSchemaSelectQuery(schema: EntitySchema, rowCount = 50): EntityQuery {
   return entityQuery(schema.tableName)
     .columns(...getVisibleSchemaQueryColumns(schema))
     .take(rowCount)
@@ -50,7 +53,7 @@ export function createSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ES
     .toJson();
 }
 
-export function createEntityRecordQuery(schema: EntitySchema, id: unknown): ESQ {
+export function createEntityRecordQuery(schema: EntitySchema, id: unknown): EntityQuery {
   return entityQuery(schema.tableName)
     .columns(...getEntityRecordQueryColumns(schema))
     .filters(createPrimaryFilter(schema, id))
@@ -58,7 +61,7 @@ export function createEntityRecordQuery(schema: EntitySchema, id: unknown): ESQ 
     .toJson();
 }
 
-export function createPrimaryFilter(schema: EntitySchema, id: unknown): ESQFilterCollection {
+export function createPrimaryFilter(schema: EntitySchema, id: unknown): EntityQueryFilterCollection {
   return {
     items: [
       createIsEqualFilter(schema.primaryColumn ?? "Id", id)
@@ -73,7 +76,7 @@ export interface CreateLookupQueryOptions {
   value?: string | number | null;
 }
 
-export function createLookupQuery(lookup: EntityLookupOptionsSource, options: CreateLookupQueryOptions = {}): ESQ {
+export function createLookupQuery(lookup: EntityLookupOptionsSource, options: CreateLookupQueryOptions = {}): EntityQuery {
   const valueColumn = getLookupValueColumn(lookup);
   const displayColumn = getLookupDisplayColumn(lookup);
   const valueAlias = getLookupValueAlias(lookup);
@@ -126,7 +129,7 @@ export function mapLookupRows(rows: EntityApiEntity[], lookup: EntityLookupOptio
 
 function normalizeLookupFilters(
   filters: EntityLookupOptionsSource["filters"]
-): ESQFilterCollection | undefined {
+): EntityQueryFilterCollection | undefined {
   if (!filters) {
     return undefined;
   }
@@ -140,10 +143,10 @@ function createLookupFilters(
   displayColumn: string,
   searchText: string | undefined,
   value: string | number | null | undefined
-): ESQFilterCollection | undefined {
+): EntityQueryFilterCollection | undefined {
   const baseFilters = normalizeLookupFilters(filters);
   const normalizedSearchText = searchText?.trim();
-  const filterItems: ESQFilter[] = [];
+  const filterItems: EntityQueryFilter[] = [];
   const baseFilterGroup = toFilterGroup(baseFilters);
 
   if (baseFilterGroup) {
@@ -163,7 +166,7 @@ function createLookupFilters(
     : undefined;
 }
 
-function toFilterGroup(collection: ESQFilterCollection | undefined): ESQFilter | undefined {
+function toFilterGroup(collection: EntityQueryFilterCollection | undefined): EntityQueryFilter | undefined {
   const items = collection?.items ?? [];
 
   if (items.length === 0) {

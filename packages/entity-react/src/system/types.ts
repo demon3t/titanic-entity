@@ -10,7 +10,7 @@ export interface EntityDataGridColumn<TRow = unknown> {
   render?: (row: TRow) => unknown;
 }
 
-export interface EntityRecordPageConfig {
+export interface EntityRecordConfig {
   tableName: string;
   primaryColumn: string;
   displayColumn?: string;

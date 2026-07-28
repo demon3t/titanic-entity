@@ -1,7 +1,6 @@
 import type { ApiColumnValueResponse } from "../models/ApiColumnValueResponse";
 import type { ApiEntity } from "../models/ApiEntity";
-import type { ESQFilter } from "../models/ESQFilter";
-import type { ESQOrder } from "../models/ESQOrder";
+import type { EntityQueryFilter, EntityQueryOrder } from "@titanic-entity/entity-core";
 
 /** Short alias for {@link ApiColumnValueResponse}. */
 export type ApiColumn<T = unknown> = ApiColumnValueResponse<T>;
@@ -15,11 +14,11 @@ export type EntityApiColumn<T = unknown> = ApiColumn<T>;
 /** Legacy alias for {@link ApiEntityRow}. */
 export type EntityRow = ApiEntityRow;
 
-/** Short alias for {@link ESQFilter}. */
-export type EntityFilter = ESQFilter;
+/** Short alias for {@link EntityQueryFilter}. */
+export type EntityFilter = EntityQueryFilter;
 
-/** Short alias for {@link ESQOrder}. */
-export type EntityOrder = ESQOrder;
+/** Short alias for {@link EntityQueryOrder}. */
+export type EntityOrder = EntityQueryOrder;
 
 /**
  * Reads the raw value of a column from an Entity API row.

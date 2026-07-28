@@ -1,8 +1,8 @@
 import type { EntityLogicalOperation } from "../enums/EntityLogicalOperation";
-import type { ESQFilter } from "./ESQFilter";
+import type { EntityQueryFilter } from "./EntityQueryFilter";
 
-/** Root filter collection used by an ESQ payload. */
-export interface ESQFilterCollection {
+/** Root filter collection used by an entity query payload. */
+export interface EntityQueryFilterCollection {
   /** Indicates whether the collection is enabled. */
   isEnabled?: boolean;
 
@@ -10,5 +10,5 @@ export interface ESQFilterCollection {
   logicalOperation?: EntityLogicalOperation;
 
   /** Leaf filters and nested filter groups. */
-  items?: ESQFilter[];
+  items?: EntityQueryFilter[];
 }

@@ -1527,8 +1527,8 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         const result =
           typeof client.select === "function"
             ? await client.select(query)
-            : typeof client.selectEntityRows === "function"
-              ? await client.selectEntityRows(query)
+            : typeof client.queryEntityRows === "function"
+              ? await client.queryEntityRows(query)
               : [];
 
         if (isCancelled?.()) {
@@ -1608,8 +1608,8 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         const result =
           typeof client.select === "function"
             ? await client.select(query)
-            : typeof client.selectEntityRows === "function"
-              ? await client.selectEntityRows(query)
+            : typeof client.queryEntityRows === "function"
+              ? await client.queryEntityRows(query)
               : [];
 
         if (isCancelled?.()) {

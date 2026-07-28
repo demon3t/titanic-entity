@@ -46,14 +46,11 @@
       "types": "./dist/packageSiteShell/icons/index.d.ts",
       "import": "./dist/packageSiteShell/icons/index.js"
     },
-    "./recordsPage/icons": {
-      "types": "./dist/recordsPage/icons/index.d.ts",
-      "import": "./dist/recordsPage/icons/index.js"
-    },
     "./baseSection": {
       "types": "./dist/baseSection/index.d.ts",
       "import": "./dist/baseSection/index.js"
     },
+    "./baseSection/styles.css": "./dist/baseSection/styles/base-section.css",
     "./baseModalPage": {
       "types": "./dist/baseModalPage/index.d.ts",
       "import": "./dist/baseModalPage/index.js"
@@ -173,11 +170,6 @@
       "import": "./dist/randomGifLoader/index.js"
     },
     "./randomGifLoader/styles.css": "./dist/randomGifLoader/styles/random-gif-loader.css",
-    "./recordsPage": {
-      "types": "./dist/recordsPage/index.d.ts",
-      "import": "./dist/recordsPage/index.js"
-    },
-    "./recordsPage/styles.css": "./dist/recordsPage/styles/records-page.css",
     "./resourceSvgIcon": {
       "types": "./dist/resourceSvgIcon/index.d.ts",
       "import": "./dist/resourceSvgIcon/index.js"

@@ -1,4 +1,4 @@
-/** Logical operators used between ESQ filters. */
+/** Logical operators used between EntityQuery filters. */
 export enum EntityLogicalOperation {
   /** Join filters with `AND`. */
   And = 0,

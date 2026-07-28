@@ -20,6 +20,10 @@ export * from "./entity/columns/StringColumn";
 // Entity enums
 export * from "./entity/enums/EntityColumnKind";
 export * from "./entity/enums/EntityFieldKind";
+export * from "./entity/enums/ConditionOperator";
+export * from "./entity/enums/EntityAggregationType";
+export * from "./entity/enums/EntityLogicalOperation";
+export * from "./entity/enums/EntityOrderDirection";
 
 // Entity models
 export * from "./entity/models/EntityColumnSchema";
@@ -30,6 +34,14 @@ export * from "./entity/models/EntitySchema";
 export * from "./entity/models/EntityValues";
 export * from "./entity/models/LookupOption";
 export * from "./entity/models/ReferenceValue";
+export * from "./entity/models/EntityQuery";
+export * from "./entity/models/EntityQueryColumn";
+export * from "./entity/models/EntityQueryFilter";
+export * from "./entity/models/EntityQueryFilterCollection";
+export * from "./entity/models/EntityQueryOrder";
+
+// Query
+export * from "./query";
 
 // Schemas
 export * from "./schemas";

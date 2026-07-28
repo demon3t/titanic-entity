@@ -1,16 +1,16 @@
 import { definePackage } from "@titanic-entity/entity-base";
 import {
   createEntityRecordQuery,
+  EntityOrderDirection,
+  entityQuery,
   titanicEntityCorePackage,
+  toEntityQueryJson,
   toEntityDisplayValues,
   toEntityValues
 } from "@titanic-entity/entity-core";
 import {
-  EntityOrderDirection,
-  entityQuery,
   getEntityValue,
-  titanicEntityApiPackage,
-  toEntityQueryJson
+  titanicEntityApiPackage
 } from "@titanic-entity/entity-api";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
 import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
@@ -24,6 +24,7 @@ export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
 export * from "@titanic-entity/entity-resources";
 export * from "@titanic-entity/entity-icons";
+export type { EntityApiColumnValueResponse, EntityApiEntity } from "@titanic-entity/entity-api";
 export { Titanic };
 export {
   entityReactEntitySchemas,

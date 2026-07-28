@@ -1,9 +1,9 @@
-import type { ESQColumn } from "./ESQColumn";
-import type { ESQFilterCollection } from "./ESQFilterCollection";
-import type { ESQOrder } from "./ESQOrder";
+import type { EntityQueryColumn } from "./EntityQueryColumn";
+import type { EntityQueryFilterCollection } from "./EntityQueryFilterCollection";
+import type { EntityQueryOrder } from "./EntityQueryOrder";
 
-/** Entity Schema Query payload sent to the Entity API. */
-export interface ESQ {
+/** Entity query payload sent to the Entity API. */
+export interface EntityQuery {
   /** Root table name of the query. */
   tableName?: string | null;
 
@@ -11,16 +11,16 @@ export interface ESQ {
   entityTypeName?: string | null;
 
   /** Selected columns of the query. */
-  columns?: ESQColumn[];
+  columns?: EntityQueryColumn[];
 
   /** Root filter collection. */
-  filters?: ESQFilterCollection;
+  filters?: EntityQueryFilterCollection;
 
   /** Grouping column paths. */
   groupBy?: string[];
 
   /** Sort expressions. */
-  orders?: ESQOrder[];
+  orders?: EntityQueryOrder[];
 
   /** Enables DISTINCT selection. */
   isDistinct?: boolean;

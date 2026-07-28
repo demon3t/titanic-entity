@@ -4,13 +4,9 @@ import type {
   EntityApiEntity,
   EntityApiManagerStructureResponse,
   EntityGridColumnSettingsClient,
-  EntityGridColumnSettingsDto,
-  EntityQueryInput,
-  ESQ,
-  ESQFilter,
-  ESQOrder
+  EntityGridColumnSettingsDto
 } from "@titanic-entity/entity-api";
-import type { Entity } from "@titanic-entity/entity-core";
+import type { Entity, EntityQueryInput, EntityQuery, EntityQueryFilter, EntityQueryOrder } from "@titanic-entity/entity-core";
 import type { GifCollectionResource } from "@titanic-entity/entity-resources";
 import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactGridNames } from "@titanic-entity/entity-react/model";
@@ -85,8 +81,8 @@ export interface EntityDataGridQueryContext {
   columns: readonly string[];
   entity?: EntityDataGridEntityDescriptor;
   entityTypeName?: string;
-  filters: readonly ESQFilter[];
-  orders?: readonly ESQOrder[];
+  filters: readonly EntityQueryFilter[];
+  orders?: readonly EntityQueryOrder[];
   pageIndex: number;
   pageSize: number;
   primaryColumn?: string;
@@ -98,7 +94,7 @@ export interface EntityDataGridQueryContext {
 export type EntityDataGridQueryFactory = (context: EntityDataGridQueryContext) => EntityQueryInput;
 export type EntityDataGridQueryInput = EntityQueryInput | EntityDataGridQueryFactory;
 export type EntityDataGridQueryColumnsFactory = (context: EntityDataGridQueryContext) => readonly string[];
-export type EntityDataGridQueryHandler = (query: ESQ, context: EntityDataGridQueryContext) => EntityQueryInput | void;
+export type EntityDataGridQueryHandler = (query: EntityQuery, context: EntityDataGridQueryContext) => EntityQueryInput | void;
 
 export interface EntityDataGridRowRenderContext<TRow = EntityApiEntity> {
   client?: EntityApiClient;
@@ -208,9 +204,9 @@ export interface DataGridProps<TRow = EntityApiEntity> {
   columnPickerLabels?: EntityDataGridColumnPickerLabels;
   defaultVisibleColumnKeys?: readonly string[];
   visibleColumnKeys?: readonly string[];
-  filter?: ESQFilter | readonly ESQFilter[];
-  filters?: readonly ESQFilter[];
-  orders?: readonly ESQOrder[];
+  filter?: EntityQueryFilter | readonly EntityQueryFilter[];
+  filters?: readonly EntityQueryFilter[];
+  orders?: readonly EntityQueryOrder[];
   rowCount?: number;
   batchRowCount?: number;
   gridWidth?: number;

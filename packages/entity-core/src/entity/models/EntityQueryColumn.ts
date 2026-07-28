@@ -1,8 +1,8 @@
 import type { EntityAggregationType } from "../enums/EntityAggregationType";
-import type { ESQ } from "./ESQ";
+import type { EntityQuery } from "./EntityQuery";
 
-/** Column descriptor used inside an ESQ payload. */
-export interface ESQColumn {
+/** Column descriptor used inside an entity query payload. */
+export interface EntityQueryColumn {
   /** Entity path of the selected column. */
   path?: string | null;
 
@@ -12,6 +12,6 @@ export interface ESQColumn {
   /** Optional aggregation applied to the selected column. */
   aggregationType?: EntityAggregationType;
 
-  /** Optional nested ESQ used as the column source. */
-  subQuery?: ESQ | null;
+  /** Optional nested entity query used as the column source. */
+  subQuery?: EntityQuery | null;
 }

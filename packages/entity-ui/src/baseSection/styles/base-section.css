@@ -1,0 +1,35 @@
+.titanic-records-section {
+  display: grid;
+  min-height: 0;
+  gap: 12px;
+}
+
+.titanic-records-section__top,
+.titanic-records-section__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 10px;
+}
+
+.titanic-records-section__top:empty,
+.titanic-records-section__bottom:empty {
+  display: none;
+}
+
+.titanic-records-section__grid {
+  min-height: 0;
+}
+
+.titanic-records-section__status {
+  color: var(--titanic-ui-muted-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.titanic-records-section__error {
+  color: var(--titanic-ui-danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+}

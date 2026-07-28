@@ -11,11 +11,15 @@ import type { ApiDeleteResult } from "../models/ApiDeleteResult";
 import type { ApiEntity } from "../models/ApiEntity";
 import type { ApiManagerStructureResponse } from "../models/ApiManagerStructureResponse";
 import type { ApiRequest } from "../models/ApiRequest";
-import type { ESQFilter } from "../models/ESQFilter";
-import type { ESQFilterCollection } from "../models/ESQFilterCollection";
-import type { ESQOrder } from "../models/ESQOrder";
-import type { SelectRequest } from "../models/SelectRequest";
-import { entityQuery, toEntityQueryJson, type EntityQueryInput } from "../query";
+import type { EntityQueryRequest } from "../models/EntityQueryRequest";
+import {
+  entityQuery,
+  toEntityQueryJson,
+  type EntityQueryInput,
+  type EntityQueryFilter,
+  type EntityQueryFilterCollection,
+  type EntityQueryOrder
+} from "@titanic-entity/entity-core";
 
 /** HTTP client for interacting with the Entity API manager endpoint. */
 export class EntityApiClient {
@@ -95,7 +99,7 @@ export class EntityApiClient {
   /**
    * Executes a select query and returns Entity API rows.
    *
-   * @param query ESQ payload or fluent builder.
+   * @param query EntityQuery payload or fluent builder.
    */
   async select(query: EntityQueryInput): Promise<ApiEntity[]> {
     return this.execute<ApiEntity[]>({
@@ -105,11 +109,11 @@ export class EntityApiClient {
   }
 
   /**
-   * Builds and executes a select request from a high-level model.
+   * Builds and executes an entity query request from a high-level model.
    *
-   * @param request Shorthand select request.
+   * @param request Shorthand entity query request.
    */
-  async selectEntityRows({
+  async queryEntityRows({
     tableName,
     columns,
     filters = [],
@@ -117,7 +121,7 @@ export class EntityApiClient {
     rowCount,
     allColumns,
     query
-  }: SelectRequest): Promise<ApiEntity[]> {
+  }: EntityQueryRequest): Promise<ApiEntity[]> {
     return this.select(query ?? entityQuery(tableName)
       .allColumns(allColumns ?? !columns?.length)
       .columns(...(columns ?? []))
@@ -137,12 +141,12 @@ export class EntityApiClient {
    */
   async selectRows(
     tableName: string,
-    filters: ESQFilter[] = [],
-    orders?: ESQOrder[],
+    filters: EntityQueryFilter[] = [],
+    orders?: EntityQueryOrder[],
     rowCount?: number,
     columns?: string[]
   ): Promise<ApiEntity[]> {
-    return this.selectEntityRows({ tableName, filters, orders, rowCount, columns });
+    return this.queryEntityRows({ tableName, filters, orders, rowCount, columns });
   }
 
   /**
@@ -160,13 +164,13 @@ export class EntityApiClient {
   }
 
   /**
-   * Deletes entities by equality payload or explicit ESQ filter collection.
+   * Deletes entities by equality payload or explicit EntityQuery filter collection.
    *
    * @param tableName Target table name.
    * @param filter Equality payload or filter collection.
    */
-  async delete(tableName: string, filter: Record<string, unknown> | ESQFilterCollection): Promise<ApiDeleteResult> {
-    const isFilterCollection = isESQFilterCollection(filter);
+  async delete(tableName: string, filter: Record<string, unknown> | EntityQueryFilterCollection): Promise<ApiDeleteResult> {
+    const isFilterCollection = isEntityQueryFilterCollection(filter);
     return this.execute<ApiDeleteResult>({
       operation: EntityApiOperationType.Delete,
       tableName,
@@ -257,6 +261,6 @@ export class EntityApiClient {
   }
 }
 
-function isESQFilterCollection(filter: Record<string, unknown> | ESQFilterCollection): filter is ESQFilterCollection {
+function isEntityQueryFilterCollection(filter: Record<string, unknown> | EntityQueryFilterCollection): filter is EntityQueryFilterCollection {
   return "items" in filter || "logicalOperation" in filter || "isEnabled" in filter;
 }

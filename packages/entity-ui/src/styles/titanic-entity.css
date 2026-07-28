@@ -12,6 +12,7 @@
 @import "../collapsiblePanel/styles/collapsible-panel.css";
 @import "../actionBar/styles/action-bar.css";
 @import "../baseModalPage/styles/base-modal-page.css";
+@import "../baseSection/styles/base-section.css";
 @import "../modalPages/styles/modal-pages.css";
 @import "../editPage/styles/edit-page.css";
 @import "../randomGifLoader/styles/random-gif-loader.css";
@@ -19,7 +20,6 @@
 @import "../dataGridRowContextMenu/styles/data-grid-row-context-menu.css";
 @import "../dataGridSettingsModalPage/styles/data-grid-settings-modal-page.css";
 @import "../siteIconDropdown/styles/site-icon-dropdown.css";
-@import "../recordsPage/styles/records-page.css";
 @import "../jsonEditor/styles/json-editor.css";
 @import "../dateInput/styles/date-input.css";
 @import "../timeInput/styles/time-input.css";

@@ -6,7 +6,7 @@ export interface GridColumnField {
   /** Entity path used to resolve the field in row data. */
   path?: string;
 
-  /** Optional query alias used by ESQ responses. */
+  /** Optional query alias used by EntityQuery responses. */
   alias?: string;
 
   /** Optional field caption shown in the UI. */
@@ -27,7 +27,7 @@ export interface GridColumnSetting {
    */
   key?: string;
 
-  /** Entity path used to build the ESQ request. */
+  /** Entity path used to build the EntityQuery request. */
   path?: string;
 
   /** Indicates whether the column is visible in the selected mode. */
@@ -66,7 +66,7 @@ export interface GridSortSetting {
   /** Logical column key used by the UI. */
   key: string;
 
-  /** Optional entity path used to build the ESQ order. */
+  /** Optional entity path used to build the EntityQuery order. */
   path?: string;
 
   /** Sort direction selected by the user. */

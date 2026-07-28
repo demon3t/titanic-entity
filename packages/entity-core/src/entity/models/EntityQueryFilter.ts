@@ -1,8 +1,8 @@
 import type { ConditionOperator } from "../enums/ConditionOperator";
 import type { EntityLogicalOperation } from "../enums/EntityLogicalOperation";
 
-/** Leaf ESQ filter or nested filter group. */
-export interface ESQFilter {
+/** Leaf entity query filter or nested filter group. */
+export interface EntityQueryFilter {
   /** Entity path of the filtered column for leaf filters. */
   path?: string;
 
@@ -25,5 +25,5 @@ export interface ESQFilter {
   logicalOperation?: EntityLogicalOperation;
 
   /** Nested filters when the item acts as a group. */
-  items?: ESQFilter[];
+  items?: EntityQueryFilter[];
 }

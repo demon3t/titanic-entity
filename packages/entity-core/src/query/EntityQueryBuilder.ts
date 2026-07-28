@@ -1,45 +1,45 @@
-import { ConditionOperator } from "../enums/ConditionOperator";
-import { EntityAggregationType } from "../enums/EntityAggregationType";
-import { EntityLogicalOperation } from "../enums/EntityLogicalOperation";
-import { EntityOrderDirection } from "../enums/EntityOrderDirection";
-import type { ESQ } from "../models/ESQ";
-import type { ESQColumn } from "../models/ESQColumn";
-import type { ESQFilter } from "../models/ESQFilter";
-import type { ESQFilterCollection } from "../models/ESQFilterCollection";
-import type { ESQOrder } from "../models/ESQOrder";
+import { ConditionOperator } from "../entity/enums/ConditionOperator";
+import { EntityAggregationType } from "../entity/enums/EntityAggregationType";
+import { EntityLogicalOperation } from "../entity/enums/EntityLogicalOperation";
+import { EntityOrderDirection } from "../entity/enums/EntityOrderDirection";
+import type { EntityQuery } from "../entity/models/EntityQuery";
+import type { EntityQueryColumn } from "../entity/models/EntityQueryColumn";
+import type { EntityQueryFilter } from "../entity/models/EntityQueryFilter";
+import type { EntityQueryFilterCollection } from "../entity/models/EntityQueryFilterCollection";
+import type { EntityQueryOrder } from "../entity/models/EntityQueryOrder";
 
 /** Supported input for query source selection. */
-export type EntityQuerySource = string | Pick<ESQ, "tableName" | "entityTypeName">;
+export type EntityQuerySource = string | Pick<EntityQuery, "tableName" | "entityTypeName">;
 
 /** Supported input for a selected query column. */
-export type EntityQueryColumnInput = string | ESQColumn;
+export type EntityQueryColumnInput = string | EntityQueryColumn;
 
 /** Optional settings for a single query column. */
-export type EntityQueryColumnOptions = Omit<ESQColumn, "path">;
+export type EntityQueryColumnOptions = Omit<EntityQueryColumn, "path">;
 
 /** Supported input for a query order clause. */
-export type EntityQueryOrderInput = string | ESQOrder;
+export type EntityQueryOrderInput = string | EntityQueryOrder;
 
 /** Supported input for a query filter clause. */
 export type EntityQueryFilterInput =
-  | ESQFilter
+  | EntityQueryFilter
   | EntityFilterBuilder
   | ((builder: EntityFilterBuilder) => EntityFilterBuilder | void);
 
-/** Converts a builder-like object to an ESQ JSON payload. */
+/** Converts a builder-like object to an EntityQuery JSON payload. */
 export interface EntityQueryJsonProvider {
-  /** Builds an ESQ JSON payload. */
-  toJson(): ESQ;
+  /** Builds an EntityQuery JSON payload. */
+  toJson(): EntityQuery;
 }
 
 /** Supported input for Entity API select queries. */
-export type EntityQueryInput = ESQ | EntityQueryJsonProvider;
+export type EntityQueryInput = EntityQuery | EntityQueryJsonProvider;
 
 /** Supported input for an aggregated column source. */
 export type EntityQueryAggregateColumnInput = string | EntityQueryInput;
 
 /**
- * Creates a fluent query builder for an Entity API select request.
+ * Creates a fluent query builder for an Entity API entity query request.
  *
  * @param source Optional root source descriptor.
  */
@@ -48,7 +48,7 @@ export function entityQuery(source?: EntityQuerySource): EntityQueryBuilder {
 }
 
 /**
- * Creates a fluent filter builder for nested ESQ filters.
+ * Creates a fluent filter builder for nested EntityQuery filters.
  *
  * @param logicalOperation Group operation used between child filters.
  */
@@ -59,16 +59,16 @@ export function entityFilters(
 }
 
 /**
- * Converts an ESQ builder or raw payload to JSON.
+ * Converts an EntityQuery builder or raw payload to JSON.
  *
- * @param query Fluent builder or ready-made ESQ payload.
+ * @param query Fluent builder or ready-made EntityQuery payload.
  */
-export function toEntityQueryJson(query: EntityQueryInput): ESQ {
+export function toEntityQueryJson(query: EntityQueryInput): EntityQuery {
   return isEntityQueryJsonProvider(query) ? query.toJson() : query;
 }
 
 /**
- * Checks whether a value can be converted to ESQ JSON via `toJson()`.
+ * Checks whether a value can be converted to EntityQuery JSON via `toJson()`.
  *
  * @param value Candidate value.
  */
@@ -76,10 +76,10 @@ export function isEntityQueryJsonProvider(value: EntityQueryInput): value is Ent
   return typeof value === "object" && value !== null && "toJson" in value && typeof value.toJson === "function";
 }
 
-/** Fluent builder for Entity API `ESQ` requests. */
+/** Fluent builder for Entity API `EntityQuery` requests. */
 export class EntityQueryBuilder implements EntityQueryJsonProvider {
-  private readonly query: ESQ = {};
-  private filterCollection: ESQFilterCollection | undefined;
+  private readonly query: EntityQuery = {};
+  private filterCollection: EntityQueryFilterCollection | undefined;
 
   /**
    * Creates a query builder and optionally binds its data source.
@@ -124,11 +124,11 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
   }
 
   /**
-   * Copies the source settings from an existing ESQ descriptor.
+   * Copies the source settings from an existing EntityQuery descriptor.
    *
    * @param source Source descriptor to copy.
    */
-  source(source: Pick<ESQ, "tableName" | "entityTypeName">): this {
+  source(source: Pick<EntityQuery, "tableName" | "entityTypeName">): this {
     this.query.tableName = source.tableName;
     this.query.entityTypeName = source.entityTypeName;
     return this;
@@ -158,7 +158,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
    *
    * @param column Existing column descriptor.
    */
-  column(column: ESQColumn): this;
+  column(column: EntityQueryColumn): this;
   /**
    * Appends a single selected column to the query.
    *
@@ -175,7 +175,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
    */
   column(path: string, alias?: string | null, aggregationType?: EntityAggregationType): this;
   column(
-    pathOrColumn: string | ESQColumn,
+    pathOrColumn: string | EntityQueryColumn,
     aliasOrOptions?: string | null | EntityQueryColumnOptions,
     aggregationType?: EntityAggregationType
   ): this {
@@ -191,7 +191,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
    *
    * @param column Existing column descriptor.
    */
-  addColumn(column: ESQColumn): this;
+  addColumn(column: EntityQueryColumn): this;
   /**
    * Appends a single selected column to the query.
    *
@@ -208,7 +208,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
    */
   addColumn(path: string, alias?: string | null, aggregationType?: EntityAggregationType): this;
   addColumn(
-    pathOrColumn: string | ESQColumn,
+    pathOrColumn: string | EntityQueryColumn,
     aliasOrOptions?: string | null | EntityQueryColumnOptions,
     aggregationType?: EntityAggregationType
   ): this {
@@ -505,7 +505,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
    *
    * @param filters Filter collection or flat filter list.
    */
-  filters(filters: ESQFilterCollection | ESQFilter[] | undefined): this {
+  filters(filters: EntityQueryFilterCollection | EntityQueryFilter[] | undefined): this {
     this.filterCollection = Array.isArray(filters)
       ? { items: filters }
       : filters;
@@ -638,8 +638,8 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
     return this.where(path, ConditionOperator.IsNotNull, undefined);
   }
 
-  /** Builds an immutable ESQ JSON snapshot. */
-  toJson(): ESQ {
+  /** Builds an immutable EntityQuery JSON snapshot. */
+  toJson(): EntityQuery {
     return {
       ...this.query,
       columns: this.query.columns ? this.query.columns.map(cloneColumn) : this.query.columns,
@@ -658,7 +658,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
     return client.select(this);
   }
 
-  private addFilter(filter: ESQFilter | undefined): void {
+  private addFilter(filter: EntityQueryFilter | undefined): void {
     if (!filter) {
       return;
     }
@@ -670,7 +670,7 @@ export class EntityQueryBuilder implements EntityQueryJsonProvider {
 
 /** Fluent builder for nested Entity API filter groups. */
 export class EntityFilterBuilder {
-  private readonly filters: ESQFilter[] = [];
+  private readonly filters: EntityQueryFilter[] = [];
 
   /**
    * Creates a filter builder with the specified group operation.
@@ -719,7 +719,7 @@ export class EntityFilterBuilder {
    * @param filters Filters, builders, or builder callbacks.
    */
   filter(...filters: EntityQueryFilterInput[]): this {
-    this.filters.push(...filters.map(resolveFilterInput).filter((filter): filter is ESQFilter => Boolean(filter)));
+    this.filters.push(...filters.map(resolveFilterInput).filter((filter): filter is EntityQueryFilter => Boolean(filter)));
     return this;
   }
 
@@ -799,16 +799,16 @@ export class EntityFilterBuilder {
     return this.where(path, ConditionOperator.IsNotNull, undefined);
   }
 
-  /** Builds a nested ESQ filter group. */
-  toFilter(): ESQFilter {
+  /** Builds a nested EntityQuery filter group. */
+  toFilter(): EntityQueryFilter {
     return {
       logicalOperation: this.logicalOperation,
       items: this.filters.map(cloneFilter)
     };
   }
 
-  /** Builds a root-level ESQ filter collection. */
-  toCollection(): ESQFilterCollection {
+  /** Builds a root-level EntityQuery filter collection. */
+  toCollection(): EntityQueryFilterCollection {
     return {
       logicalOperation: this.logicalOperation,
       items: this.filters.map(cloneFilter)
@@ -816,15 +816,15 @@ export class EntityFilterBuilder {
   }
 }
 
-function normalizeColumns(columns: EntityQueryColumnInput[]): ESQColumn[] {
+function normalizeColumns(columns: EntityQueryColumnInput[]): EntityQueryColumn[] {
   return columns.map(normalizeColumn);
 }
 
-function normalizeOrders(orders: EntityQueryOrderInput[]): ESQOrder[] {
+function normalizeOrders(orders: EntityQueryOrderInput[]): EntityQueryOrder[] {
   return orders.map((order) => typeof order === "string" ? { path: order } : { ...order });
 }
 
-function normalizeColumn(column: EntityQueryColumnInput): ESQColumn {
+function normalizeColumn(column: EntityQueryColumnInput): EntityQueryColumn {
   return typeof column === "string" ? { path: column } : cloneColumn(column);
 }
 
@@ -832,7 +832,7 @@ function createColumn(
   path: string,
   aliasOrOptions?: string | null | EntityQueryColumnOptions,
   aggregationType?: EntityAggregationType
-): ESQColumn {
+): EntityQueryColumn {
   return typeof aliasOrOptions === "object" && aliasOrOptions !== null
     ? { path, ...aliasOrOptions }
     : { path, alias: aliasOrOptions, aggregationType };
@@ -842,7 +842,7 @@ function createAggregateColumn(
   aggregationType: EntityAggregationType,
   source: EntityQueryAggregateColumnInput,
   alias?: string | null
-): ESQColumn {
+): EntityQueryColumn {
   return typeof source === "string"
     ? createColumn(source, alias, aggregationType)
     : { aggregationType, alias, subQuery: cloneQuery(toEntityQueryJson(source)) };
@@ -853,7 +853,7 @@ function createFilter(
   comparisonType: ConditionOperator,
   value?: unknown,
   secondValue?: unknown
-): ESQFilter {
+): EntityQueryFilter {
   return {
     path,
     comparisonType,
@@ -865,7 +865,7 @@ function createFilter(
 function createGroupFilter(
   logicalOperation: EntityLogicalOperation,
   filters: EntityQueryFilterInput[]
-): ESQFilter {
+): EntityQueryFilter {
   const builder = new EntityFilterBuilder(logicalOperation);
 
   if (filters.length === 1 && typeof filters[0] === "function") {
@@ -877,7 +877,7 @@ function createGroupFilter(
   return builder.toFilter();
 }
 
-function resolveFilterInput(filter: EntityQueryFilterInput): ESQFilter | undefined {
+function resolveFilterInput(filter: EntityQueryFilterInput): EntityQueryFilter | undefined {
   if (typeof filter === "function") {
     const builder = new EntityFilterBuilder();
     const result = filter(builder);
@@ -892,8 +892,8 @@ function resolveFilterInput(filter: EntityQueryFilterInput): ESQFilter | undefin
 }
 
 function cloneFilterCollection(
-  filters: ESQFilterCollection | undefined
-): ESQFilterCollection | undefined {
+  filters: EntityQueryFilterCollection | undefined
+): EntityQueryFilterCollection | undefined {
   return filters
     ? {
         ...filters,
@@ -902,21 +902,21 @@ function cloneFilterCollection(
     : undefined;
 }
 
-function cloneFilter(filter: ESQFilter): ESQFilter {
+function cloneFilter(filter: EntityQueryFilter): EntityQueryFilter {
   return {
     ...filter,
     items: filter.items?.map(cloneFilter)
   };
 }
 
-function cloneColumn(column: ESQColumn): ESQColumn {
+function cloneColumn(column: EntityQueryColumn): EntityQueryColumn {
   return {
     ...column,
     subQuery: column.subQuery ? cloneQuery(column.subQuery) : column.subQuery
   };
 }
 
-function cloneQuery(query: ESQ): ESQ {
+function cloneQuery(query: EntityQuery): EntityQuery {
   return {
     ...query,
     columns: query.columns?.map(cloneColumn),

@@ -28,7 +28,6 @@ import { navigationTrailComponentSchema } from "./navigationTrail";
 import { numberInputComponentSchema } from "./numberInput";
 import { packageSiteShellComponentSchema } from "./packageSiteShell";
 import { randomGifLoaderComponentSchema } from "./randomGifLoader";
-import { recordsPageComponentSchema } from "./recordsPage";
 import { resourceSvgIconComponentSchema } from "./resourceSvgIcon";
 import { siteLayoutComponentSchema } from "./siteLayout";
 import { timeInputComponentSchema } from "./timeInput";
@@ -58,7 +57,6 @@ export const entityUiComponentSchemas = [
   formComponentSchema,
   siteIconDropdownComponentSchema,
   dataGridRowContextMenuComponentSchema,
-  recordsPageComponentSchema,
   baseSectionComponentSchema,
   packageSiteShellComponentSchema,
   siteIconButtonComponentSchema,
