@@ -1,7 +1,7 @@
 {
   "name": "titanic-entity-react-workspace",
   "private": true,
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "Workspace for Titanic.Entity React framework packages.",
   "type": "module",
   "license": "MIT",
