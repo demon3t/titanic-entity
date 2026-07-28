@@ -1,4 +1,5 @@
 import { definePackage } from "@titanic-entity/entity-base";
+import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
 import { entityApiSchemas } from "./schemas";
 
 // Client
@@ -69,6 +70,9 @@ export * from "./services/EntityUserProfileClient";
 export const titanicEntityApiPackage = definePackage({
   name: "Titanic.EntityApi",
   version: "0.1.0",
+  dependsOn: [
+    titanicEntityCorePackage.name
+  ],
   schemas: entityApiSchemas
 });
 
