@@ -1,23 +1,47 @@
-import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { defineComponentSchema, useUiComponent } from "@titanic-entity/entity-base";
+import { getColumnKey, type EntityDisplayValues, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
+import { Titanic } from "@titanic-entity/entity-react";
 import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 import type { FormEvent } from "react";
-import { getColumnKey } from "@titanic-entity/entity-core";
-import type { EntityFormProps } from "./form-props";
 import { Button, type ButtonProps } from "../button";
-import { EntityField } from "../field";
+import { EntityField, type EntityFieldProps } from "../field";
 import { EntityFieldProvider } from "../field/field-context";
-import type { EntityFieldProps } from "../field/field-props";
-import { EntityGrid } from "../grid";
-import type { EntityGridProps } from "../grid/grid-props";
-import { useUiComponent } from "@titanic-entity/entity-base";
+import { Grid, type GridProps } from "../grid";
 import { useEntityFormState } from "@titanic-entity/entity-react/headless";
 
-export type { EntityFormProps } from "./form-props";
+/**
+ * Props schema-driven Entity-С„РѕСЂРјС‹.
+ */
+export interface EntityFormProps {
+  /** UI-СЃС…РµРјР° СЃСѓС‰РЅРѕСЃС‚Рё. */
+  schema: EntitySchema;
+
+  /** Р—РЅР°С‡РµРЅРёСЏ С„РѕСЂРјС‹. */
+  value?: EntityValues;
+
+  /** Display labels for lookup/reference values keyed by field name. */
+  displayValues?: EntityDisplayValues;
+
+  /** РћС‚РєР»СЋС‡РёС‚СЊ РїРѕР»СЏ Рё submit. */
+  disabled?: boolean;
+
+  /** РўРµРєСЃС‚ РєРЅРѕРїРєРё submit. */
+  submitLabel?: string;
+
+  /** Р—Р°РґРµСЂР¶РєР° РїРµСЂРµРґ С„РёРєСЃР°С†РёРµР№ СЂСѓС‡РЅРѕРіРѕ РІРІРѕРґР° С‚РµРєСЃС‚Р°/С‡РёСЃР»Р° РІ Р·РЅР°С‡РµРЅРёСЏ СЃСѓС‰РЅРѕСЃС‚Рё. */
+  manualCommitDelayMs?: number;
+
+  /** РћР±СЂР°Р±РѕС‚С‡РёРє РёР·РјРµРЅРµРЅРёСЏ Р·РЅР°С‡РµРЅРёР№. */
+  onChange?: (values: EntityValues) => void;
+
+  /** РћР±СЂР°Р±РѕС‚С‡РёРє submit С„РѕСЂРјС‹. */
+  onSubmit?: (values: EntityValues) => void | Promise<void>;
+}
 
 /**
  * Renders a schema-driven form for creating and editing Entity records.
  */
-export function EntityForm({
+export const EntityForm = Titanic.define<EntityFormProps>("Titanic.UI.EntityForm", function EntityForm({
   schema,
   value,
   displayValues,
@@ -29,7 +53,7 @@ export function EntityForm({
 }: EntityFormProps) {
   const ButtonComponent = useUiComponent<ButtonProps>("Button", Button);
   const FieldComponent = useUiComponent<EntityFieldProps>("EntityField", EntityField);
-  const GridComponent = useUiComponent<EntityGridProps>("EntityGrid", EntityGrid);
+  const GridComponent = useUiComponent<GridProps>("Grid", Grid);
   const { values, getValues, setValue } = useEntityFormState({ schema, value, onChange });
 
   const handleSubmit = async (event: FormEvent) => {
@@ -64,7 +88,7 @@ export function EntityForm({
       ) : null}
     </form>
   );
-}
+});
 
 export const formComponentSchema = defineComponentSchema<EntityFormProps>({
   kind: "component",

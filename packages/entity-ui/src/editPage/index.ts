@@ -1,35 +1,49 @@
 import { defineComponentSchema, defineTemplateSchema } from "@titanic-entity/entity-base";
 import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactTemplateNames } from "@titanic-entity/entity-react/model";
+import type { EntityEditPageProps as ReactEntityEditPageProps } from "@titanic-entity/entity-react/templates";
 import "../button";
 import "../container";
 import "../field";
 import "../grid";
 import "../label";
 import "./edit-page";
-import type { BaseEntityPageProps } from "./edit-page-props";
+import type { ActionBarVariant } from "../actionBar";
+import type { EditPageLabels } from "./edit-page-lcz";
 
-export * from "./edit-page-props";
-export * from "./icons";
-export * from "./lcz";
+export {
+  defaultEditPageCulture,
+  editPageLocalizationSchemaName,
+  getEditPageLabels,
+  getEditPageLocale
+} from "./edit-page-lcz";
+export type { EditPageCulture, EditPageLabels, EditPageResolvedLabels } from "./edit-page-lcz";
 
-export const BaseEntityPage =
-  Titanic.getReactModule<DefinedEntityReactComponent<BaseEntityPageProps>>("Titanic.UI.BaseEntityPage")!;
+export type EntityEditPageProps = ReactEntityEditPageProps & {
+  actionBarVariant?: ActionBarVariant;
+  labels?: EditPageLabels;
+  locale?: string;
+};
 
-export const EntityEditPage = BaseEntityPage;
+export type BasePageProps = EntityEditPageProps;
 
-export const baseEntityPageComponentSchema = defineComponentSchema<BaseEntityPageProps>({
+export const BasePage =
+  Titanic.getReactModule<DefinedEntityReactComponent<BasePageProps>>("Titanic.UI.BasePage")!;
+
+export const EntityEditPage = BasePage;
+
+export const basePageComponentSchema = defineComponentSchema<BasePageProps>({
   kind: "component",
-  name: entityReactComponentNames.BaseEntityPage,
-  component: BaseEntityPage
+  name: entityReactComponentNames.BasePage,
+  component: BasePage
 });
 
-export const editPageComponentSchema = baseEntityPageComponentSchema;
+export const editPageComponentSchema = basePageComponentSchema;
 
-export const baseEntityPageTemplateSchema = defineTemplateSchema<BaseEntityPageProps>({
+export const basePageTemplateSchema = defineTemplateSchema<BasePageProps>({
   kind: "template",
-  name: entityReactTemplateNames.BaseEntityPage,
-  component: BaseEntityPage
+  name: entityReactTemplateNames.BasePage,
+  component: BasePage
 });
 
-export const editPageTemplateSchema = baseEntityPageTemplateSchema;
+export const editPageTemplateSchema = basePageTemplateSchema;

@@ -1,4 +1,5 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { Titanic } from "@titanic-entity/entity-react";
 import { entityReactComponentNames } from "@titanic-entity/entity-react/model";// Базовый layout сайта: левая панель, рабочая область и правая панель.
 import type { ReactNode } from "react";
 
@@ -12,7 +13,7 @@ export interface SiteLayoutProps {
   rightPanel: ReactNode;
 }
 
-export function SiteLayout({
+export const SiteLayout = Titanic.define<SiteLayoutProps>("Titanic.UI.SiteLayout", function SiteLayout({
   children,
   className,
   leftPanel,
@@ -30,7 +31,7 @@ export function SiteLayout({
       {rightPanel}
     </div>
   );
-}
+});
 
 export const siteLayoutComponentSchema = defineComponentSchema<SiteLayoutProps>({
   kind: "component",

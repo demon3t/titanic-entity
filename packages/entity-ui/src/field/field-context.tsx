@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { EntityDisplayValues, EntityValues } from "@titanic-entity/entity-core";
 import { Titanic } from "@titanic-entity/entity-react";
-import type { EntityFieldProps } from "./field-props";
+import type { EntityFieldProps } from "./index";
 
 export interface EntityFieldContextValue {
   values?: EntityValues;
@@ -19,13 +19,13 @@ export interface EntityFieldProviderProps {
 
 const EntityFieldContext = createContext<EntityFieldContextValue | null>(null);
 
-export function EntityFieldProvider({ value, children }: EntityFieldProviderProps) {
+export const EntityFieldProvider = Titanic.define<EntityFieldProviderProps>("Titanic.UI.EntityFieldProvider", function EntityFieldProvider({ value, children }: EntityFieldProviderProps) {
   return (
     <EntityFieldContext.Provider value={value}>
       {children}
     </EntityFieldContext.Provider>
   );
-}
+});
 
 export function useEntityFieldContext(): EntityFieldContextValue | null {
   return useContext(EntityFieldContext);

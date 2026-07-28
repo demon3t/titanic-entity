@@ -315,23 +315,36 @@ function normalizeEntityGridColumnSettings(value: readonly unknown[]): EntityGri
     }
 
     const column = item as Record<string, unknown>;
-    const key = typeof column.key === "string" ? column.key.trim() : "";
-    const path = toPositiveString(column.path);
+    const rawField = normalizeEntityGridColumnField(column.field);
+    const legacyKey = toPositiveString(column.key);
+    const fieldPath = toPositiveString(rawField?.path);
+    const fieldKey = toPositiveString(rawField?.key) ?? legacyKey;
+    const fieldAlias = toPositiveString(rawField?.alias);
+    const fieldCaption = toPositiveString(rawField?.caption);
+    const path = toPositiveString(column.path) ?? fieldPath ?? fieldKey ?? fieldAlias ?? legacyKey;
     const id = typeof column.id === "string" ? column.id.trim() : "";
-    const label = toPositiveString(column.label);
+    const caption = toPositiveString(column.caption) ?? toPositiveString(column.label) ?? fieldCaption;
     const span = toGridSpan(column.span);
     const width = toPositiveNumber(column.width);
 
-    if (!key) {
+    if (!path) {
       return;
     }
 
+    const field = normalizeEntityGridColumnField({
+      ...rawField,
+      ...(fieldKey ? { key: fieldKey } : {}),
+      path,
+      ...(fieldAlias ? { alias: fieldAlias } : {}),
+      ...(caption ? { caption } : {})
+    });
+
     settings.push({
       ...(id ? { id } : {}),
-      key,
-      ...(path ? { path } : {}),
+      path,
       visible: column.visible !== false,
-      ...(label ? { label } : {}),
+      ...(caption ? { caption } : {}),
+      ...(field ? { field } : {}),
       ...(span ? { span } : {}),
       ...(width ? { width } : {}),
       order: toFiniteNumber(column.order) ?? index
@@ -339,6 +352,34 @@ function normalizeEntityGridColumnSettings(value: readonly unknown[]): EntityGri
   });
 
   return settings;
+}
+
+function normalizeEntityGridColumnField(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const field: Record<string, unknown> = {};
+
+  Object.entries(value as Record<string, unknown>).forEach(([key, fieldValue]) => {
+    if (fieldValue === null || fieldValue === undefined) {
+      return;
+    }
+
+    if (typeof fieldValue === "string") {
+      const normalizedValue = fieldValue.trim();
+
+      if (normalizedValue) {
+        field[key] = normalizedValue;
+      }
+
+      return;
+    }
+
+    field[key] = fieldValue;
+  });
+
+  return Object.keys(field).length ? field : undefined;
 }
 
 function toColumnSettingsMode(value: unknown): EntityGridColumnSettingsDto["columnSettingsMode"] {

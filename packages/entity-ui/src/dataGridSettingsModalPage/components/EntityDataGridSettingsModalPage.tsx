@@ -9,9 +9,9 @@ import {
   type ReactNode
 } from "react";
 import type { EntityApiManagerStructureResponse } from "@titanic-entity/entity-api";
-import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { Titanic } from "@titanic-entity/entity-react";
 import { Button } from "../../button";
-import { EntityContainer } from "../../container";
+import { Container } from "../../container";
 import type {
   EntityDataGridColumn,
   EntityDataGridColumnSetting,
@@ -30,10 +30,11 @@ import {
   clampGridSpan,
   columnEditorGap,
   columnEditorRowHeight,
-  columnWidthUnit,
   addColumnToEditorSettings,
   createEditorDraftColumnSettingsForMode,
   createEditorDraftSettingsByMode,
+  createEditorColumnsFromSettings,
+  createColumnSettingsPayload,
   createModeSettingsPayload,
   getColumnBaseLabel,
   getColumnLabel,
@@ -69,7 +70,20 @@ type FieldPickerItem = ColumnSettingsFieldPickerItem;
 type EntityDataGridSettingsModalPageComponent =
   <TRow>(props: EntityDataGridSettingsModalPageContext<TRow>) => ReactNode;
 
-function EntityDataGridSettingsModalPageNative<TRow>({
+function getColumnSettingKey(setting: EntityDataGridColumnSetting): string {
+  const field = setting.field && typeof setting.field === "object" && !Array.isArray(setting.field)
+    ? setting.field
+    : undefined;
+
+  return setting.key?.trim()
+    || field?.key?.trim()
+    || field?.alias?.trim()
+    || field?.path?.trim()
+    || setting.path?.trim()
+    || "";
+}
+
+export const EntityDataGridSettingsModalPage = Titanic.define<EntityDataGridSettingsModalPageContext<unknown>>(columnSettingsDefinedComponentNames.EntityDataGridSettingsModalPage, function EntityDataGridSettingsModalPage<TRow>({
   client,
   columns,
   columnSettingsMode,
@@ -114,8 +128,22 @@ function EntityDataGridSettingsModalPageNative<TRow>({
   const [fieldPickerTrail, setFieldPickerTrail] = useState<FieldPickerTrailItem[]>([]);
   const [fieldPickerSearch, setFieldPickerSearch] = useState("");
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
+  const savedSettingsGroups = useMemo(
+    () => [
+      currentSettings,
+      ...Object.values(modeSettings ?? {}).map((modeSetting) => modeSetting?.columns)
+    ],
+    [currentSettings, modeSettings]
+  );
+  const savedExtraColumns = useMemo(
+    () => createEditorColumnsFromSettings(columns, savedSettingsGroups),
+    [columns, savedSettingsGroups]
+  );
   const [extraColumns, setExtraColumns] = useState<EntityDataGridColumn<TRow>[]>([]);
-  const editorColumns = useMemo(() => mergeEditorColumns(columns, extraColumns), [columns, extraColumns]);
+  const editorColumns = useMemo(
+    () => mergeEditorColumns(mergeEditorColumns(columns, savedExtraColumns), extraColumns),
+    [columns, extraColumns, savedExtraColumns]
+  );
   const columnByKey = useMemo(() => new Map(editorColumns.map((column) => [column.key, column])), [editorColumns]);
   const editorGridColumns = getEditorGridColumns(gridColumns, mode, draftSettings);
   const editorSettings = useMemo(
@@ -123,6 +151,10 @@ function EntityDataGridSettingsModalPageNative<TRow>({
     [draftSettings, editorColumns, editorGridColumns, mode]
   );
   const visibleSettings = editorSettings.filter((setting) => setting.visible);
+  const visibleColumnKeys = useMemo(
+    () => new Set(visibleSettings.map(getColumnSettingKey).filter(Boolean)),
+    [visibleSettings]
+  );
   const structureFieldPickerPathOptions = useMemo(
     () => createFieldPickerPathOptions(effectiveStructure, rootTableName, columnPickerLabels),
     [columnPickerLabels, effectiveStructure, rootTableName]
@@ -157,18 +189,15 @@ function EntityDataGridSettingsModalPageNative<TRow>({
       : filterAvailableColumnSettingsByPath(searchedAvailableSettings, columnByKey, selectedFieldPickerPath),
     [columnByKey, fieldPickerState, searchedAvailableSettings, selectedFieldPickerPath]
   );
-  const visibleColumnKeys = useMemo(
-    () => new Set(visibleSettings.map((setting) => setting.key)),
-    [visibleSettings]
-  );
   const availableColumnItems = useMemo<ColumnSettingsAvailableColumnItem[]>(() =>
     filteredAvailableSettings.flatMap((setting) => {
-      const column = columnByKey.get(setting.key);
+      const settingKey = getColumnSettingKey(setting);
+      const column = settingKey ? columnByKey.get(settingKey) : undefined;
 
       return column
         ? [{
-            isVisible: visibleColumnKeys.has(setting.key),
-            key: setting.key,
+            isVisible: visibleColumnKeys.has(settingKey),
+            key: settingKey,
             label: getColumnLabel(column, setting),
             path: getAvailableColumnPath(setting, column)
           }]
@@ -267,7 +296,7 @@ function EntityDataGridSettingsModalPageNative<TRow>({
           id: getColumnSettingId(setting, index)
         };
 
-        return setting.key === key ? updater(nextSetting) : nextSetting;
+        return getColumnSettingKey(setting) === key ? updater(nextSetting) : nextSetting;
       });
 
       return normalizeColumnSettingsForEditorMode(
@@ -310,7 +339,7 @@ function EntityDataGridSettingsModalPageNative<TRow>({
     setValidationWarning(null);
     setDraftSettings((settings) => {
       const nextSettings = settings.map((setting) =>
-        setting.key === key
+        getColumnSettingKey(setting) === key
           ? {
               ...setting,
               visible: false
@@ -354,13 +383,16 @@ function EntityDataGridSettingsModalPageNative<TRow>({
           id: getColumnSettingId(setting, index)
         };
 
-        return setting.key === key
-          ? {
-              ...nextSetting,
-              span: nextSpan,
-              width: nextSpan * columnWidthUnit
-            }
-          : nextSetting;
+        if (getColumnSettingKey(setting) !== key) {
+          return nextSetting;
+        }
+
+        const { width: _width, ...settingWithoutWidth } = nextSetting;
+
+        return {
+          ...settingWithoutWidth,
+          span: nextSpan
+        };
       });
 
       return normalizeColumnSettingsForEditorMode(
@@ -379,7 +411,8 @@ function EntityDataGridSettingsModalPageNative<TRow>({
 
     updateSetting(key, (setting) => ({
       ...setting,
-      label: trimmedLabel && trimmedLabel !== baseLabel ? trimmedLabel : undefined
+      caption: trimmedLabel && trimmedLabel !== baseLabel ? trimmedLabel : undefined,
+      label: undefined
     }));
   };
 
@@ -427,8 +460,8 @@ function EntityDataGridSettingsModalPageNative<TRow>({
     };
 
     return {
-      modeSettings: createModeSettingsPayload(nextDraftSettingsByMode),
-      settings: normalizedSettings
+      modeSettings: createModeSettingsPayload(editorColumns, nextDraftSettingsByMode),
+      settings: createColumnSettingsPayload(editorColumns, normalizedSettings)
     };
   };
 
@@ -495,21 +528,26 @@ function EntityDataGridSettingsModalPageNative<TRow>({
   };
 
   const renderEditableLabel = (setting: EntityDataGridColumnSetting, column: EntityDataGridColumn<TRow>) => {
+    const settingKey = getColumnSettingKey(setting);
     const label = getColumnLabel(column, setting);
 
-    if (editingKey === setting.key) {
+    if (!settingKey) {
+      return label;
+    }
+
+    if (editingKey === settingKey) {
       return (
         <input
           autoFocus
           className="titanic-data-grid-column-modal__name-input"
           defaultValue={label}
           onBlur={(event) => {
-            renameColumn(setting.key, event.target.value);
+            renameColumn(settingKey, event.target.value);
             setEditingKey(null);
           }}
           onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
             if (event.key === "Enter") {
-              renameColumn(setting.key, event.currentTarget.value);
+              renameColumn(settingKey, event.currentTarget.value);
               setEditingKey(null);
             }
 
@@ -526,7 +564,7 @@ function EntityDataGridSettingsModalPageNative<TRow>({
         className="titanic-data-grid-column-modal__field-name"
         title={labels.renameColumn}
         type="button"
-        onClick={() => setEditingKey(setting.key)}
+        onClick={() => setEditingKey(settingKey)}
       >
         {label}
       </Button>
@@ -534,7 +572,8 @@ function EntityDataGridSettingsModalPageNative<TRow>({
   };
 
   const renderVisibleField = (setting: EntityDataGridColumnSetting) => {
-    const column = columnByKey.get(setting.key);
+    const settingKey = getColumnSettingKey(setting);
+    const column = settingKey ? columnByKey.get(settingKey) : undefined;
 
     if (!column) {
       return null;
@@ -548,27 +587,27 @@ function EntityDataGridSettingsModalPageNative<TRow>({
     const fieldClassName = [
       "titanic-data-grid-column-modal__field",
       mode === "list" ? "titanic-data-grid-column-modal__field_list" : "titanic-data-grid-column-modal__field_tile",
-      draggingKey === setting.key ? "titanic-data-grid-column-modal__field_dragging" : "",
-      resizingKey === setting.key ? "titanic-data-grid-column-modal__field_resizing" : ""
+      draggingKey === settingKey ? "titanic-data-grid-column-modal__field_dragging" : "",
+      resizingKey === settingKey ? "titanic-data-grid-column-modal__field_resizing" : ""
     ].filter(Boolean).join(" ");
 
     return (
       <ColumnSettingsVisibleFieldSchema
         canRemove={canRemove}
         className={fieldClassName}
-        dragValue={setting.key}
-        draggable={editingKey !== setting.key}
+        dragValue={settingKey}
+        draggable={editingKey !== settingKey}
         isRequired={Boolean(column.required)}
-        key={setting.key}
+        key={settingKey}
         labels={labels}
         span={span}
         style={fieldStyle}
         onDragEnd={() => setDraggingKey(null)}
         onDragOver={(event) => event.preventDefault()}
-        onDragStart={(event) => handleColumnDragStart(event, setting.key, setDraggingKey)}
-        onDrop={(event) => handleColumnDrop(event, setting.key, draggingKey, moveColumn)}
-        onRemove={() => removeColumn(setting.key)}
-        onResizeStart={(event) => beginResize(event, setting.key, span)}
+        onDragStart={(event) => handleColumnDragStart(event, settingKey, setDraggingKey)}
+        onDrop={(event) => handleColumnDrop(event, settingKey, draggingKey, moveColumn)}
+        onRemove={() => removeColumn(settingKey)}
+        onResizeStart={(event) => beginResize(event, settingKey, span)}
       >
         {renderEditableLabel(setting, column)}
       </ColumnSettingsVisibleFieldSchema>
@@ -577,6 +616,8 @@ function EntityDataGridSettingsModalPageNative<TRow>({
 
   const addPickedField = (item: FieldPickerItem) => {
     addColumn(item.path, createGridColumnFromFieldPickerItem<TRow>(item, fieldPickerTrail));
+    setFieldPickerTrail([]);
+    setFieldPickerSearch("");
   };
   const changeFieldPickerPath = (path: string) => {
     const nextOption = fieldPickerPathOptions.find((option) => option.path === path);
@@ -626,7 +667,7 @@ function EntityDataGridSettingsModalPageNative<TRow>({
       onSave={saveSettings}
       onSaveDefault={saveDefaultSettings}
     >
-      <EntityContainer className="titanic-data-grid-column-modal__body">
+      <Container className="titanic-data-grid-column-modal__body">
         <ColumnSettingsVisibleFieldsSchema
           gridRef={gridRef}
           hasVisibleFields={visibleSettings.length > 0}
@@ -654,18 +695,7 @@ function EntityDataGridSettingsModalPageNative<TRow>({
           onPathItemClick={selectFieldPickerPath}
           onSearchChange={setFieldPickerSearch}
         />
-      </EntityContainer>
+      </Container>
     </ColumnSettingsDialogLayout>
   );
-}
-
-Titanic.define<EntityDataGridSettingsModalPageContext<unknown>>(
-  columnSettingsDefinedComponentNames.EntityDataGridSettingsModalPage,
-  EntityDataGridSettingsModalPageNative as (props: EntityDataGridSettingsModalPageContext<unknown>) => ReactNode
-);
-
-export const EntityDataGridSettingsModalPage = Titanic.getReactModule<
-  DefinedEntityReactComponent<EntityDataGridSettingsModalPageContext<unknown>>
->(
-  columnSettingsDefinedComponentNames.EntityDataGridSettingsModalPage
-)! as unknown as EntityDataGridSettingsModalPageComponent;
+}) as unknown as EntityDataGridSettingsModalPageComponent;

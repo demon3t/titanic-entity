@@ -1,3 +1,5 @@
-export * from "./site-icon-button";
-export * from "./icons";
-export * from "./lcz";
+export {
+  IconButton as SiteIconButton,
+  siteIconButtonComponentSchema
+} from "../button";
+export type { IconButtonProps as SiteIconButtonProps } from "../button";

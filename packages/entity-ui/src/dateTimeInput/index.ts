@@ -1,15 +1,33 @@
 import { defineComponentSchema, defineFieldSchema } from "@titanic-entity/entity-base";
 import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactFieldNames } from "@titanic-entity/entity-react/model";
+import type { DateInputLabels } from "../dateInput";
+import type { BaseInputFieldProps } from "../inputFieldFrame/base-input-field";
+import type { TimeInputLabels } from "../timeInput";
 import "../dateInput";
 import "../inputFieldFrame";
 import "../timeInput";
 import "./date-time-input";
-import type { DateTimeInputProps } from "./date-time-input-props";
 
 export type { DateInputLabels } from "../dateInput";
 export type { TimeInputLabels } from "../timeInput";
-export type { DateTimeInputProps } from "./date-time-input-props";
+
+export interface DateTimeInputProps extends BaseInputFieldProps<string | null, "dateTime"> {
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  className?: string;
+  locale?: string;
+  dateLabels?: DateInputLabels;
+  timeLabels?: TimeInputLabels;
+  placeholder?: string;
+  datePlaceholder?: string;
+  timePlaceholder?: string;
+  renderFrame?: boolean;
+  rootClassName?: string;
+  minuteStep?: number;
+  onChange: (value: string | null) => void;
+}
 
 export const DateTimeInput = Titanic.getReactModule<DefinedEntityReactComponent<DateTimeInputProps>>(
   "Titanic.UI.DateTimeInput"

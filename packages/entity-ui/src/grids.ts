@@ -30,7 +30,7 @@ export type {
   EntityDataGridModeSettingsMap as DataGridModeSettingsMap,
   EntityDataGridPackage as DataGridPackage,
   EntityDataGridPackageExtension as DataGridPackageExtension,
-  EntityDataGridProps as DataGridProps,
+  DataGridProps as DataGridProps,
   EntityDataGridQueryColumnsFactory as DataGridQueryColumnsFactory,
   EntityDataGridQueryContext as DataGridQueryContext,
   EntityDataGridQueryFactory as DataGridQueryFactory,

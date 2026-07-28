@@ -1,246 +1,114 @@
-Titanic.define("Titanic.UI.IconDropdownButton", {
-  attributes: {
-    chevron: {},
-    chevronClassName: {},
-    className: { default: "" },
-    disabled: { default: false },
-    errorClassName: { default: "titanic-icon-dropdown__error" },
-    errorText: {},
-    iconClassName: { default: "titanic-icon-dropdown__icon" },
-    label: {},
-    labelClassName: {},
-    menuClassName: { default: "titanic-icon-dropdown__menu" },
-    optionActiveClassName: { default: "titanic-icon-dropdown__option_active" },
-    optionClassName: { default: "titanic-icon-dropdown__option" },
-    options: { default: [] },
-    selectedLabelClassName: {},
-    tooltipClassName: {},
-    triggerClassName: { default: "titanic-icon-dropdown__trigger" },
-    value: {},
-    onChange: {},
-    open: { state: true, default: false },
-    rootRef: { ref: true, default: null },
-    selectedOption: {
-      value(this: any): any {
-        const options = Array.isArray(this.attributes.options) ? this.attributes.options : [];
+import { Titanic } from "@titanic-entity/entity-react";
+import { useEffect, useRef, useState } from "react";
+import { ResourceSvgIcon } from "../resourceSvgIcon/resource-svg-icon";
+import { Button } from "./button";
+import type { IconDropdownButtonProps, IconDropdownOption } from "./index";
 
-        return options.find((option: any) => option.value === this.attributes.value) ?? options[0];
-      }
-    },
-    rootClassName: {
-      value(this: any): string {
-        return this.methods.joinClassNames("titanic-icon-dropdown", this.attributes.className);
-      }
-    },
-    triggerLabelClassName: {
-      value(this: any): string | undefined {
-        return this.attributes.selectedLabelClassName ??
-          (!this.attributes.selectedOption?.icon ? "titanic-icon-dropdown__value" : undefined);
-      }
-    },
-    triggerLabel: {
-      value(this: any): unknown {
-        if (this.attributes.selectedLabelClassName) {
-          return this.attributes.selectedOption?.label;
-        }
+export const IconDropdownButton = Titanic.define<IconDropdownButtonProps>("Titanic.UI.IconDropdownButton", function IconDropdownButton({
+  chevron,
+  chevronClassName,
+  className = "",
+  disabled = false,
+  errorClassName = "titanic-icon-dropdown__error",
+  errorText,
+  iconClassName = "titanic-icon-dropdown__icon",
+  label,
+  labelClassName,
+  menuClassName = "titanic-icon-dropdown__menu",
+  optionActiveClassName = "titanic-icon-dropdown__option_active",
+  optionClassName = "titanic-icon-dropdown__option",
+  options = [],
+  selectedLabelClassName,
+  tooltipClassName,
+  triggerClassName = "titanic-icon-dropdown__trigger",
+  value,
+  onChange
+}: IconDropdownButtonProps) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const selectedOption = options.find((option) => option.value === value) ?? options[0];
+  const triggerLabelClassName = selectedLabelClassName ?? (!selectedOption?.icon ? "titanic-icon-dropdown__value" : undefined);
+  const triggerLabel = selectedLabelClassName
+    ? selectedOption?.label
+    : selectedOption?.icon ? undefined : label;
 
-        return this.attributes.selectedOption?.icon ? undefined : this.attributes.label;
-      }
-    },
-    outsideMenuEffect: {
-      deps: { array: [{ attr: "open" }] },
-      effect(this: any): void | (() => void) {
-        if (!this.attributes.open) {
-          return;
-        }
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
 
-        const closeOnOutsidePointer = (event: PointerEvent) => {
-          if (!this.attributes.rootRef.current?.contains(event.target as Node)) {
-            this.attributes.setOpen(false);
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer, true);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer, true);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  const selectOption = (option: IconDropdownOption) => {
+    onChange(option.value);
+    setOpen(false);
+  };
+
+  return (
+    <div className={["titanic-icon-dropdown", className].filter(Boolean).join(" ")} ref={rootRef}>
+      {labelClassName ? <span className={labelClassName}>{label}</span> : null}
+      <Button
+        unstyled
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-label={label}
+        className={triggerClassName}
+        disabled={disabled}
+        title={triggerLabel ?? selectedOption?.label ?? label}
+        type="button"
+        onClick={() => {
+          if (!disabled) {
+            setOpen((current) => !current);
           }
-        };
-
-        const closeOnEscape = (event: KeyboardEvent) => {
-          if (event.key === "Escape") {
-            this.attributes.setOpen(false);
-          }
-        };
-
-        document.addEventListener("pointerdown", closeOnOutsidePointer, true);
-        document.addEventListener("keydown", closeOnEscape);
-
-        return () => {
-          document.removeEventListener("pointerdown", closeOnOutsidePointer, true);
-          document.removeEventListener("keydown", closeOnEscape);
-        };
-      }
-    }
-  },
-  methods: {
-    joinClassNames(this: any, ...classNames: Array<string | false | null | undefined>): string {
-      return classNames.filter(Boolean).join(" ");
-    },
-
-    toggleOpen(this: any): void {
-      if (this.attributes.disabled) {
-        return;
-      }
-
-      this.attributes.setOpen((currentValue: boolean) => !currentValue);
-    },
-
-    selectOption(this: any, _event: any, option: any): void {
-      this.attributes.onChange?.(option.value);
-      this.attributes.setOpen(false);
-    },
-
-    isActiveOption(this: any, option: any): boolean {
-      return option?.value === this.attributes.value;
-    },
-
-    getOptionClassName(this: any, option: any): string {
-      return this.methods.isActiveOption(option)
-        ? `${this.attributes.optionClassName} ${this.attributes.optionActiveClassName}`
-        : this.attributes.optionClassName;
-    },
-
-    getTriggerTitle(this: any): unknown {
-      return this.attributes.triggerLabel ?? this.attributes.selectedOption?.label ?? this.attributes.label;
-    },
-
-    getTooltipText(this: any): unknown {
-      return this.attributes.triggerLabel ?? this.attributes.selectedOption?.label;
-    },
-
-    getChevron(this: any): unknown {
-      return this.attributes.chevron ?? "v";
-    }
-  },
-  diff: [
-    {
-      tag: "div",
-      props: {
-        className: { attr: "rootClassName" },
-        ref: { attr: "rootRef" }
-      },
-      children: [
-        {
-          tag: "span",
-          when: { attr: "labelClassName" },
-          props: {
-            className: { attr: "labelClassName" }
-          },
-          text: { attr: "label" }
-        },
-        {
-          component: "Titanic.UI.Button",
-          props: {
-            "aria-expanded": { attr: "open" },
-            "aria-haspopup": "listbox",
-            "aria-label": { attr: "label" },
-            className: { attr: "triggerClassName" },
-            disabled: { attr: "disabled" },
-            onClick: { method: "toggleOpen" },
-            title: { call: "getTriggerTitle" },
-            type: "button",
-            unstyled: true
-          },
-          children: [
-            {
-              component: "Titanic.UI.ResourceSvgIcon",
-              props: {
-                className: { attr: "iconClassName" },
-                icon: { attr: "selectedOption.icon" }
-              }
-            },
-            {
-              tag: "span",
-              when: { and: [{ attr: "triggerLabelClassName" }, { attr: "triggerLabel" }] },
-              props: {
-                className: { attr: "triggerLabelClassName" }
-              },
-              text: { attr: "triggerLabel" }
-            },
-            {
-              tag: "span",
-              when: { attr: "chevronClassName" },
-              props: {
-                "aria-hidden": true,
-                className: { attr: "chevronClassName" }
-              },
-              text: { call: "getChevron" }
-            },
-            {
-              tag: "span",
-              when: { and: [{ attr: "tooltipClassName" }, { attr: "selectedOption" }] },
-              props: {
-                className: { attr: "tooltipClassName" },
-                role: "tooltip"
-              },
-              text: { call: "getTooltipText" }
-            }
-          ]
-        },
-        {
-          tag: "div",
-          when: { attr: "open" },
-          props: {
-            "aria-label": { attr: "label" },
-            className: { attr: "menuClassName" },
-            role: "listbox"
-          },
-          children: [
-            {
-              each: { attr: "options" },
-              as: "option",
-              diff: [
-                {
-                  component: "Titanic.UI.Button",
-                  key: { local: "option.value" },
-                  props: {
-                    "aria-selected": {
-                      call: "isActiveOption",
-                      args: [{ local: "option" }]
-                    },
-                    className: {
-                      call: "getOptionClassName",
-                      args: [{ local: "option" }]
-                    },
-                    onClick: {
-                      method: "selectOption",
-                      args: [{ local: "option" }]
-                    },
-                    role: "option",
-                    type: "button",
-                    unstyled: true
-                  },
-                  children: [
-                    {
-                      component: "Titanic.UI.ResourceSvgIcon",
-                      props: {
-                        className: { attr: "iconClassName" },
-                        icon: { local: "option.icon" }
-                      }
-                    },
-                    {
-                      tag: "span",
-                      text: { local: "option.label" }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          tag: "small",
-          when: { attr: "errorText" },
-          props: {
-            className: { attr: "errorClassName" }
-          },
-          text: { attr: "errorText" }
-        }
-      ]
-    }
-  ]
+        }}
+      >
+        <ResourceSvgIcon className={iconClassName} icon={selectedOption?.icon} />
+        {triggerLabelClassName && triggerLabel ? <span className={triggerLabelClassName}>{triggerLabel}</span> : null}
+        {chevronClassName ? <span aria-hidden="true" className={chevronClassName}>{chevron ?? "v"}</span> : null}
+        {tooltipClassName && selectedOption ? (
+          <span className={tooltipClassName} role="tooltip">{triggerLabel ?? selectedOption.label}</span>
+        ) : null}
+      </Button>
+      {open ? (
+        <div aria-label={label} className={menuClassName} role="listbox">
+          {options.map((option) => {
+            const active = option.value === value;
+            return (
+              <Button
+                unstyled
+                aria-selected={active}
+                className={active ? `${optionClassName} ${optionActiveClassName}` : optionClassName}
+                key={option.value}
+                role="option"
+                type="button"
+                onClick={() => selectOption(option)}
+              >
+                <ResourceSvgIcon className={iconClassName} icon={option.icon} />
+                <span>{option.label}</span>
+              </Button>
+            );
+          })}
+        </div>
+      ) : null}
+      {errorText ? <small className={errorClassName}>{errorText}</small> : null}
+    </div>
+  );
 });

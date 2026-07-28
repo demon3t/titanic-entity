@@ -1,0 +1,31 @@
+.titanic-input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.titanic-input-field:has(.titanic-date),
+.titanic-input-field:has(.titanic-time),
+.titanic-input-field:has(.titanic-datetime-input) {
+  grid-column: span var(--titanic-grid-span, 12);
+}
+
+.titanic-input-field__label {
+  color: var(--titanic-ui-muted-text, var(--titanic-ui-text));
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.titanic-input-field__required {
+  color: var(--titanic-ui-danger, #b42318);
+  margin-left: 4px;
+}
+
+.titanic-input-field__error {
+  color: var(--titanic-ui-danger, #b42318);
+  font-size: 12px;
+  line-height: 16px;
+}

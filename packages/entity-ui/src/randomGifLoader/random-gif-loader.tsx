@@ -1,4 +1,5 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { Titanic } from "@titanic-entity/entity-react";
 import { entityReactComponentNames } from "@titanic-entity/entity-react/model";// Компонент обратной связи 'RandomGifLoader' для общих UI-сценариев.
 import { useEffect, useMemo, useState } from "react";
 import type { GifCollectionResource } from "@titanic-entity/entity-resources";
@@ -9,7 +10,7 @@ export interface RandomGifLoaderProps {
   label?: string;
 }
 
-export function RandomGifLoader({
+export const RandomGifLoader = Titanic.define<RandomGifLoaderProps>("Titanic.UI.RandomGifLoader", function RandomGifLoader({
   className = "",
   collection,
   label
@@ -51,7 +52,7 @@ export function RandomGifLoader({
       {label ? <span className="titanic-random-gif-loader__label">{label}</span> : null}
     </div>
   );
-}
+});
 
 function getRandomIndex(length: number): number {
   return length > 0 ? Math.floor(Math.random() * length) : 0;

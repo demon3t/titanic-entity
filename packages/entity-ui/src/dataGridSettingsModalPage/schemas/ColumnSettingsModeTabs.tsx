@@ -1,4 +1,4 @@
-import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { Titanic } from "@titanic-entity/entity-react";
 import type {
   EntityDataGridColumnSettingsMode,
   EntityDataGridLabels
@@ -12,7 +12,7 @@ export interface ColumnSettingsModeTabsProps {
   onChange: (mode: EntityDataGridColumnSettingsMode) => void;
 }
 
-function ColumnSettingsModeTabsNative({
+export const ColumnSettingsModeTabs = Titanic.define<ColumnSettingsModeTabsProps>(columnSettingsDefinedComponentNames.ColumnSettingsModeTabs, function ColumnSettingsModeTabs({
   labels,
   mode,
   onChange
@@ -41,13 +41,4 @@ function ColumnSettingsModeTabsNative({
       </div>
     </div>
   );
-}
-
-Titanic.define<ColumnSettingsModeTabsProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsModeTabs,
-  ColumnSettingsModeTabsNative
-);
-
-export const ColumnSettingsModeTabs = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsModeTabsProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsModeTabs)!;
+});

@@ -1,6 +1,6 @@
-import type { DateInputResolvedLabels } from "./types";
+import { Titanic } from "@titanic-entity/entity-resources";
 
-export const dateInputEnUsLabels: DateInputResolvedLabels = {
+Titanic.Localization.define("Titanic.UI.DateInput", "en-US", {
   clear: "Clear",
   days: "Days",
   month: "Month",
@@ -10,4 +10,4 @@ export const dateInputEnUsLabels: DateInputResolvedLabels = {
   selectedDate: "Selected date",
   today: "Today",
   year: "Year"
-};
+}, { defaultLocale: "en-US" });

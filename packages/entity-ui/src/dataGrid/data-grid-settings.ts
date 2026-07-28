@@ -1,7 +1,6 @@
 import type {
   EntityGridColumnSetting,
   EntityGridColumnSettingsMode,
-  EntityGridModeSettingsMap,
   EntityGridSortDirection,
   EntityGridSortSetting
 } from "@titanic-entity/entity-api";
@@ -74,11 +73,22 @@ export interface EntityDataGridLabels {
 
 export type EntityDataGridCulture = "en-US" | "ru-RU";
 
+export interface EntityDataGridColumnField {
+  key?: string;
+  path?: string;
+  alias?: string;
+  caption?: string;
+  [key: string]: unknown;
+}
+
 export interface EntityDataGridColumn<TRow = unknown> {
   key: string;
   path?: string;
+  alias?: string;
+  field?: EntityDataGridColumnField;
   label?: string;
   width?: number;
+  span?: number;
   defaultVisible?: boolean;
   required?: boolean;
   queryRequired?: boolean;
@@ -99,23 +109,33 @@ export interface EntityDataGridCellEditorContext<TRow = unknown> {
   setValue: (value: unknown) => void;
 }
 
+export interface EntityDataGridColumnSetting extends EntityGridColumnSetting {
+  key?: string;
+  path?: string;
+  caption?: string;
+  field?: EntityDataGridColumnField;
+  label?: string;
+}
+
 export type {
-  EntityGridColumnSetting as EntityDataGridColumnSetting,
   EntityGridColumnSettingsMode as EntityDataGridColumnSettingsMode,
-  EntityGridModeSettingsMap as EntityDataGridModeSettingsMap,
   EntityGridSortDirection as EntityDataGridSortDirection,
   EntityGridSortSetting as EntityDataGridSortSetting
 };
 
 export interface EntityDataGridModeColumnSettings {
-  columns: EntityGridColumnSetting[];
+  columns: EntityDataGridColumnSetting[];
 }
 
+export type EntityDataGridModeSettingsMap = Partial<
+  Record<EntityGridColumnSettingsMode, EntityDataGridModeColumnSettings>
+>;
+
 export interface EntityDataGridUserSettings {
-  columns: EntityGridColumnSetting[];
+  columns: EntityDataGridColumnSetting[];
   displayMode?: EntityGridColumnSettingsMode;
   columnSettingsMode?: EntityGridColumnSettingsMode;
-  modeSettings?: EntityGridModeSettingsMap;
+  modeSettings?: EntityDataGridModeSettingsMap;
   sort?: EntityGridSortSetting;
 }
 

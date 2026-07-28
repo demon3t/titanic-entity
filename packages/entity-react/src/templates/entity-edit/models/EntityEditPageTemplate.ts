@@ -131,6 +131,7 @@ export interface NormalizedEntityEditPageTemplate extends NormalizedBaseModuleTe
 }
 
 export interface EntityEditPageContext {
+  entity: Entity;
   template: NormalizedEntityEditPageTemplate;
   schema: EntitySchema;
   attributes: EntityEditPageAttributes;
@@ -138,6 +139,7 @@ export interface EntityEditPageContext {
   values: EntityValues;
   displayValues: EntityDisplayValues;
   disabled: boolean;
+  isDirty: boolean;
   getValue: <TValue = unknown>(key: string) => TValue | undefined;
   setValue: (key: string, value: unknown) => void;
   setValues: (updater: EntityEditPageValuesUpdater) => void;
@@ -150,7 +152,13 @@ export interface EntityEditPageMethodScope extends EntityEditPageContext {
   context: EntityEditPageContext;
 }
 
-export interface EntityEditPageMethodThis extends BaseModuleMethodThis, EntityEditPageMethodScope {}
+export interface EntityEditPageMethodThis extends BaseModuleMethodThis, EntityEditPageMethodScope {
+  /** Reads the current value of a page/entity attribute inside a page method. */
+  get: <TValue = unknown>(key: string) => TValue | undefined;
+
+  /** Registered page methods are exposed as bound methods on `this`. */
+  [methodName: string]: any;
+}
 
 export type EntityEditPageMethod = BaseModuleMethod<EntityEditPageContext, EntityEditPageMethodThis>;
 
@@ -171,6 +179,7 @@ export interface EntityEditPageFieldDiffItem extends EntityEditPageDiffItemBase 
 export interface EntityEditPageSectionDiffItem extends EntityEditPageDiffItemBase {
   type: "section";
   title?: EntityEditPageRenderValue<ReactNode>;
+  defaultExpanded?: boolean;
   columns?: number;
   gap?: number;
   /** Имена Entity-атрибутов, выводимых внутри блока. Это оставляет diff.json сфокусированным на блоках страницы. */
@@ -245,8 +254,18 @@ export interface EntityEditPageProps<TValues extends EntityValues = EntityValues
   className?: string;
   top?: EntityEditPageRenderValue<ReactNode>;
   bottom?: EntityEditPageRenderValue<ReactNode>;
+  backLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+  deleteLabel?: ReactNode;
   submitLabel?: ReactNode;
+  backDisabled?: boolean;
+  cancelDisabled?: boolean;
+  deleteDisabled?: boolean;
+  submitDisabled?: boolean;
   manualCommitDelayMs?: number;
   onChange?: (values: TValues, context: EntityEditPageContext) => void;
-  onSubmit?: (values: TValues, context: EntityEditPageContext) => void | Promise<void>;
+  onBack?: (context: EntityEditPageContext) => void | Promise<void>;
+  onCancel?: (context: EntityEditPageContext) => void | Promise<void>;
+  onDelete?: (values: TValues, context: EntityEditPageContext) => void | Promise<void>;
+  onSubmit?: (values: TValues, context: EntityEditPageContext) => boolean | void | Promise<boolean | void>;
 }

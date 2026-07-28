@@ -1,26 +1,42 @@
 import { defineComponentSchema, defineGridSchema } from "@titanic-entity/entity-base";
 import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactGridNames } from "@titanic-entity/entity-react/model";
+import type {
+  AriaRole,
+  CSSProperties,
+  MouseEventHandler,
+  ReactNode
+} from "react";
 import "./grid";
-import type { EntityGridProps } from "./grid-props";
 
-export type { EntityGridProps } from "./grid-props";
+export interface GridProps {
+  ariaLabel?: string;
+  ariaLabelledBy?: string;
+  children?: ReactNode;
+  className?: string;
+  columns?: number;
+  gap?: number;
+  id?: string;
+  role?: AriaRole;
+  style?: CSSProperties;
+  tabIndex?: number;
+  title?: string;
+  visible?: boolean;
+  onClick?: MouseEventHandler<HTMLDivElement>;
+}
 
-export const EntityGrid = Titanic.getReactModule<DefinedEntityReactComponent<EntityGridProps>>(
-  "Titanic.UI.EntityGrid"
+export const Grid = Titanic.getReactModule<DefinedEntityReactComponent<GridProps>>(
+  "Titanic.UI.Grid"
 )!;
 
-export const gridComponentSchema = defineComponentSchema<EntityGridProps>({
+export const gridComponentSchema = defineComponentSchema<GridProps>({
   kind: "component",
-  name: entityReactComponentNames.EntityGrid,
-  component: EntityGrid
+  name: entityReactComponentNames.Grid,
+  component: Grid
 });
 
-export const gridSchema = defineGridSchema<EntityGridProps>({
+export const gridSchema = defineGridSchema<GridProps>({
   kind: "grid",
-  name: entityReactGridNames.EntityGrid,
-  component: EntityGrid
+  name: entityReactGridNames.Grid,
+  component: Grid
 });
-
-export * from "./icons";
-export * from "./lcz";

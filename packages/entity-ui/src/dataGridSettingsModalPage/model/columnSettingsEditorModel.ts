@@ -1,6 +1,7 @@
 import type { DragEvent } from "react";
 import type {
   EntityDataGridColumn,
+  EntityDataGridColumnField,
   EntityDataGridColumnSetting,
   EntityDataGridColumnSettingsMode,
   EntityDataGridModeSettingsMap
@@ -62,14 +63,53 @@ export function createEditorDraftColumnSettingsForMode<TRow>(
   return createEditorDraftColumnSettings(columns, sourceSettings, gridColumns, targetMode);
 }
 
-export function createModeSettingsPayload(modeSettings: EditorDraftSettingsByMode): EntityDataGridModeSettingsMap {
+export function createColumnSettingsPayload<TRow>(
+  columns: readonly EntityDataGridColumn<TRow>[],
+  settings: readonly EntityDataGridColumnSetting[]
+): EntityDataGridColumnSetting[] {
+  const columnByKey = new Map(columns.map((column) => [column.key, column]));
+
+  return settings.flatMap((setting, index) => {
+    const key = getSettingKey(setting);
+    const column = key ? columnByKey.get(key) : undefined;
+    const path = getSettingPath(setting, column);
+
+    if (!path) {
+      return [];
+    }
+
+    const caption = getSettingCaption(setting)
+      ?? normalizeLabel(column?.label)
+      ?? getReadableLabelFromPath(path)
+      ?? getLabelFromPath(path);
+    const field = createSettingField(column, setting, key ?? path, path, caption);
+    const order = Number(setting.order);
+    const hasRelativeSpan = hasPositiveSpan(setting.span);
+
+    return [{
+      ...(setting.id ? { id: setting.id } : {}),
+      path,
+      ...(caption ? { caption } : {}),
+      ...(field ? { field } : {}),
+      visible: setting.visible !== false,
+      ...(hasRelativeSpan ? { span: setting.span } : {}),
+      ...(!hasRelativeSpan && setting.width ? { width: setting.width } : {}),
+      order: Number.isFinite(order) ? order : index
+    } satisfies EntityDataGridColumnSetting];
+  });
+}
+
+export function createModeSettingsPayload<TRow>(
+  columns: readonly EntityDataGridColumn<TRow>[],
+  modeSettings: EditorDraftSettingsByMode
+): EntityDataGridModeSettingsMap {
   const nextModeSettings: EntityDataGridModeSettingsMap = {};
 
   columnSettingsModes.forEach((mode) => {
-    const columns = modeSettings[mode];
+    const modeColumns = modeSettings[mode];
 
-    if (columns?.length) {
-      nextModeSettings[mode] = { columns };
+    if (modeColumns?.length) {
+      nextModeSettings[mode] = { columns: createColumnSettingsPayload(columns, modeColumns) };
     }
   });
 
@@ -100,15 +140,22 @@ function createDraftColumnSettings<TRow>(
   return normalizeDraftColumnSettings(columns, [
     ...currentSettings,
     ...columns
-      .filter((column) => !currentSettings.some((setting) => setting.key === column.key))
-      .map((column, index) => ({
-        id: createColumnSettingId(column.key, currentSettings.length + index),
-        key: column.key,
-        path: column.path ?? column.key,
-        visible: false,
-        span: getDefaultColumnSpan(column, gridColumns),
-        width: column.width
-      } satisfies EntityDataGridColumnSetting))
+      .filter((column) => !currentSettings.some((setting) => getSettingKey(setting) === column.key))
+      .map((column, index) => {
+        const path = column.path ?? column.key;
+        const caption = column.label;
+
+        return {
+          id: createColumnSettingId(column.key, currentSettings.length + index),
+          key: column.key,
+          path,
+          caption,
+          field: createSettingField(column, undefined, column.key, path, caption),
+          visible: false,
+          span: getDefaultColumnSpan(column, gridColumns),
+          width: column.width
+        } satisfies EntityDataGridColumnSetting;
+      })
   ], gridColumns);
 }
 
@@ -120,25 +167,39 @@ function createDefaultColumnSettings<TRow>(
   const sourceColumns = visibleColumns.length > 0 ? visibleColumns : columns.slice(0, 1);
 
   return normalizeDraftColumnSettings(columns, [
-    ...sourceColumns.map((column, index) => ({
-      id: createColumnSettingId(column.key, index),
-      key: column.key,
-      path: column.path ?? column.key,
-      visible: true,
-      span: getDefaultColumnSpan(column, gridColumns),
-      width: column.width,
-      order: index
-    } satisfies EntityDataGridColumnSetting)),
+    ...sourceColumns.map((column, index) => {
+      const path = column.path ?? column.key;
+      const caption = column.label;
+
+      return {
+        id: createColumnSettingId(column.key, index),
+        key: column.key,
+        path,
+        caption,
+        field: createSettingField(column, undefined, column.key, path, caption),
+        visible: true,
+        span: getDefaultColumnSpan(column, gridColumns),
+        width: column.width,
+        order: index
+      } satisfies EntityDataGridColumnSetting;
+    }),
     ...columns
       .filter((column) => !sourceColumns.some((visibleColumn) => visibleColumn.key === column.key))
-      .map((column, index) => ({
-        id: createColumnSettingId(column.key, sourceColumns.length + index),
-        key: column.key,
-        path: column.path ?? column.key,
-        visible: false,
-        span: getDefaultColumnSpan(column, gridColumns),
-        width: column.width
-      } satisfies EntityDataGridColumnSetting))
+      .map((column, index) => {
+        const path = column.path ?? column.key;
+        const caption = column.label;
+
+        return {
+          id: createColumnSettingId(column.key, sourceColumns.length + index),
+          key: column.key,
+          path,
+          caption,
+          field: createSettingField(column, undefined, column.key, path, caption),
+          visible: false,
+          span: getDefaultColumnSpan(column, gridColumns),
+          width: column.width
+        } satisfies EntityDataGridColumnSetting;
+      })
   ], gridColumns);
 }
 
@@ -151,38 +212,52 @@ function normalizeDraftColumnSettings<TRow>(
   const uniqueSettings = new Map<string, EntityDataGridColumnSetting>();
 
   settings.forEach((setting, index) => {
-    const column = columnByKey.get(setting.key);
+    const key = getSettingKey(setting);
+
+    if (!key) {
+      return;
+    }
+
+    const normalizedSetting = { ...setting, key };
+    const column = columnByKey.get(key) ?? createColumnFromSetting<TRow>(normalizedSetting);
 
     if (!column) {
       return;
     }
 
     const span = normalizeSpan(setting.span, gridColumns) ?? getDefaultColumnSpan(column, gridColumns);
-    const label = normalizeLabel(setting.label);
-    const path = normalizePath(setting.path) ?? column.path ?? setting.key;
+    const path = getSettingPath(normalizedSetting, column) ?? key;
+    const caption = getSettingCaption(setting) ?? (columnByKey.has(key) ? undefined : normalizeLabel(column.label));
 
-    uniqueSettings.set(setting.key, {
-      ...setting,
-      id: getColumnSettingId(setting, index),
+    uniqueSettings.set(key, {
+      ...normalizedSetting,
+      id: getColumnSettingId(normalizedSetting, index),
       path,
+      caption,
+      field: createSettingField(column, normalizedSetting, key, path, caption ?? column.label),
       visible: setting.visible !== false,
       span,
-      width: setting.width ?? span * columnWidthUnit,
+      width: setting.width,
       order: setting.visible !== false ? setting.order ?? index : undefined,
-      ...(label ? { label } : { label: undefined })
+      label: undefined
     });
   });
 
   columns.forEach((column, index) => {
     if (!uniqueSettings.has(column.key)) {
       const span = getDefaultColumnSpan(column, gridColumns);
+      const path = column.path ?? column.key;
+      const caption = column.label;
+
       uniqueSettings.set(column.key, {
         id: createColumnSettingId(column.key, index),
         key: column.key,
-        path: column.path ?? column.key,
+        path,
+        caption,
+        field: createSettingField(column, undefined, column.key, path, caption),
         visible: false,
         span,
-        width: column.width ?? span * columnWidthUnit
+        width: column.width
       });
     }
   });
@@ -196,7 +271,7 @@ function normalizeDraftColumnSettings<TRow>(
     }));
   const hidden = [...uniqueSettings.values()]
     .filter((setting) => !setting.visible)
-    .sort((left, right) => left.key.localeCompare(right.key))
+    .sort((left, right) => (getSettingKey(left) ?? "").localeCompare(getSettingKey(right) ?? ""))
     .map((setting): EntityDataGridColumnSetting => {
       const { order: _order, ...hiddenSetting } = setting;
       return hiddenSetting;
@@ -228,9 +303,15 @@ export function addColumnToEditorSettings<TRow>(
   mode: EntityDataGridColumnSettingsMode,
   column?: EntityDataGridColumn<TRow>
 ): EntityDataGridColumnSetting[] {
-  const targetColumn = column ?? columns.find((candidate) => candidate.key === key);
+  const normalizedKey = normalizePath(key);
   const normalizedSettings = normalizeColumnSettingsForEditorMode(columns, settings, gridColumns, mode);
-  const currentSetting = normalizedSettings.find((setting) => setting.key === key);
+
+  if (!normalizedKey) {
+    return normalizedSettings;
+  }
+
+  const targetColumn = column ?? columns.find((candidate) => candidate.key === normalizedKey);
+  const currentSetting = normalizedSettings.find((setting) => getSettingKey(setting) === normalizedKey);
 
   if (currentSetting?.visible) {
     return normalizedSettings;
@@ -240,16 +321,40 @@ export function addColumnToEditorSettings<TRow>(
     return normalizedSettings;
   }
 
-  const targetSetting = currentSetting ?? {
-    id: createColumnSettingId(key, normalizedSettings.length),
-    key,
-    path: targetColumn?.path ?? key,
+  const fallbackSetting = currentSetting ?? ({
+    key: normalizedKey,
+    path: targetColumn?.path ?? normalizedKey
+  } as EntityDataGridColumnSetting);
+  const targetPath = getSettingPath(fallbackSetting, targetColumn) ?? normalizedKey;
+  const targetCaption = normalizeLabel(column?.label)
+    ?? (currentSetting ? getSettingCaption(currentSetting) : undefined)
+    ?? normalizeLabel(targetColumn?.label);
+  const targetSetting = {
+    ...(currentSetting ?? {
+      id: createColumnSettingId(normalizedKey, normalizedSettings.length),
+      span: getDefaultColumnSpan(targetColumn, gridColumns),
+      width: targetColumn?.width
+    }),
+    key: normalizedKey,
+    path: targetPath,
+    caption: targetCaption,
+    field: createSettingField(
+      targetColumn,
+      currentSetting,
+      normalizedKey,
+      targetPath,
+      targetCaption
+    ),
     visible: false,
-    span: getDefaultColumnSpan(targetColumn, gridColumns),
-    width: targetColumn?.width
+    span: currentSetting?.span ?? getDefaultColumnSpan(targetColumn, gridColumns),
+    width: currentSetting?.width ?? targetColumn?.width
   } satisfies EntityDataGridColumnSetting;
-  const sourceSettings = currentSetting ? normalizedSettings : [...normalizedSettings, targetSetting];
-  const visibleSettings = sourceSettings.filter((setting) => setting.visible && setting.key !== key);
+  const sourceSettings = currentSetting
+    ? normalizedSettings.map((setting) =>
+      getSettingKey(setting) === normalizedKey ? targetSetting : setting
+    )
+    : [...normalizedSettings, targetSetting];
+  const visibleSettings = sourceSettings.filter((setting) => setting.visible && getSettingKey(setting) !== normalizedKey);
   const nextVisibleSettings = mode === "list"
     ? addColumnToListRow(visibleSettings, targetSetting, gridColumns)
     : addColumnToTileRows(visibleSettings, targetSetting, gridColumns);
@@ -345,18 +450,29 @@ function applyVisibleColumnOrder(
   settings: readonly EntityDataGridColumnSetting[],
   visibleSettings: readonly EntityDataGridColumnSetting[]
 ): EntityDataGridColumnSetting[] {
-  const visibleSettingByKey = new Map(
-    visibleSettings.map((setting, index) => [
-      setting.key,
+  const visibleSettingEntries: [string, EntityDataGridColumnSetting][] = [];
+
+  visibleSettings.forEach((setting, index) => {
+    const key = getSettingKey(setting);
+
+    if (!key) {
+      return;
+    }
+
+    visibleSettingEntries.push([
+      key,
       {
         ...setting,
+        key,
         visible: true,
         order: index
       } satisfies EntityDataGridColumnSetting
-    ])
-  );
+    ]);
+  });
 
-  return settings.map((setting) => visibleSettingByKey.get(setting.key) ?? hideColumnSetting(setting));
+  const visibleSettingByKey = new Map(visibleSettingEntries);
+
+  return settings.map((setting) => visibleSettingByKey.get(getSettingKey(setting) ?? "") ?? hideColumnSetting(setting));
 }
 
 function findLastShrinkableColumnIndex(
@@ -382,12 +498,12 @@ function updateSettingSpan(
   gridColumns: number
 ): EntityDataGridColumnSetting {
   const nextSpan = clampGridSpan(span, gridColumns);
+  const { width: _width, ...settingWithoutWidth } = setting;
 
   return {
-    ...setting,
+    ...settingWithoutWidth,
     visible: true,
-    span: nextSpan,
-    width: nextSpan * columnWidthUnit
+    span: nextSpan
   };
 }
 
@@ -396,7 +512,7 @@ function sortHiddenColumnSettings(
 ): EntityDataGridColumnSetting[] {
   return [...settings]
     .map(hideColumnSetting)
-    .sort((left, right) => left.key.localeCompare(right.key));
+    .sort((left, right) => (getSettingKey(left) ?? "").localeCompare(getSettingKey(right) ?? ""));
 }
 
 function hideColumnSetting(setting: EntityDataGridColumnSetting): EntityDataGridColumnSetting {
@@ -425,8 +541,9 @@ export function getMaxResizeSpanForCurrentRow(
   key: string,
   gridColumns: number
 ): number {
+  const normalizedKey = normalizePath(key) ?? key;
   const row = getEditorGridRows(settings, gridColumns).find((items) =>
-    items.some((setting) => setting.key === key)
+    items.some((setting) => getSettingKey(setting) === normalizedKey)
   );
 
   if (!row) {
@@ -434,7 +551,7 @@ export function getMaxResizeSpanForCurrentRow(
   }
 
   const usedByRowNeighbors = row.reduce((totalSpan, setting) =>
-    setting.key === key
+    getSettingKey(setting) === normalizedKey
       ? totalSpan
       : totalSpan + clampGridSpan(setting.span ?? 1, gridColumns),
   0);
@@ -485,10 +602,12 @@ export function moveDraftColumnSettings<TRow>(
   targetKey: string,
   gridColumns: number
 ): EntityDataGridColumnSetting[] {
+  const normalizedSourceKey = normalizePath(sourceKey) ?? sourceKey;
+  const normalizedTargetKey = normalizePath(targetKey) ?? targetKey;
   const visibleSettings = settings.filter((setting) => setting.visible);
   const hiddenSettings = settings.filter((setting) => !setting.visible);
-  const sourceIndex = visibleSettings.findIndex((setting) => setting.key === sourceKey);
-  const targetIndex = visibleSettings.findIndex((setting) => setting.key === targetKey);
+  const sourceIndex = visibleSettings.findIndex((setting) => getSettingKey(setting) === normalizedSourceKey);
+  const targetIndex = visibleSettings.findIndex((setting) => getSettingKey(setting) === normalizedTargetKey);
 
   if (sourceIndex < 0 || targetIndex < 0) {
     return normalizeDraftColumnSettings(columns, settings, gridColumns);
@@ -523,6 +642,35 @@ export function mergeEditorColumns<TRow>(
   return [...mergedColumns.values()];
 }
 
+export function createEditorColumnsFromSettings<TRow>(
+  columns: readonly EntityDataGridColumn<TRow>[],
+  settingsGroups: readonly (readonly EntityDataGridColumnSetting[] | null | undefined)[]
+): EntityDataGridColumn<TRow>[] {
+  const knownColumnKeys = new Set(columns.map((column) => column.key));
+  const settingColumns: EntityDataGridColumn<TRow>[] = [];
+
+  settingsGroups.forEach((settings) => {
+    settings?.forEach((setting) => {
+      const key = getSettingKey(setting);
+
+      if (!key || knownColumnKeys.has(key)) {
+        return;
+      }
+
+      const column = createColumnFromSetting<TRow>({ ...setting, key });
+
+      if (!column) {
+        return;
+      }
+
+      knownColumnKeys.add(column.key);
+      settingColumns.push(column);
+    });
+  });
+
+  return settingColumns;
+}
+
 function normalizeLabel(value: unknown): string | undefined {
   const label = typeof value === "string" ? value.trim() : "";
   return label || undefined;
@@ -533,20 +681,159 @@ function normalizePath(value: unknown): string | undefined {
   return path || undefined;
 }
 
+function getSettingField(setting: Pick<EntityDataGridColumnSetting, "field"> | undefined): EntityDataGridColumnField | undefined {
+  return setting?.field && typeof setting.field === "object" && !Array.isArray(setting.field)
+    ? setting.field
+    : undefined;
+}
+
+function getColumnField<TRow>(column: EntityDataGridColumn<TRow> | undefined): EntityDataGridColumnField | undefined {
+  return column?.field && typeof column.field === "object" && !Array.isArray(column.field)
+    ? column.field
+    : undefined;
+}
+
+function getSettingKey(setting: EntityDataGridColumnSetting): string | undefined {
+  const field = getSettingField(setting);
+
+  return normalizePath(setting.key)
+    ?? normalizePath(field?.key)
+    ?? normalizePath(field?.alias)
+    ?? normalizePath(field?.path)
+    ?? normalizePath(setting.path);
+}
+
+function getSettingPath<TRow>(
+  setting: EntityDataGridColumnSetting,
+  column?: EntityDataGridColumn<TRow>
+): string | undefined {
+  const field = getSettingField(setting);
+
+  return normalizePath(setting.path)
+    ?? normalizePath(field?.path)
+    ?? normalizePath(column?.path)
+    ?? getSettingKey(setting);
+}
+
+function getSettingCaption(setting: EntityDataGridColumnSetting): string | undefined {
+  const field = getSettingField(setting);
+
+  return normalizeLabel(setting.caption)
+    ?? normalizeLabel(setting.label)
+    ?? normalizeLabel(field?.caption);
+}
+
+function createSettingField<TRow>(
+  column: EntityDataGridColumn<TRow> | undefined,
+  setting: EntityDataGridColumnSetting | undefined,
+  key: string | undefined,
+  path: string | undefined,
+  caption: string | undefined
+): EntityDataGridColumnField | undefined {
+  const columnField = getColumnField(column);
+  const settingField = getSettingField(setting);
+  const alias = normalizePath(settingField?.alias) ?? normalizePath(columnField?.alias) ?? normalizePath(column?.alias);
+  const nextField: EntityDataGridColumnField = {
+    ...(columnField ?? {}),
+    ...(settingField ?? {}),
+    ...(key ? { key } : {}),
+    ...(path ? { path } : {}),
+    ...(alias ? { alias } : {}),
+    ...(caption ? { caption } : {})
+  };
+
+  return Object.keys(nextField).length ? nextField : undefined;
+}
+
+function createColumnFromSetting<TRow>(
+  setting: EntityDataGridColumnSetting
+): EntityDataGridColumn<TRow> | undefined {
+  const key = getSettingKey(setting);
+
+  if (!key) {
+    return undefined;
+  }
+
+  const path = getSettingPath(setting) ?? key;
+  const settingCaption = getSettingCaption(setting);
+  const label = settingCaption && !isPathLeafLabel(settingCaption, path)
+    ? settingCaption
+    : getReadableLabelFromPath(path) ?? settingCaption ?? getLabelFromPath(path);
+
+  return {
+    key,
+    label,
+    path,
+    field: createSettingField(undefined, setting, key, path, label),
+    defaultVisible: false,
+    width: setting.width
+  };
+}
+
+function getLabelFromPath(path: string): string {
+  return path
+    .split(".")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .pop() ?? path;
+}
+
+function splitTechnicalName(value: string): string {
+  const normalizedValue = value.trim().replace(/Id$/, "");
+
+  return normalizedValue
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim() || value;
+}
+
+function getReadableLabelFromPath(path: string): string | undefined {
+  const parts = path
+    .split(".")
+    .map((part) => splitTechnicalName(part))
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" / ") : undefined;
+}
+
+function isPathLeafLabel(label: string | undefined, path: string | undefined): boolean {
+  if (!label || !path?.includes(".")) {
+    return false;
+  }
+
+  return getLabelFromPath(path).localeCompare(label, undefined, { sensitivity: "accent" }) === 0;
+}
+
 export function getColumnLabel<TRow>(
   column: EntityDataGridColumn<TRow>,
   setting: EntityDataGridColumnSetting
 ): string {
-  return setting.label || getColumnBaseLabel(column);
+  const settingCaption = getSettingCaption(setting);
+  const path = getSettingPath(setting, column) ?? normalizePath(column.key);
+
+  if (settingCaption && !isPathLeafLabel(settingCaption, path)) {
+    return settingCaption;
+  }
+
+  return getColumnBaseLabel(column);
 }
 
 export function getColumnBaseLabel<TRow>(column?: EntityDataGridColumn<TRow>): string {
-  return column?.label ?? column?.path ?? column?.key ?? "";
+  const field = getColumnField(column);
+
+  return column?.label ?? field?.caption ?? column?.path ?? field?.path ?? column?.key ?? "";
 }
 
 function normalizeSpan(value: unknown, gridColumns: number): number | undefined {
   const parsedValue = Number(value);
   return Number.isFinite(parsedValue) && parsedValue > 0 ? clampGridSpan(parsedValue, gridColumns) : undefined;
+}
+
+function hasPositiveSpan(value: unknown): boolean {
+  const parsedValue = Number(value);
+
+  return Number.isFinite(parsedValue) && parsedValue > 0;
 }
 
 export function getDefaultColumnSpan<TRow>(column: EntityDataGridColumn<TRow> | undefined, gridColumns: number): number {
@@ -571,7 +858,7 @@ export function createColumnSettingId(key: string, index = Date.now()): string {
 }
 
 export function getColumnSettingId(setting: EntityDataGridColumnSetting, index: number): string {
-  return setting.id || createColumnSettingId(setting.key, index);
+  return setting.id || createColumnSettingId(getSettingKey(setting) ?? setting.path ?? "column", index);
 }
 
 export function handleColumnDragStart(

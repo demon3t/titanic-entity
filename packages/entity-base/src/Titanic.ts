@@ -91,6 +91,8 @@ export type TitanicLocalizationModuleExports = UiPackageModuleExports & {
 
 /** Options used when localization resources are registered. */
 export interface TitanicLocalizationRegistrationOptions {
+  /** Optional schema name that owns this localization group. */
+  schemaName?: string;
   /** Optional explicit group name for a single localization resource. */
   groupName?: string;
   /** Optional module name added as an additional lookup prefix. */
@@ -359,6 +361,8 @@ export class TitanicLocalizationRegistry {
   readonly all: Record<string, string> = {};
   /** Localized property proxy trees grouped by public package resource names. */
   readonly groups: Record<string, TitanicLocalizedPropertyTree> = {};
+  /** Immutable empty tree returned when a schema has no localization resources. */
+  readonly empty: TitanicLocalizationTree = Object.freeze({});
   /** Default locale used when the user locale has no matching string. */
   defaultLocale = "en-US";
   /** Explicit active locale. When omitted, the registry detects the browser locale. */
@@ -367,9 +371,10 @@ export class TitanicLocalizationRegistry {
   private readonly flatByLocale: Record<string, Record<string, string>> = {};
   private readonly groupTreesByLocale: Record<string, Record<string, TitanicLocalizationTree>> = {};
   private readonly pathDefaultLocales: Record<string, string> = {};
+  private readonly schemaGroupNames: Record<string, string> = {};
   private readonly branchPaths = new Set<string>();
 
-  /** Sets the active locale. Pass undefined or null to return to browser locale detection. */
+  /** Sets the active locale. Pass undefined or null to return to current user/browser locale detection. */
   setLocale(locale: string | null | undefined): void {
     const normalizedLocale = normalizeLocalizationLocale(locale);
 
@@ -382,7 +387,7 @@ export class TitanicLocalizationRegistry {
     this.refreshAll();
   }
 
-  /** Sets the registry fallback locale. */
+  /** Sets the registry fallback locale used as the default configuration. */
   setDefaultLocale(locale: string): void {
     const normalizedLocale = normalizeLocalizationLocale(locale);
 
@@ -394,9 +399,24 @@ export class TitanicLocalizationRegistry {
     this.refreshAll();
   }
 
-  /** Resolves the active locale from an explicit setting, browser/user locale, or fallback locale. */
+  /** Resolves the active locale from an explicit setting, current user, browser/user locale, or fallback locale. */
   getCurrentLocale(): string {
-    return this.locale ?? this.getUserLocale() ?? this.defaultLocale;
+    return this.locale ?? this.getCurrentUserLocale() ?? this.getUserLocale() ?? this.defaultLocale;
+  }
+
+  /** Reads the preferred locale from Titanic.CurrentUser when it is available. */
+  getCurrentUserLocale(): string | undefined {
+    const currentUser = Titanic.CurrentUser;
+
+    if (!currentUser || typeof currentUser !== "object") {
+      return undefined;
+    }
+
+    const user = currentUser as TitanicCurrentUser;
+
+    return normalizeLocalizationLocale(
+      user.locale ?? user.localization ?? user.culture ?? user.language
+    );
   }
 
   /** Reads the user locale from document and navigator when a browser environment is available. */
@@ -437,6 +457,14 @@ export class TitanicLocalizationRegistry {
 
     if (!normalizedGroupName || !isLocalizationResource(resource)) {
       return resource;
+    }
+
+    const normalizedSchemaName = options.schemaName
+      ? normalizeLocalizationPath(options.schemaName)
+      : "";
+
+    if (normalizedSchemaName) {
+      this.schemaGroupNames[normalizedSchemaName] = normalizedGroupName;
     }
 
     const defaultLocale = normalizeLocalizationLocale(
@@ -585,6 +613,22 @@ export class TitanicLocalizationRegistry {
     ) as TTree | undefined;
   }
 
+  /** Gets a localization group associated with a schema name. */
+  forSchema<TTree = TitanicLocalizationTree>(
+    schemaName: string,
+    options: TitanicLocalizationResolveOptions = {}
+  ): TTree {
+    const normalizedSchemaName = normalizeLocalizationPath(schemaName);
+
+    if (!normalizedSchemaName) {
+      return this.empty as TTree;
+    }
+
+    const groupName = this.schemaGroupNames[normalizedSchemaName] ?? normalizedSchemaName;
+
+    return (this.group<TTree>(groupName, options) ?? this.empty) as TTree;
+  }
+
   /** Returns true when a localized string exists for the provided path. */
   has(path: string, options: TitanicLocalizationResolveOptions = {}): boolean {
     return this.get(path, options) !== undefined;
@@ -627,6 +671,9 @@ export class TitanicLocalizationRegistry {
     });
     Object.keys(this.pathDefaultLocales).forEach((key) => {
       delete this.pathDefaultLocales[key];
+    });
+    Object.keys(this.schemaGroupNames).forEach((key) => {
+      delete this.schemaGroupNames[key];
     });
     this.branchPaths.clear();
   }
@@ -715,7 +762,12 @@ export class TitanicPackageTools {
 }
 
 /** Dynamic current-user payload shared by applications through Titanic.CurrentUser. */
-export type TitanicCurrentUser = Record<string, unknown>;
+export type TitanicCurrentUser = Record<string, unknown> & {
+  locale?: string | null;
+  localization?: string | null;
+  culture?: string | null;
+  language?: string | null;
+};
 
 /** Public facade for package resource registration and shared Titanic helpers. */
 export class Titanic {
@@ -739,12 +791,14 @@ export class Titanic {
     currentUser: TCurrentUser
   ): TCurrentUser {
     this.CurrentUser = currentUser;
+    this.Localization.setLocale(this.Localization.locale);
     return currentUser;
   }
 
   /** Clears current user data from the shared facade. */
   static clearCurrentUser(): void {
     this.CurrentUser = undefined;
+    this.Localization.setLocale(this.Localization.locale);
   }
 
   /** Registers all schemas exposed by a package descriptor. */
@@ -775,7 +829,8 @@ export class Titanic {
       this.Localization.registerModule(schema.name, schema.exports, {
         defaultLocale: schema.defaultLocale,
         groupName: schema.groupName,
-        packageName: schema.packageName
+        packageName: schema.packageName,
+        schemaName: schema.schemaName
       });
     }
 

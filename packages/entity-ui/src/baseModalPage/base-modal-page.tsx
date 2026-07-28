@@ -1,15 +1,41 @@
 import { Titanic } from "@titanic-entity/entity-react";
+import type { ReactNode } from "react";
 import { Button } from "../button";
-import { EntityContainer } from "../container";
-import { EntityLabel } from "../label";
+import { Container } from "../container";
+import { Label } from "../label";
 import { ResourceSvgIcon } from "../resourceSvgIcon/resource-svg-icon";
-import type { BaseModalPageProps } from "./base-modal-page-props";
+
+export interface BaseModalPageClassNames {
+  backdrop?: string;
+  card?: string;
+  closeButton?: string;
+  closeIcon?: string;
+  error?: string;
+  footer?: string;
+  header?: string;
+  root?: string;
+  title?: string;
+  warning?: string;
+}
+
+export interface BaseModalPageProps {
+  ariaLabel?: string;
+  children?: ReactNode;
+  classNames?: BaseModalPageClassNames;
+  closeLabel?: string;
+  error?: ReactNode;
+  footer?: ReactNode;
+  title?: ReactNode;
+  toolbar?: ReactNode;
+  validationWarning?: ReactNode;
+  onClose?: () => void;
+}
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
   return classNames.filter(Boolean).join(" ");
 }
 
-export function BaseModalPage({
+export const BaseModalPage = Titanic.define<BaseModalPageProps>("Titanic.UI.BaseModalPage", function BaseModalPage({
   ariaLabel,
   children,
   classNames,
@@ -24,21 +50,21 @@ export function BaseModalPage({
   const resolvedAriaLabel = ariaLabel ?? (typeof title === "string" ? title : undefined);
 
   return (
-    <EntityContainer
+    <Container
       ariaLabel={resolvedAriaLabel}
       ariaModal="true"
       className={joinClassNames("titanic-base-modal-page", classNames?.root)}
       role="dialog"
     >
-      <EntityContainer
+      <Container
         className={joinClassNames("titanic-base-modal-page__backdrop", classNames?.backdrop)}
         onClick={onClose}
       />
-      <EntityContainer className={joinClassNames("titanic-base-modal-page__card", classNames?.card)}>
+      <Container className={joinClassNames("titanic-base-modal-page__card", classNames?.card)}>
         <header className={joinClassNames("titanic-base-modal-page__header", classNames?.header)}>
-          <EntityContainer className={joinClassNames("titanic-base-modal-page__title", classNames?.title)}>
-            <EntityLabel as="strong" value={title} />
-          </EntityContainer>
+          <Container className={joinClassNames("titanic-base-modal-page__title", classNames?.title)}>
+            <Label as="strong" value={title} />
+          </Container>
           {onClose ? (
             <Button unstyled
               aria-label={closeLabel}
@@ -55,14 +81,14 @@ export function BaseModalPage({
           ) : null}
         </header>
 
-        <EntityLabel
+        <Label
           as="p"
           className={joinClassNames("titanic-base-modal-page__error", classNames?.error)}
           value={error}
           visible={Boolean(error)}
         />
         {validationWarning ? (
-          <EntityLabel
+          <Label
             as="p"
             className={joinClassNames("titanic-base-modal-page__warning", classNames?.warning)}
             role="alert"
@@ -78,9 +104,7 @@ export function BaseModalPage({
             {footer}
           </footer>
         ) : null}
-      </EntityContainer>
-    </EntityContainer>
+      </Container>
+    </Container>
   );
-}
-
-Titanic.define<BaseModalPageProps>("Titanic.UI.BaseModalPage", BaseModalPage);
+});

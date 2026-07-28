@@ -1,0 +1,274 @@
+.titanic-time {
+  --titanic-date-time-action-edge: 8px;
+  --titanic-date-time-action-gap: 6px;
+  --titanic-date-time-action-size: 32px;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.titanic-time__control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  height: var(--titanic-control-height, 44px);
+  min-height: var(--titanic-control-height, 44px);
+  box-sizing: border-box;
+  padding: 0 var(--titanic-date-time-action-edge, 8px) 0 12px;
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface);
+  font: inherit;
+  font-weight: 400;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.titanic-time .titanic-time__control.titanic-field__control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--titanic-date-time-action-gap, 6px);
+  width: 100%;
+  height: var(--titanic-control-height, 44px);
+  min-height: var(--titanic-control-height, 44px);
+  padding: 0 var(--titanic-date-time-action-edge, 8px) 0 12px !important;
+}
+
+.titanic-time__control:hover,
+.titanic-time__control:focus-within {
+  background: var(--titanic-ui-surface);
+}
+
+.titanic-time__control:focus-within {
+  box-shadow: none;
+}
+
+.titanic-time__control_disabled {
+  color: var(--titanic-ui-muted-text);
+  background: var(--titanic-ui-surface-muted);
+  cursor: not-allowed;
+}
+
+.titanic-time__control_invalid {
+  border-color: var(--titanic-ui-danger);
+  box-shadow: none;
+}
+
+.titanic-time__input {
+  display: block;
+  flex: 1 1 auto;
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  color: var(--titanic-ui-text);
+  background: transparent;
+  font: inherit;
+  font-weight: 400;
+  line-height: normal;
+  outline: none;
+}
+
+.titanic-time__input::placeholder {
+  color: var(--titanic-ui-muted-text);
+}
+
+.titanic-time__input:disabled {
+  cursor: not-allowed;
+}
+
+.titanic-time__dropdown-button {
+  display: grid;
+  flex: 0 0 var(--titanic-date-time-action-size, 32px);
+  width: var(--titanic-date-time-action-size, 32px);
+  min-width: var(--titanic-date-time-action-size, 32px);
+  height: var(--titanic-date-time-action-size, 32px);
+  min-height: var(--titanic-date-time-action-size, 32px);
+  border: 0 !important;
+  border-radius: 6px;
+  padding: 0 !important;
+  margin: 0 !important;
+  place-items: center;
+  line-height: 1;
+  color: var(--titanic-ui-accent);
+  background: transparent !important;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.titanic-time__dropdown-button:hover:not(:disabled),
+.titanic-time__dropdown-button[aria-expanded="true"] {
+  color: var(--titanic-ui-accent);
+  background: transparent;
+}
+
+.titanic-time__dropdown-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.titanic-time__popover {
+  left: auto;
+  right: 0;
+}
+
+.titanic-time__icon {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.titanic-time__icon::before,
+.titanic-time__icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.titanic-time__icon::before {
+  width: 2px;
+  height: 6px;
+  transform: translate(-50%, -5px);
+  transform-origin: center bottom;
+}
+
+.titanic-time__icon::after {
+  width: 6px;
+  height: 2px;
+  transform: translate(0, -50%) rotate(25deg);
+  transform-origin: left center;
+}
+
+.titanic-time__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.titanic-time__column {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.titanic-time__column-title {
+  color: var(--titanic-ui-muted-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.titanic-time__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  max-height: 178px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.titanic-time__option {
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 0 6px;
+  color: var(--titanic-ui-text);
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titanic-time__option:hover,
+.titanic-time__option:focus-visible {
+  border-color: var(--titanic-ui-border);
+  background: var(--titanic-ui-hover);
+  outline: none;
+}
+
+.titanic-time__option_active {
+  border-color: var(--titanic-ui-accent);
+  color: var(--titanic-ui-accent-text);
+  background: var(--titanic-ui-accent);
+}
+
+.titanic-time {
+  color: var(--titanic-ui-text);
+  font-family: inherit;
+}
+
+.titanic-time__control:focus-within {
+  border-color: var(--titanic-ui-border);
+  background: var(--titanic-ui-surface);
+  box-shadow: none;
+}
+
+.titanic-date-time-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 120;
+  display: grid;
+  gap: 10px;
+  width: min(318px, calc(100vw - 32px));
+  border: 1px solid var(--titanic-ui-border);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface);
+  box-shadow: 0 22px 54px color-mix(in srgb, var(--titanic-ui-accent) 18%, rgba(15, 23, 42, 0.18));
+}
+
+.titanic-time__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--titanic-ui-border-muted);
+  padding-top: 10px;
+}
+
+.titanic-time__actions button {
+  min-height: 30px;
+  border: 1px solid var(--titanic-ui-border);
+  border-radius: 7px;
+  padding: 0 10px;
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titanic-time__actions button:hover:not(:disabled) {
+  border-color: var(--titanic-ui-accent);
+  background: var(--titanic-ui-hover);
+}
+
+.titanic-time__actions button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.titanic-time__popover {
+  left: auto;
+  right: 0;
+  border-color: var(--titanic-ui-border);
+}
+
+.titanic-time__control_invalid {
+  border-color: var(--titanic-ui-danger, #b42318);
+  box-shadow: none;
+}

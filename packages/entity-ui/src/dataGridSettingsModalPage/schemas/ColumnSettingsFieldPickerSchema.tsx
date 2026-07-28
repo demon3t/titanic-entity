@@ -1,9 +1,10 @@
 import type { ChangeEvent } from "react";
-import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { Titanic } from "@titanic-entity/entity-react";
 import type { EntityDataGridLabels } from "../../dataGrid/data-grid-settings";
 import { Button } from "../../button";
-import { EntityContainer } from "../../container";
-import { EntityLabel } from "../../label";
+import { Container } from "../../container";
+import { Label } from "../../label";
+import { NavigationTrail, type NavigationTrailItem } from "../../navigationTrail";
 import {
   formatReferenceTrailLabel,
   type ColumnSettingsAvailableColumnItem,
@@ -18,7 +19,7 @@ export type {
   ColumnSettingsFieldPickerTrailItem
 } from "../model/columnSettingsFieldPickerModel";
 
-export interface ColumnSettingsFieldPickerPathItem {
+export interface ColumnSettingsFieldPickerPathItem extends NavigationTrailItem {
   label: string;
   path: string;
 }
@@ -41,7 +42,7 @@ export interface ColumnSettingsFieldPickerSchemaProps {
   onSearchChange: (value: string) => void;
 }
 
-function ColumnSettingsFieldPickerSchemaNative({
+export const ColumnSettingsFieldPickerSchema = Titanic.define<ColumnSettingsFieldPickerSchemaProps>(columnSettingsDefinedComponentNames.ColumnSettingsFieldPicker, function ColumnSettingsFieldPickerSchema({
   availableColumns,
   emptyText,
   isFieldVisible,
@@ -62,14 +63,14 @@ function ColumnSettingsFieldPickerSchemaNative({
     : "titanic-data-grid-column-modal__available";
 
   return (
-    <EntityContainer
+    <Container
       ariaLabel={labels.availableColumnsTitle}
       className={availableClassName}
     >
-      <EntityContainer className="titanic-data-grid-column-modal__panel-head">
-        <EntityContainer>
-          <EntityLabel as="h3" value={labels.availableColumnsTitle} />
-        </EntityContainer>
+      <Container className="titanic-data-grid-column-modal__panel-head">
+        <Container>
+          <Label as="h3" value={labels.availableColumnsTitle} />
+        </Container>
         <label className="titanic-data-grid-column-modal__field-search">
           <input
             aria-label={labels.searchColumnsPlaceholder}
@@ -79,7 +80,7 @@ function ColumnSettingsFieldPickerSchemaNative({
             onChange={(event: ChangeEvent<HTMLInputElement>) => onSearchChange(event.target.value)}
           />
         </label>
-      </EntityContainer>
+      </Container>
 
       {hasPathPicker ? (
         <ColumnSettingsFieldPickerPath
@@ -105,80 +106,34 @@ function ColumnSettingsFieldPickerSchemaNative({
           onAddColumn={onAddAvailableColumn}
         />
       )}
-    </EntityContainer>
+    </Container>
   );
-}
-
-Titanic.define<ColumnSettingsFieldPickerSchemaProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsFieldPicker,
-  ColumnSettingsFieldPickerSchemaNative
-);
-
-export const ColumnSettingsFieldPickerSchema = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsFieldPickerSchemaProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsFieldPicker)!;
+});
 
 export interface ColumnSettingsFieldPickerPathProps {
   pathItems: readonly ColumnSettingsFieldPickerPathItem[];
   onPathItemClick: (index: number) => void;
 }
 
-function ColumnSettingsFieldPickerPathNative({
+export const ColumnSettingsFieldPickerPath = Titanic.define<ColumnSettingsFieldPickerPathProps>(columnSettingsDefinedComponentNames.ColumnSettingsFieldPickerPath, function ColumnSettingsFieldPickerPath({
   pathItems,
   onPathItemClick
 }: ColumnSettingsFieldPickerPathProps) {
-  const pathLabel = pathItems.map((item) => item.label).join(" - ");
-  const currentPathIndex = Math.max(0, pathItems.length - 1);
-
-  if (pathItems.length === 0) {
-    return null;
-  }
-
   return (
-    <EntityContainer
-      ariaLabel={pathLabel}
-      className="titanic-data-grid-column-modal__field-picker-path"
-      role="navigation"
-      title={pathLabel}
-    >
-      <EntityContainer className="titanic-data-grid-column-modal__field-picker-trail">
-        {pathItems.map((item, index) => {
-          const isActive = index === currentPathIndex;
-          const crumb = (
-            <Button unstyled
-              aria-current={isActive ? "page" : undefined}
-              className={isActive
-                ? "titanic-data-grid-column-modal__field-picker-crumb titanic-data-grid-column-modal__field-picker-crumb_active"
-                : "titanic-data-grid-column-modal__field-picker-crumb"}
-              type="button"
-              onClick={() => onPathItemClick(index)}
-            >
-              {item.label}
-            </Button>
-          );
-
-          return index === 0 ? (
-            <span key={item.path || "__root"}>{crumb}</span>
-          ) : (
-            <span className="titanic-data-grid-column-modal__field-picker-step" key={item.path}>
-              <span className="titanic-data-grid-column-modal__field-picker-separator">-</span>
-              {crumb}
-            </span>
-          );
-        })}
-      </EntityContainer>
-    </EntityContainer>
+    <NavigationTrail
+      classNames={{
+        root: "titanic-data-grid-column-modal__field-picker-path",
+        list: "titanic-data-grid-column-modal__field-picker-trail",
+        item: "titanic-data-grid-column-modal__field-picker-crumb",
+        activeItem: "titanic-data-grid-column-modal__field-picker-crumb_active",
+        step: "titanic-data-grid-column-modal__field-picker-step",
+        separator: "titanic-data-grid-column-modal__field-picker-separator"
+      }}
+      items={pathItems}
+      onItemClick={(_, index) => onPathItemClick(index)}
+    />
   );
-}
-
-Titanic.define<ColumnSettingsFieldPickerPathProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsFieldPickerPath,
-  ColumnSettingsFieldPickerPathNative
-);
-
-export const ColumnSettingsFieldPickerPath = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsFieldPickerPathProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsFieldPickerPath)!;
+});
 
 export interface ColumnSettingsFieldPickerListProps {
   emptyText: string;
@@ -188,7 +143,7 @@ export interface ColumnSettingsFieldPickerListProps {
   onOpenReference: (item: ColumnSettingsFieldPickerItem) => void;
 }
 
-function ColumnSettingsFieldPickerListNative({
+export const ColumnSettingsFieldPickerList = Titanic.define<ColumnSettingsFieldPickerListProps>(columnSettingsDefinedComponentNames.ColumnSettingsFieldPickerList, function ColumnSettingsFieldPickerList({
   emptyText,
   isFieldVisible,
   items,
@@ -196,14 +151,15 @@ function ColumnSettingsFieldPickerListNative({
   onOpenReference
 }: ColumnSettingsFieldPickerListProps) {
   return (
-    <EntityContainer className="titanic-data-grid-column-modal__field-picker-list">
+    <Container className="titanic-data-grid-column-modal__field-picker-list">
       {items.length > 0 ? items.map((item) => {
         const canOpenReference = item.isReference && Boolean(item.referenceTableName);
         const referenceLabel = formatReferenceTrailLabel(item);
         const isVisible = isFieldVisible(item);
+        const mainButtonDisabled = isVisible;
 
         return (
-          <EntityContainer
+          <Container
             className={canOpenReference
               ? "titanic-data-grid-column-modal__field-picker-row titanic-data-grid-column-modal__field-picker-row_reference"
               : "titanic-data-grid-column-modal__field-picker-row"}
@@ -213,11 +169,12 @@ function ColumnSettingsFieldPickerListNative({
               className={canOpenReference
                 ? "titanic-data-grid-column-modal__field-picker-main titanic-data-grid-column-modal__field-picker-main_reference"
                 : "titanic-data-grid-column-modal__field-picker-main"}
-              disabled={isVisible}
+              disabled={mainButtonDisabled}
+              title={canOpenReference ? referenceLabel : undefined}
               type="button"
               onClick={() => onAddField(item)}
             >
-              <EntityLabel as="strong" value={item.label} />
+              <Label as="strong" value={item.label} />
               {canOpenReference ? <span>{item.referenceEntityLabel}</span> : null}
             </Button>
             {canOpenReference ? (
@@ -231,23 +188,14 @@ function ColumnSettingsFieldPickerListNative({
                 +
               </Button>
             ) : null}
-          </EntityContainer>
+          </Container>
         );
       }) : (
-        <EntityLabel as="p" className="titanic-data-grid-column-modal__empty" value={emptyText} />
+        <Label as="p" className="titanic-data-grid-column-modal__empty" value={emptyText} />
       )}
-    </EntityContainer>
+    </Container>
   );
-}
-
-Titanic.define<ColumnSettingsFieldPickerListProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsFieldPickerList,
-  ColumnSettingsFieldPickerListNative
-);
-
-export const ColumnSettingsFieldPickerList = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsFieldPickerListProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsFieldPickerList)!;
+});
 
 export interface ColumnSettingsAvailableColumnsListProps {
   columns: readonly ColumnSettingsAvailableColumnItem[];
@@ -255,13 +203,13 @@ export interface ColumnSettingsAvailableColumnsListProps {
   onAddColumn: (key: string) => void;
 }
 
-function ColumnSettingsAvailableColumnsListNative({
+export const ColumnSettingsAvailableColumnsList = Titanic.define<ColumnSettingsAvailableColumnsListProps>(columnSettingsDefinedComponentNames.ColumnSettingsAvailableColumnsList, function ColumnSettingsAvailableColumnsList({
   columns,
   emptyText,
   onAddColumn
 }: ColumnSettingsAvailableColumnsListProps) {
   return (
-    <EntityContainer className="titanic-data-grid-column-modal__available-list">
+    <Container className="titanic-data-grid-column-modal__available-list">
       {columns.length > 0 ? columns.map((column) => (
         <Button unstyled
           className="titanic-data-grid-column-modal__available-row"
@@ -271,22 +219,13 @@ function ColumnSettingsAvailableColumnsListNative({
           onClick={() => onAddColumn(column.key)}
         >
           <span>
-            <EntityLabel as="strong" value={column.label} />
+            <Label as="strong" value={column.label} />
             {column.path ? <small>{column.path}</small> : null}
           </span>
         </Button>
       )) : (
-        <EntityLabel as="p" className="titanic-data-grid-column-modal__empty" value={emptyText} />
+        <Label as="p" className="titanic-data-grid-column-modal__empty" value={emptyText} />
       )}
-    </EntityContainer>
+    </Container>
   );
-}
-
-Titanic.define<ColumnSettingsAvailableColumnsListProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsAvailableColumnsList,
-  ColumnSettingsAvailableColumnsListNative
-);
-
-export const ColumnSettingsAvailableColumnsList = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsAvailableColumnsListProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsAvailableColumnsList)!;
+});

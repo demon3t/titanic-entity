@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { Titanic } from "@titanic-entity/entity-react";
 import type {
   EntityDataGridColumnSettingsMode,
   EntityDataGridLabels
 } from "../../dataGrid/data-grid-settings";
-import { EntityContainer } from "../../container";
-import { EntityLabel } from "../../label";
+import { Container } from "../../container";
+import { Label } from "../../label";
 import { columnSettingsDefinedComponentNames } from "./component-names";
 
 export interface ColumnSettingsVisibleFieldsSchemaProps {
@@ -17,7 +17,7 @@ export interface ColumnSettingsVisibleFieldsSchemaProps {
   style: CSSProperties;
 }
 
-function ColumnSettingsVisibleFieldsSchemaNative({
+export const ColumnSettingsVisibleFieldsSchema = Titanic.define<ColumnSettingsVisibleFieldsSchemaProps>(columnSettingsDefinedComponentNames.ColumnSettingsVisibleFields, function ColumnSettingsVisibleFieldsSchema({
   children,
   gridRef,
   hasVisibleFields,
@@ -26,14 +26,14 @@ function ColumnSettingsVisibleFieldsSchemaNative({
   style
 }: ColumnSettingsVisibleFieldsSchemaProps) {
   return (
-    <EntityContainer className="titanic-data-grid-column-modal__panel">
-      <EntityContainer className="titanic-data-grid-column-modal__panel-head">
-        <EntityContainer>
-          <EntityLabel as="h3" value={labels.visibleColumnsTitle} />
-        </EntityContainer>
-      </EntityContainer>
+    <Container className="titanic-data-grid-column-modal__panel">
+      <Container className="titanic-data-grid-column-modal__panel-head">
+        <Container>
+          <Label as="h3" value={labels.visibleColumnsTitle} />
+        </Container>
+      </Container>
 
-      <EntityContainer
+      <Container
         className={mode === "list"
           ? "titanic-data-grid-column-modal__grid titanic-data-grid-column-modal__grid_list"
           : "titanic-data-grid-column-modal__grid titanic-data-grid-column-modal__grid_tile"}
@@ -41,18 +41,9 @@ function ColumnSettingsVisibleFieldsSchemaNative({
         style={style}
       >
         {hasVisibleFields ? children : (
-          <EntityLabel as="p" className="titanic-data-grid-column-modal__empty" value={labels.noSelectedColumns} />
+          <Label as="p" className="titanic-data-grid-column-modal__empty" value={labels.noSelectedColumns} />
         )}
-      </EntityContainer>
-    </EntityContainer>
+      </Container>
+    </Container>
   );
-}
-
-Titanic.define<ColumnSettingsVisibleFieldsSchemaProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsVisibleFields,
-  ColumnSettingsVisibleFieldsSchemaNative
-);
-
-export const ColumnSettingsVisibleFieldsSchema = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsVisibleFieldsSchemaProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsVisibleFields)!;
+});

@@ -1,23 +1,27 @@
 export const entityReactComponentNames = {
-  BaseEntityPage: "BaseEntityPage",
+  ActionBar: "ActionBar",
+  AlertModalPage: "AlertModalPage",
+  ApprovalModalPage: "ApprovalModalPage",
+  BasePage: "BasePage",
   BaseModalPage: "BaseModalPage",
   BaseSection: "BaseSection",
   BaseEntitySection: "BaseSection",
   Button: "Button",
-  EntityEditPage: "BaseEntityPage",
-  EntityDataGrid: "EntityDataGrid",
+  CollapsiblePanel: "CollapsiblePanel",
+  EntityEditPage: "BasePage",
+  DataGrid: "DataGrid",
   EntityDataGridRowContextMenu: "EntityDataGridRowContextMenu",
-  EntityContainer: "EntityContainer",
+  Container: "Container",
   EntityDragDropItem: "EntityDragDropItem",
-  EntityExpander: "EntityExpander",
+  Expander: "Expander",
+  EntityExpander: "Expander",
   EntityField: "EntityField",
   EntityForm: "EntityForm",
-  EntityGrid: "EntityGrid",
+  Grid: "Grid",
   EntityJsonEditor: "EntityJsonEditor",
-  EntityLabel: "EntityLabel",
+  Label: "Label",
   LookupInput: "LookupInput",
-  EntityPageActionButton: "EntityPageActionButton",
-  EntityPageActions: "EntityPageActions",
+  NavigationTrail: "NavigationTrail",
   EntityRecordsPage: "EntityRecordsPage",
   EntityRecordsSection: "BaseSection",
   DateInput: "DateInput",
@@ -26,7 +30,6 @@ export const entityReactComponentNames = {
   PackageSiteShell: "PackageSiteShell",
   RandomGifLoader: "RandomGifLoader",
   ResourceSvgIcon: "ResourceSvgIcon",
-  SiteCollapsiblePanel: "SiteCollapsiblePanel",
   SiteIconButton: "SiteIconButton",
   SiteIconDropdown: "SiteIconDropdown",
   SiteLayout: "SiteLayout",
@@ -35,10 +38,10 @@ export const entityReactComponentNames = {
 } as const;
 
 export const entityReactTemplateNames = {
-  BaseEntityPage: entityReactComponentNames.BaseEntityPage,
+  BasePage: entityReactComponentNames.BasePage,
   BaseEntitySection: entityReactComponentNames.BaseSection,
   BaseSection: entityReactComponentNames.BaseSection,
-  EntityEditPage: entityReactComponentNames.BaseEntityPage,
+  EntityEditPage: entityReactComponentNames.BasePage,
   EntityRecordsSection: entityReactComponentNames.BaseSection
 } as const;
 
@@ -53,8 +56,8 @@ export const entityReactFieldNames = {
 } as const;
 
 export const entityReactGridNames = {
-  EntityDataGrid: entityReactComponentNames.EntityDataGrid,
-  EntityGrid: entityReactComponentNames.EntityGrid
+  DataGrid: entityReactComponentNames.DataGrid,
+  Grid: entityReactComponentNames.Grid
 } as const;
 
 export const entityReactEnumNames = {

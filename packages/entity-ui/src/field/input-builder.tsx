@@ -8,7 +8,7 @@ import { DateTimeInput, type DateTimeInputProps } from "../dateTimeInput";
 import { EntityJsonEditor, type EntityJsonEditorProps } from "../jsonEditor/json-editor";
 import { LookupInput, type LookupInputMode, type LookupInputProps, type LookupInputValue } from "../lookupInput";
 import { TimeInput, type TimeInputProps } from "../timeInput";
-import type { EntityFieldProps } from "./field-props";
+import type { EntityFieldProps } from "./index";
 import { InputResolver } from "./input-resolver";
 
 const CONTROL_CLASS_NAME = "titanic-field__control";
@@ -28,7 +28,7 @@ export interface InputBuilderProps {
   onChange: NonNullable<EntityFieldProps["onChange"]>;
 }
 
-export function InputBuilder(props: InputBuilderProps) {
+export const InputBuilder = Titanic.define<InputBuilderProps>("Titanic.UI.InputBuilder", function InputBuilder(props: InputBuilderProps) {
   const resolution = InputResolver.resolve(props.column);
 
   switch (resolution.inputKind) {
@@ -53,7 +53,7 @@ export function InputBuilder(props: InputBuilderProps) {
     default:
       return <DeferredStringControl {...props} />;
   }
-}
+});
 
 function JsonControl({ column, fieldId, keyName, value, readOnly, onChange }: InputBuilderProps) {
   const JsonEditorComponent = useUiField<EntityJsonEditorProps>("EntityJsonEditor", EntityJsonEditor);
@@ -225,9 +225,10 @@ function LookupControl({ column, displayValue: loadedDisplayValue, fieldId, keyN
     void lookupOptions.reload({ rowCount: 1, searchText: "", skip: 0, value: lookupValue });
   }, [lookupOptions.reload, lookupValue, normalizedValue, resolvedDisplayValue, selectedOption]);
 
-  const reloadCurrent = useCallback(() => {
-    void lookupOptions.reload({ rowCount: pageSize, searchText, skip: 0 });
-  }, [lookupOptions.reload, pageSize, searchText]);
+  const reloadCurrent = useCallback((nextSearchText: string) => {
+    setSearchText(nextSearchText);
+    void lookupOptions.reload({ rowCount: pageSize, searchText: nextSearchText, skip: 0 });
+  }, [lookupOptions.reload, pageSize]);
 
   const handleSearchChange = useCallback(async (nextSearchText: string) => {
     setSearchText(nextSearchText);
@@ -262,7 +263,7 @@ function LookupControl({ column, displayValue: loadedDisplayValue, fieldId, keyN
       error={lookupOptions.error}
       searchDelayMs={getLookupSearchDelayMs(column)}
       minSearchLength={getLookupMinSearchLength(column)}
-      emptyText={column.placeholder ?? "Не выбрано"}
+      emptyText={column.placeholder}
       onOpen={reloadCurrent}
       onSearchChange={handleSearchChange}
       onLoadMore={handleLoadMore}
@@ -516,5 +517,3 @@ function isValidTimePart(value: number, max: number): boolean {
 function padTimePart(value: number): string {
   return String(value).padStart(2, "0");
 }
-
-Titanic.define<InputBuilderProps>("Titanic.UI.InputBuilder", InputBuilder);

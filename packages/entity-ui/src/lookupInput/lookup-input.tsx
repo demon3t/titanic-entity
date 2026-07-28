@@ -1,970 +1,461 @@
-Titanic.define("Titanic.UI.LookupInput", {
-  attributes: {
-    id: {},
-    name: {},
-    value: { default: null },
-    displayValue: { default: "" },
-    items: { default: [] },
-    mode: { default: "enum" },
-    disabled: { default: false },
-    emptyText: { default: "Not selected" },
-    noResultsText: { default: "No results" },
-    loadingText: { default: "Loading..." },
-    loadingMoreText: { default: "Loading..." },
-    errorText: { default: "Failed to load values" },
-    className: {},
-    inputClassName: {},
-    editable: { default: true },
-    renderFrame: { default: true },
-    loading: { default: false },
-    loadingMore: { default: false },
-    hasMore: { default: false },
-    error: { default: null },
-    searchDelayMs: { default: 1500 },
-    minSearchLength: { default: 3 },
-    getId: {},
-    getLabel: {},
-    required: { default: false },
-    title: {},
-    validationError: {},
-    visible: { default: true },
-    onChange: {},
-    onOpen: {},
-    onSearchChange: {},
-    onLoadMore: {},
-    fallbackId: { id: true },
-    rootRef: { ref: true, default: null },
-    modalRef: { ref: true, default: null },
-    loadMorePendingRef: { ref: true, default: false },
-    searchTimerRef: { ref: true, default: null },
-    searchRequestIdRef: { ref: true, default: 0 },
-    suggestionsOpen: { state: true, default: false },
-    modalOpen: { state: true, default: false },
-    searchPending: { state: true, default: false },
-    resolvedId: {
-      value(this: any): string {
-        return this.attributes.id ?? this.attributes.fallbackId;
-      }
-    },
-    resolvedName: {
-      value(this: any): string {
-        return this.attributes.name ?? this.attributes.id ?? String(this.attributes.fallbackId).replace(/:/g, "");
-      }
-    },
-    readOnly: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.disabled) || !this.attributes.editable;
-      }
-    },
-    resolvedSearchDelayMs: {
-      value(this: any): number {
-        return this.methods.normalizeLookupSearchDelayMs(this.attributes.searchDelayMs);
-      }
-    },
-    resolvedMinSearchLength: {
-      value(this: any): number {
-        return this.methods.normalizeLookupMinSearchLength(this.attributes.minSearchLength);
-      }
-    },
-    errorId: {
-      value(this: any): string | undefined {
-        return this.attributes.validationError ? `${this.attributes.resolvedId}-error` : undefined;
-      }
-    },
-    validationControlProps: {
-      value(this: any): Record<string, unknown> {
-        return this.methods.getValidationControlProps(this.attributes.resolvedId, this.attributes.validationError);
-      }
-    },
-    normalizedValue: {
-      value(this: any): string {
-        return this.methods.normalizeLookupValue(this.attributes.value);
-      }
-    },
-    normalizedItems: {
-      deps: { array: [{ attr: "items" }, { attr: "getId" }, { attr: "getLabel" }] },
-      memo(this: any): readonly any[] {
-        const items = Array.isArray(this.attributes.items) ? this.attributes.items : [];
+import { Titanic } from "@titanic-entity/entity-react";
+import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type UIEvent } from "react";
+import { Button } from "../button";
+import { InputFieldFrame } from "../inputFieldFrame";
+import { getLookupInputLabels, getLookupInputLocale } from "./lookup-input-lcz";
+import type { LookupInputItem, LookupInputProps, LookupInputValue } from "./index";
 
-        return items.map((item: any) => {
-          const itemValue = this.methods.getItemId(item);
-          const label = this.methods.getItemLabel(item);
+interface NormalizedLookupItem<TItem extends LookupInputItem> {
+  item: TItem;
+  label: string;
+  normalizedValue: string;
+  searchValue: string;
+  value: LookupInputValue;
+}
 
-          return {
-            item,
-            label,
-            normalizedValue: this.methods.normalizeLookupValue(itemValue),
-            searchValue: this.methods.createLookupSearchValue(label, itemValue),
-            value: itemValue
-          };
-        });
-      }
-    },
-    selectedOption: {
-      value(this: any): any {
-        return this.attributes.normalizedItems.find((item: any) => item.normalizedValue === this.attributes.normalizedValue);
-      }
-    },
-    selectedLabel: {
-      value(this: any): string {
-        return this.attributes.selectedOption?.label
-          ?? this.attributes.displayValue
-          ?? (this.attributes.normalizedValue ? this.attributes.normalizedValue : "");
-      }
-    },
-    draft: {
-      state: true,
-      default(this: any): string {
-        return this.attributes.selectedLabel;
-      }
-    },
-    optionSearchText: {
-      value(this: any): string {
-        return this.attributes.draft === this.attributes.selectedLabel ? "" : this.attributes.draft;
-      }
-    },
-    visibleItems: {
-      deps: { array: [{ attr: "normalizedItems" }, { attr: "optionSearchText" }, { attr: "searchPending" }] },
-      memo(this: any): readonly any[] {
-        const normalizedSearchText = this.methods.normalizeLookupSearchText(this.attributes.optionSearchText);
-
-        if (!normalizedSearchText || this.attributes.searchPending) {
-          return this.attributes.normalizedItems;
-        }
-
-        return this.attributes.normalizedItems.filter((item: any) => item.searchValue.includes(normalizedSearchText));
-      }
-    },
-    rootClasses: {
-      value(this: any): string {
-        return this.methods.joinClassNames(
-          "titanic-lookup",
-          "titanic-field__control",
-          "titanic-lookup_framed",
-          this.attributes.readOnly ? "titanic-lookup_disabled" : undefined,
-          this.attributes.className
-        );
-      }
-    },
-    controlClasses: {
-      value(this: any): string {
-        return this.methods.joinClassNames(
-          "titanic-lookup__control",
-          "titanic-lookup__control_embedded",
-          this.attributes.readOnly ? "titanic-lookup__control_disabled" : undefined
-        );
-      }
-    },
-    inputClasses: {
-      value(this: any): string {
-        return this.methods.joinClassNames("titanic-lookup__input", this.attributes.inputClassName);
-      }
-    },
-    actionAriaExpanded: {
-      value(this: any): boolean {
-        return this.attributes.mode === "lookup" ? this.attributes.modalOpen : this.attributes.suggestionsOpen;
-      }
-    },
-    actionAriaHasPopup: {
-      value(this: any): string {
-        return this.attributes.mode === "lookup" ? "dialog" : "listbox";
-      }
-    },
-    actionAriaLabel: {
-      value(this: any): string {
-        return this.attributes.mode === "lookup" ? "Open search" : "Open list";
-      }
-    },
-    actionIconClass: {
-      value(this: any): string {
-        return this.attributes.mode === "lookup" ? "titanic-lookup__search-icon" : "titanic-lookup__chevron";
-      }
-    },
-    ariaBusy: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.loading || this.attributes.loadingMore);
-      }
-    },
-    shouldRenderSuggestions: {
-      value(this: any): boolean {
-        return this.attributes.suggestionsOpen
-          && this.methods.canRenderOptionList(
-            this.attributes.visibleItems,
-            this.attributes.loading,
-            this.attributes.loadingMore,
-            this.attributes.error
-          );
-      }
-    },
-    shouldRenderModalList: {
-      value(this: any): boolean {
-        return this.methods.canRenderOptionList(
-          this.attributes.visibleItems,
-          this.attributes.loading,
-          this.attributes.loadingMore,
-          this.attributes.error
-        );
-      }
-    },
-    modalTitleId: {
-      value(this: any): string {
-        return `${this.attributes.resolvedId}-lookup-title`;
-      }
-    },
-    modalListClasses: {
-      value(this: any): string {
-        return this.methods.joinClassNames("titanic-lookup__popover", "titanic-lookup__modal-list");
-      }
-    },
-    syncDraftEffect: {
-      deps: { array: [{ attr: "modalOpen" }, { attr: "selectedLabel" }, { attr: "suggestionsOpen" }] },
-      effect(this: any): void {
-        if (!this.attributes.suggestionsOpen && !this.attributes.modalOpen) {
-          this.attributes.setDraft(this.attributes.selectedLabel);
-        }
-      }
-    },
-    outsidePopoverEffect: {
-      deps: { array: [{ attr: "modalOpen" }, { attr: "suggestionsOpen" }] },
-      effect(this: any): void | (() => void) {
-        if (!this.attributes.suggestionsOpen && !this.attributes.modalOpen) {
-          return;
-        }
-
-        const handlePointerDown = (event: PointerEvent) => {
-          const target = event.target as Node;
-          const modal = this.attributes.modalRef.current;
-          const root = this.attributes.rootRef.current;
-
-          if (modal?.contains(target) || root?.contains(target)) {
-            return;
-          }
-
-          this.attributes.setSuggestionsOpen(false);
-          this.attributes.setModalOpen(false);
+export const LookupInput = Titanic.define<LookupInputProps<any>>(
+  "Titanic.UI.LookupInput",
+  function LookupInput<TItem extends LookupInputItem = LookupInputItem>({
+    id,
+    name,
+    value = null,
+    displayValue = "",
+    items = [],
+    mode = "enum",
+    locale,
+    labels,
+    disabled = false,
+    emptyText,
+    noResultsText,
+    loadingText,
+    loadingMoreText,
+    errorText,
+    className,
+    inputClassName,
+    editable = true,
+    renderFrame = true,
+    loading = false,
+    loadingMore = false,
+    hasMore = false,
+    error = null,
+    searchDelayMs = 1500,
+    minSearchLength = 3,
+    getId,
+    getLabel,
+    required = false,
+    title,
+    validationError,
+    visible = true,
+    onChange,
+    onOpen,
+    onSearchChange,
+    onLoadMore
+  }: LookupInputProps<TItem>) {
+    const fallbackId = useId();
+    const resolvedId = id ?? fallbackId;
+    const resolvedName = name ?? id ?? fallbackId.replace(/:/g, "");
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const modalRef = useRef<HTMLDivElement | null>(null);
+    const loadMorePendingRef = useRef(false);
+    const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const searchRequestIdRef = useRef(0);
+    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [searchPending, setSearchPending] = useState(false);
+    const readOnly = disabled || !editable;
+    const resolvedSearchDelayMs = normalizePositiveInteger(searchDelayMs);
+    const resolvedMinSearchLength = normalizePositiveInteger(minSearchLength);
+    const errorId = validationError ? `${resolvedId}-error` : undefined;
+    const currentLocale = getLookupInputLocale(locale);
+    const resolvedLabels = mergeLookupLabels(
+      { ...getLookupInputLabels(currentLocale), ...(labels ?? {}) },
+      { emptyText, noResultsText, loadingText, loadingMoreText, errorText }
+    );
+    const normalizedValue = normalizeLookupValue(value);
+    const normalizedItems = useMemo<readonly NormalizedLookupItem<TItem>[]>(() => (
+      (Array.isArray(items) ? items : []).map((item) => {
+        const itemValue = getId ? getId(item) : defaultEntityId(item);
+        const label = getLabel ? getLabel(item) : defaultEntityLabel(item);
+        return {
+          item,
+          label,
+          normalizedValue: normalizeLookupValue(itemValue),
+          searchValue: normalizeLookupSearchText(`${label} ${normalizeLookupValue(itemValue)}`),
+          value: itemValue
         };
+      })
+    ), [getId, getLabel, items]);
+    const selectedOption = normalizedItems.find((item) => item.normalizedValue === normalizedValue);
+    const selectedLabel = normalizedValue
+      ? selectedOption?.label ?? displayValue ?? normalizedValue
+      : "";
+    const [draft, setDraft] = useState(selectedLabel);
+    const optionSearchText = draft === selectedLabel ? "" : draft;
+    const visibleItems = useMemo(() => {
+      const normalizedSearchText = normalizeLookupSearchText(optionSearchText);
+      return !normalizedSearchText
+        ? normalizedItems
+        : normalizedItems.filter((item) => item.searchValue.includes(normalizedSearchText));
+    }, [normalizedItems, optionSearchText]);
 
-        const handleKeyDown = (event: KeyboardEvent) => {
-          if (event.key !== "Escape") {
-            return;
-          }
-
-          this.attributes.setSuggestionsOpen(false);
-          this.attributes.setModalOpen(false);
-        };
-
-        document.addEventListener("pointerdown", handlePointerDown, true);
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-          document.removeEventListener("pointerdown", handlePointerDown, true);
-          document.removeEventListener("keydown", handleKeyDown);
-        };
+    const clearScheduledSearch = () => {
+      if (searchTimerRef.current != null) {
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
       }
-    },
-    loadingMoreEffect: {
-      deps: { array: [{ attr: "loadingMore" }] },
-      effect(this: any): void {
-        if (!this.attributes.loadingMore) {
-          this.attributes.loadMorePendingRef.current = false;
-        }
-      }
-    },
-    cleanupSearchEffect: {
-      deps: { array: [] },
-      effect(this: any): () => void {
-        return () => {
-          this.methods.clearScheduledSearch();
-          this.attributes.searchRequestIdRef.current += 1;
-        };
-      }
-    }
-  },
-  methods: {
-    defaultEntityId(this: any, item: any): string | number | null {
-      return item?.value ?? item?.id ?? null;
-    },
+    };
 
-    defaultEntityLabel(this: any, item: any): string {
-      const title = item?.displayValue
-        || item?.title
-        || (item?.value == null ? "" : String(item.value))
-        || (item?.id == null ? "" : String(item.id));
+    const runSearch = (nextValue: string) => {
+      clearScheduledSearch();
+      const requestId = searchRequestIdRef.current + 1;
+      searchRequestIdRef.current = requestId;
+      setSearchPending(true);
 
-      return item?.index == null ? title : `${item.index}. ${title}`;
-    },
-
-    getItemId(this: any, item: any): string | number | null {
-      return this.attributes.getId ? this.attributes.getId(item) : this.methods.defaultEntityId(item);
-    },
-
-    getItemLabel(this: any, item: any): string {
-      return this.attributes.getLabel ? this.attributes.getLabel(item) : this.methods.defaultEntityLabel(item);
-    },
-
-    getValidationControlProps(this: any, fieldId: string, validationError?: string | null): Record<string, unknown> {
-      return validationError
-        ? {
-            "aria-errormessage": `${fieldId}-error`,
-            "aria-invalid": true
-          }
-        : {};
-    },
-
-    normalizeLookupValue(this: any, value: string | number | null): string {
-      return value == null ? "" : String(value);
-    },
-
-    createLookupSearchValue(this: any, label: string, value: string | number | null): string {
-      return this.methods.normalizeLookupSearchText(`${label} ${this.methods.normalizeLookupValue(value)}`);
-    },
-
-    normalizeLookupSearchText(this: any, value: string): string {
-      return String(value ?? "").trim().toLocaleLowerCase();
-    },
-
-    normalizeLookupSearchDelayMs(this: any, value: number): number {
-      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-    },
-
-    normalizeLookupMinSearchLength(this: any, value: number): number {
-      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-    },
-
-    canRenderOptionList(this: any, items: readonly any[], loading: boolean, loadingMore: boolean, error?: Error | null): boolean {
-      return items.length > 0 || loading || loadingMore || Boolean(error);
-    },
-
-    joinClassNames(this: any, ...classNames: Array<string | false | null | undefined>): string {
-      return classNames.filter(Boolean).join(" ");
-    },
-
-    getOptionClassName(this: any, option: any): string {
-      return this.methods.joinClassNames(
-        "titanic-lookup__option",
-        option?.normalizedValue === this.attributes.normalizedValue ? "titanic-lookup__option_active" : undefined
-      );
-    },
-
-    getOptionKey(this: any, option: any, index: number): string {
-      return `${option?.normalizedValue ?? "lookup-option"}-${index}`;
-    },
-
-    clearScheduledSearch(this: any): void {
-      if (this.attributes.searchTimerRef.current == null) {
-        return;
-      }
-
-      clearTimeout(this.attributes.searchTimerRef.current);
-      this.attributes.searchTimerRef.current = null;
-    },
-
-    cancelPendingSearch(this: any): void {
-      this.methods.clearScheduledSearch();
-      this.attributes.searchRequestIdRef.current += 1;
-      this.attributes.setSearchPending(false);
-    },
-
-    runSearch(this: any, nextValue: string): void {
-      this.methods.clearScheduledSearch();
-
-      const requestId = this.attributes.searchRequestIdRef.current + 1;
-      this.attributes.searchRequestIdRef.current = requestId;
-      this.attributes.setSearchPending(true);
-
-      Promise.resolve(this.attributes.onSearchChange?.(nextValue)).finally(() => {
-        if (this.attributes.searchRequestIdRef.current === requestId) {
-          this.attributes.setSearchPending(false);
+      Promise.resolve(onSearchChange?.(nextValue)).finally(() => {
+        if (searchRequestIdRef.current === requestId) {
+          setSearchPending(false);
         }
       });
-    },
+    };
 
-    scheduleSearch(this: any, nextValue: string): boolean {
-      const normalizedSearchText = this.methods.normalizeLookupSearchText(nextValue);
+    const scheduleSearch = (nextValue: string): boolean => {
+      const normalizedSearchText = normalizeLookupSearchText(nextValue);
+      clearScheduledSearch();
 
-      this.methods.clearScheduledSearch();
-
-      if (normalizedSearchText.length < this.attributes.resolvedMinSearchLength) {
-        this.attributes.searchRequestIdRef.current += 1;
-        this.attributes.setSearchPending(false);
+      if (normalizedSearchText.length < resolvedMinSearchLength) {
+        searchRequestIdRef.current += 1;
+        setSearchPending(false);
         return false;
       }
 
-      this.attributes.setSearchPending(true);
-
-      if (this.attributes.resolvedSearchDelayMs <= 0) {
-        this.methods.runSearch(nextValue);
-        return true;
+      setSearchPending(true);
+      if (resolvedSearchDelayMs <= 0) {
+        runSearch(nextValue);
+      } else {
+        searchTimerRef.current = setTimeout(() => runSearch(nextValue), resolvedSearchDelayMs);
       }
 
-      this.attributes.searchTimerRef.current = setTimeout(
-        () => this.methods.runSearch(nextValue),
-        this.attributes.resolvedSearchDelayMs
-      );
       return true;
-    },
+    };
 
-    requestOpen(this: any): void {
-      if (this.attributes.readOnly) {
+    useEffect(() => {
+      if (!suggestionsOpen && !modalOpen) {
+        setDraft(selectedLabel);
+      }
+    }, [selectedLabel]);
+
+    useEffect(() => {
+      if (!suggestionsOpen && !modalOpen) {
         return;
       }
 
-      void this.attributes.onOpen?.();
-    },
-
-    openSuggestions(this: any): void {
-      if (this.attributes.readOnly) {
-        return;
-      }
-
-      this.attributes.setSuggestionsOpen(true);
-      this.methods.requestOpen();
-    },
-
-    openModal(this: any): void {
-      if (this.attributes.readOnly) {
-        return;
-      }
-
-      this.attributes.setSuggestionsOpen(false);
-      this.attributes.setModalOpen(true);
-      this.methods.requestOpen();
-    },
-
-    toggleAction(this: any): void {
-      if (this.attributes.mode === "lookup") {
-        this.methods.openModal();
-        return;
-      }
-
-      if (this.attributes.suggestionsOpen) {
-        this.attributes.setSuggestionsOpen(false);
-        return;
-      }
-
-      this.methods.openSuggestions();
-    },
-
-    updateSearch(this: any, nextValue: string): void {
-      this.attributes.setDraft(nextValue);
-
-      if (this.attributes.readOnly) {
-        return;
-      }
-
-      const normalizedSearchText = this.methods.normalizeLookupSearchText(nextValue);
-
-      if (!normalizedSearchText) {
-        this.methods.cancelPendingSearch();
-        this.attributes.setSuggestionsOpen(false);
-
-        if (this.attributes.value != null) {
-          this.attributes.onChange?.(null);
+      const handlePointerDown = (event: PointerEvent) => {
+        const target = event.target as Node;
+        if (modalRef.current?.contains(target) || rootRef.current?.contains(target)) {
+          return;
         }
 
+        setSuggestionsOpen(false);
+        setModalOpen(false);
+        setDraft(selectedLabel);
+      };
+      const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+        if (event.key === "Escape") {
+          setSuggestionsOpen(false);
+          setModalOpen(false);
+          setDraft(selectedLabel);
+        }
+      };
+
+      document.addEventListener("pointerdown", handlePointerDown, true);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("pointerdown", handlePointerDown, true);
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [modalOpen, selectedLabel, suggestionsOpen]);
+
+    useEffect(() => {
+      if (!loadingMore) {
+        loadMorePendingRef.current = false;
+      }
+    }, [loadingMore]);
+
+    useEffect(() => () => {
+      clearScheduledSearch();
+      searchRequestIdRef.current += 1;
+    }, []);
+
+    if (!visible) {
+      return null;
+    }
+
+    const requestOpen = (searchText: string) => {
+      if (!readOnly) {
+        void onOpen?.(searchText);
+      }
+    };
+
+    const openSuggestions = () => {
+      if (readOnly) {
         return;
       }
 
-      const searchScheduled = this.methods.scheduleSearch(nextValue);
-      this.attributes.setSuggestionsOpen(searchScheduled);
-    },
+      setSuggestionsOpen(true);
+      requestOpen(optionSearchText);
+    };
 
-    handleDraftChange(this: any, event: any): void {
-      this.methods.updateSearch(event.target.value);
-    },
+    const openModal = () => {
+      if (readOnly) {
+        return;
+      }
 
-    handleModalSearchChange(this: any, event: any): void {
-      const nextValue = event.target.value;
-      this.attributes.setDraft(nextValue);
-      this.methods.scheduleSearch(nextValue);
-    },
+      setSuggestionsOpen(false);
+      setModalOpen(true);
+      requestOpen(optionSearchText);
+    };
 
-    selectOption(this: any, _event: any, option: any): void {
-      this.attributes.onChange?.(option?.value ?? null, option?.item);
-      this.attributes.setDraft(option?.label ?? "");
-      this.attributes.setSuggestionsOpen(false);
-      this.attributes.setModalOpen(false);
-    },
+    const toggleAction = () => {
+      if (mode === "lookup") {
+        openModal();
+      } else if (suggestionsOpen) {
+        setSuggestionsOpen(false);
+        setDraft(selectedLabel);
+      } else {
+        openSuggestions();
+      }
+    };
 
-    handleListScroll(this: any, event: any): void {
+    const updateSearch = (nextValue: string) => {
+      setDraft(nextValue);
+
+      if (readOnly) {
+        return;
+      }
+
+      if (!normalizeLookupSearchText(nextValue)) {
+        clearScheduledSearch();
+        searchRequestIdRef.current += 1;
+        setSearchPending(false);
+        setSuggestionsOpen(false);
+        if (value != null) {
+          onChange(null);
+        }
+        return;
+      }
+
+      setSuggestionsOpen(scheduleSearch(nextValue));
+    };
+
+    const selectOption = (option: NormalizedLookupItem<TItem>) => {
+      onChange(option.value, option.item);
+      setDraft(option.label);
+      setSuggestionsOpen(false);
+      setModalOpen(false);
+    };
+
+    const handleListScroll = (event: UIEvent<HTMLDivElement>) => {
       const element = event.currentTarget;
       const distanceToBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
 
       if (
         distanceToBottom > 32
-        || !this.attributes.hasMore
-        || !this.attributes.onLoadMore
-        || this.attributes.loading
-        || this.attributes.loadingMore
-        || this.attributes.loadMorePendingRef.current
+        || !hasMore
+        || !onLoadMore
+        || loading
+        || loadingMore
+        || loadMorePendingRef.current
       ) {
         return;
       }
 
-      this.attributes.loadMorePendingRef.current = true;
-      void this.attributes.onLoadMore?.();
-    },
+      loadMorePendingRef.current = true;
+      void onLoadMore();
+    };
 
-    closeModal(this: any): void {
-      this.attributes.setModalOpen(false);
+    const renderOptionList = (listClassName: string, shouldRender: boolean) => shouldRender ? (
+      <div
+        aria-busy={Boolean(loading || loadingMore || searchPending)}
+        className={listClassName}
+        role="listbox"
+        onScroll={handleListScroll}
+      >
+        {loading ? <div className="titanic-lookup__status">{resolvedLabels.loadingText}</div> : null}
+        {error ? <div className="titanic-lookup__error">{resolvedLabels.errorText}</div> : null}
+        {visibleItems.map((option, optionIndex) => {
+          const active = option.normalizedValue === normalizedValue;
+          return (
+            <Button
+              unstyled
+              aria-selected={active}
+              className={joinClassNames("titanic-lookup__option", active && "titanic-lookup__option_active")}
+              key={`${option.normalizedValue || "lookup-option"}-${optionIndex}`}
+              role="option"
+              type="button"
+              onClick={() => selectOption(option)}
+            >
+              {option.label}
+            </Button>
+          );
+        })}
+        {loadingMore ? <div className="titanic-lookup__status">{resolvedLabels.loadingMoreText}</div> : null}
+      </div>
+    ) : null;
+
+    const canRenderOptionList = visibleItems.length > 0 || loading || loadingMore || Boolean(error);
+    const control = (
+      <div
+        className={joinClassNames(
+          "titanic-lookup",
+          "titanic-field__control",
+          "titanic-lookup_framed",
+          readOnly && "titanic-lookup_disabled",
+          className
+        )}
+        ref={rootRef}
+      >
+        <div className={joinClassNames(
+          "titanic-lookup__control",
+          "titanic-lookup__control_embedded",
+          readOnly && "titanic-lookup__control_disabled"
+        )}>
+          <input
+            aria-errormessage={errorId}
+            aria-invalid={validationError ? true : undefined}
+            autoComplete="off"
+            className={joinClassNames("titanic-lookup__input", inputClassName)}
+            disabled={readOnly}
+            id={resolvedId}
+            name={resolvedName}
+            required={required}
+            type="text"
+            value={draft}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateSearch(event.target.value)}
+            onFocus={openSuggestions}
+          />
+          <Button
+            unstyled
+            aria-expanded={mode === "lookup" ? modalOpen : suggestionsOpen}
+            aria-haspopup={mode === "lookup" ? "dialog" : "listbox"}
+            aria-label={mode === "lookup" ? resolvedLabels.openSearch : resolvedLabels.openList}
+            className="titanic-lookup__action"
+            disabled={readOnly}
+            type="button"
+            onClick={toggleAction}
+          >
+            <span
+              aria-hidden
+              className={mode === "lookup" ? "titanic-lookup__search-icon" : "titanic-lookup__chevron"}
+            />
+          </Button>
+        </div>
+
+        {renderOptionList(
+          "titanic-lookup__popover",
+          suggestionsOpen && canRenderOptionList
+        )}
+
+        {modalOpen ? (
+          <div className="titanic-lookup__modal-backdrop" role="presentation">
+            <div
+              aria-labelledby={`${resolvedId}-lookup-title`}
+              aria-modal
+              className="titanic-lookup__modal"
+              ref={modalRef}
+              role="dialog"
+            >
+              <div className="titanic-lookup__modal-header">
+                <h2 className="titanic-lookup__modal-title" id={`${resolvedId}-lookup-title`}>
+                  {title ?? resolvedLabels.emptyText}
+                </h2>
+                <Button
+                  unstyled
+                  aria-label={resolvedLabels.close}
+                  className="titanic-lookup__modal-close"
+                  type="button"
+                  onClick={() => {
+                    setModalOpen(false);
+                    setDraft(selectedLabel);
+                  }}
+                >
+                  <span aria-hidden className="titanic-lookup__close-icon" />
+                </Button>
+              </div>
+              <input
+                autoComplete="off"
+                className="titanic-lookup__modal-search"
+                type="text"
+                value={draft}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  scheduleSearch(event.target.value);
+                }}
+              />
+              {renderOptionList(
+                "titanic-lookup__popover titanic-lookup__modal-list",
+                canRenderOptionList
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+
+    return renderFrame ? (
+      <InputFieldFrame
+        control={control}
+        errorId={errorId}
+        htmlFor={resolvedId}
+        required={required}
+        title={title}
+        validationError={validationError}
+      />
+    ) : control;
+  }
+);
+
+function mergeLookupLabels<T extends Record<string, string>>(
+  labels: T,
+  overrides: Record<string, unknown>
+): T {
+  const merged = { ...labels };
+
+  Object.entries(overrides).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      (merged as Record<string, string>)[key] = String(value);
     }
-  },
-  diff: [
-    {
-      component: "Titanic.UI.InputFieldFrame",
-      when: { and: [{ attr: "visible" }, { attr: "renderFrame" }] },
-      props: {
-        control: {
-          diff: [
-            {
-              tag: "div",
-              props: {
-                className: { attr: "rootClasses" },
-                ref: { attr: "rootRef" }
-              },
-              children: [
-                {
-                  tag: "div",
-                  props: {
-                    className: { attr: "controlClasses" }
-                  },
-                  children: [
-                    {
-                      tag: "input",
-                      props: {
-                        $spread: { attr: "validationControlProps" },
-                        autoComplete: "off",
-                        className: { attr: "inputClasses" },
-                        disabled: { attr: "readOnly" },
-                        id: { attr: "resolvedId" },
-                        name: { attr: "resolvedName" },
-                        required: { attr: "required" },
-                        type: "text",
-                        value: { attr: "draft" },
-                        onChange: { method: "handleDraftChange" },
-                        onFocus: { method: "openSuggestions" }
-                      }
-                    },
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        unstyled: true,
-                        "aria-expanded": { attr: "actionAriaExpanded" },
-                        "aria-haspopup": { attr: "actionAriaHasPopup" },
-                        "aria-label": { attr: "actionAriaLabel" },
-                        className: "titanic-lookup__action",
-                        disabled: { attr: "readOnly" },
-                        onClick: { method: "toggleAction" },
-                        type: "button"
-                      },
-                      children: [
-                        {
-                          tag: "span",
-                          props: {
-                            "aria-hidden": true,
-                            className: { attr: "actionIconClass" }
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  when: { attr: "shouldRenderSuggestions" },
-                  props: {
-                    "aria-busy": { attr: "ariaBusy" },
-                    className: "titanic-lookup__popover",
-                    role: "listbox",
-                    onScroll: { method: "handleListScroll" }
-                  },
-                  children: [
-                    {
-                      tag: "div",
-                      when: { attr: "loading" },
-                      props: { className: "titanic-lookup__status" },
-                      text: { attr: "loadingText" }
-                    },
-                    {
-                      tag: "div",
-                      when: { attr: "error" },
-                      props: { className: "titanic-lookup__error" },
-                      text: { attr: "errorText" }
-                    },
-                    {
-                      each: { attr: "visibleItems" },
-                      as: "option",
-                      indexAs: "optionIndex",
-                      diff: [
-                        {
-                          component: "Titanic.UI.Button",
-                          key: { call: "getOptionKey", args: [{ local: "option" }, { local: "optionIndex" }] },
-                          props: {
-                            unstyled: true,
-                            "aria-selected": { eq: [{ local: "option.normalizedValue" }, { attr: "normalizedValue" }] },
-                            className: { call: "getOptionClassName", args: [{ local: "option" }] },
-                            onClick: { method: "selectOption", args: [{ local: "option" }] },
-                            role: "option",
-                            type: "button"
-                          },
-                          text: { local: "option.label" }
-                        }
-                      ]
-                    },
-                    {
-                      tag: "div",
-                      when: { attr: "loadingMore" },
-                      props: { className: "titanic-lookup__status" },
-                      text: { attr: "loadingMoreText" }
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  when: { attr: "modalOpen" },
-                  props: {
-                    className: "titanic-lookup__modal-backdrop",
-                    role: "presentation"
-                  },
-                  children: [
-                    {
-                      tag: "div",
-                      props: {
-                        "aria-labelledby": { attr: "modalTitleId" },
-                        "aria-modal": true,
-                        className: "titanic-lookup__modal",
-                        ref: { attr: "modalRef" },
-                        role: "dialog"
-                      },
-                      children: [
-                        {
-                          tag: "div",
-                          props: { className: "titanic-lookup__modal-header" },
-                          children: [
-                            {
-                              tag: "h2",
-                              props: {
-                                className: "titanic-lookup__modal-title",
-                                id: { attr: "modalTitleId" }
-                              },
-                              text: { coalesce: [{ attr: "title" }, { attr: "emptyText" }] }
-                            },
-                            {
-                              component: "Titanic.UI.Button",
-                              props: {
-                                unstyled: true,
-                                "aria-label": "Close",
-                                className: "titanic-lookup__modal-close",
-                                onClick: { method: "closeModal" },
-                                type: "button"
-                              },
-                              children: [
-                                {
-                                  tag: "span",
-                                  props: {
-                                    "aria-hidden": true,
-                                    className: "titanic-lookup__close-icon"
-                                  }
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          tag: "input",
-                          props: {
-                            autoComplete: "off",
-                            className: "titanic-lookup__modal-search",
-                            type: "text",
-                            value: { attr: "draft" },
-                            onChange: { method: "handleModalSearchChange" }
-                          }
-                        },
-                        {
-                          tag: "div",
-                          when: { attr: "shouldRenderModalList" },
-                          props: {
-                            "aria-busy": { attr: "ariaBusy" },
-                            className: { attr: "modalListClasses" },
-                            role: "listbox",
-                            onScroll: { method: "handleListScroll" }
-                          },
-                          children: [
-                            {
-                              tag: "div",
-                              when: { attr: "loading" },
-                              props: { className: "titanic-lookup__status" },
-                              text: { attr: "loadingText" }
-                            },
-                            {
-                              tag: "div",
-                              when: { attr: "error" },
-                              props: { className: "titanic-lookup__error" },
-                              text: { attr: "errorText" }
-                            },
-                            {
-                              each: { attr: "visibleItems" },
-                              as: "option",
-                              indexAs: "optionIndex",
-                              diff: [
-                                {
-                                  component: "Titanic.UI.Button",
-                                  key: { call: "getOptionKey", args: [{ local: "option" }, { local: "optionIndex" }] },
-                                  props: {
-                                    unstyled: true,
-                                    "aria-selected": { eq: [{ local: "option.normalizedValue" }, { attr: "normalizedValue" }] },
-                                    className: { call: "getOptionClassName", args: [{ local: "option" }] },
-                                    onClick: { method: "selectOption", args: [{ local: "option" }] },
-                                    role: "option",
-                                    type: "button"
-                                  },
-                                  text: { local: "option.label" }
-                                }
-                              ]
-                            },
-                            {
-                              tag: "div",
-                              when: { attr: "loadingMore" },
-                              props: { className: "titanic-lookup__status" },
-                              text: { attr: "loadingMoreText" }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        errorId: { attr: "errorId" },
-        htmlFor: { attr: "resolvedId" },
-        required: { attr: "required" },
-        title: { attr: "title" },
-        validationError: { attr: "validationError" }
-      }
-    },
-    {
-      tag: "div",
-      when: { and: [{ attr: "visible" }, { not: { attr: "renderFrame" } }] },
-      props: {
-        className: { attr: "rootClasses" },
-        ref: { attr: "rootRef" }
-      },
-      children: [
-        {
-          tag: "div",
-          props: {
-            className: { attr: "controlClasses" }
-          },
-          children: [
-            {
-              tag: "input",
-              props: {
-                $spread: { attr: "validationControlProps" },
-                autoComplete: "off",
-                className: { attr: "inputClasses" },
-                disabled: { attr: "readOnly" },
-                id: { attr: "resolvedId" },
-                name: { attr: "resolvedName" },
-                required: { attr: "required" },
-                type: "text",
-                value: { attr: "draft" },
-                onChange: { method: "handleDraftChange" },
-                onFocus: { method: "openSuggestions" }
-              }
-            },
-            {
-              component: "Titanic.UI.Button",
-              props: {
-                unstyled: true,
-                "aria-expanded": { attr: "actionAriaExpanded" },
-                "aria-haspopup": { attr: "actionAriaHasPopup" },
-                "aria-label": { attr: "actionAriaLabel" },
-                className: "titanic-lookup__action",
-                disabled: { attr: "readOnly" },
-                onClick: { method: "toggleAction" },
-                type: "button"
-              },
-              children: [
-                {
-                  tag: "span",
-                  props: {
-                    "aria-hidden": true,
-                    className: { attr: "actionIconClass" }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          tag: "div",
-          when: { attr: "shouldRenderSuggestions" },
-          props: {
-            "aria-busy": { attr: "ariaBusy" },
-            className: "titanic-lookup__popover",
-            role: "listbox",
-            onScroll: { method: "handleListScroll" }
-          },
-          children: [
-            {
-              tag: "div",
-              when: { attr: "loading" },
-              props: { className: "titanic-lookup__status" },
-              text: { attr: "loadingText" }
-            },
-            {
-              tag: "div",
-              when: { attr: "error" },
-              props: { className: "titanic-lookup__error" },
-              text: { attr: "errorText" }
-            },
-            {
-              each: { attr: "visibleItems" },
-              as: "option",
-              indexAs: "optionIndex",
-              diff: [
-                {
-                  component: "Titanic.UI.Button",
-                  key: { call: "getOptionKey", args: [{ local: "option" }, { local: "optionIndex" }] },
-                  props: {
-                    unstyled: true,
-                    "aria-selected": { eq: [{ local: "option.normalizedValue" }, { attr: "normalizedValue" }] },
-                    className: { call: "getOptionClassName", args: [{ local: "option" }] },
-                    onClick: { method: "selectOption", args: [{ local: "option" }] },
-                    role: "option",
-                    type: "button"
-                  },
-                  text: { local: "option.label" }
-                }
-              ]
-            },
-            {
-              tag: "div",
-              when: { attr: "loadingMore" },
-              props: { className: "titanic-lookup__status" },
-              text: { attr: "loadingMoreText" }
-            }
-          ]
-        },
-        {
-          tag: "div",
-          when: { attr: "modalOpen" },
-          props: {
-            className: "titanic-lookup__modal-backdrop",
-            role: "presentation"
-          },
-          children: [
-            {
-              tag: "div",
-              props: {
-                "aria-labelledby": { attr: "modalTitleId" },
-                "aria-modal": true,
-                className: "titanic-lookup__modal",
-                ref: { attr: "modalRef" },
-                role: "dialog"
-              },
-              children: [
-                {
-                  tag: "div",
-                  props: { className: "titanic-lookup__modal-header" },
-                  children: [
-                    {
-                      tag: "h2",
-                      props: {
-                        className: "titanic-lookup__modal-title",
-                        id: { attr: "modalTitleId" }
-                      },
-                      text: { coalesce: [{ attr: "title" }, { attr: "emptyText" }] }
-                    },
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        unstyled: true,
-                        "aria-label": "Close",
-                        className: "titanic-lookup__modal-close",
-                        onClick: { method: "closeModal" },
-                        type: "button"
-                      },
-                      children: [
-                        {
-                          tag: "span",
-                          props: {
-                            "aria-hidden": true,
-                            className: "titanic-lookup__close-icon"
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  tag: "input",
-                  props: {
-                    autoComplete: "off",
-                    className: "titanic-lookup__modal-search",
-                    type: "text",
-                    value: { attr: "draft" },
-                    onChange: { method: "handleModalSearchChange" }
-                  }
-                },
-                {
-                  tag: "div",
-                  when: { attr: "shouldRenderModalList" },
-                  props: {
-                    "aria-busy": { attr: "ariaBusy" },
-                    className: { attr: "modalListClasses" },
-                    role: "listbox",
-                    onScroll: { method: "handleListScroll" }
-                  },
-                  children: [
-                    {
-                      tag: "div",
-                      when: { attr: "loading" },
-                      props: { className: "titanic-lookup__status" },
-                      text: { attr: "loadingText" }
-                    },
-                    {
-                      tag: "div",
-                      when: { attr: "error" },
-                      props: { className: "titanic-lookup__error" },
-                      text: { attr: "errorText" }
-                    },
-                    {
-                      each: { attr: "visibleItems" },
-                      as: "option",
-                      indexAs: "optionIndex",
-                      diff: [
-                        {
-                          component: "Titanic.UI.Button",
-                          key: { call: "getOptionKey", args: [{ local: "option" }, { local: "optionIndex" }] },
-                          props: {
-                            unstyled: true,
-                            "aria-selected": { eq: [{ local: "option.normalizedValue" }, { attr: "normalizedValue" }] },
-                            className: { call: "getOptionClassName", args: [{ local: "option" }] },
-                            onClick: { method: "selectOption", args: [{ local: "option" }] },
-                            role: "option",
-                            type: "button"
-                          },
-                          text: { local: "option.label" }
-                        }
-                      ]
-                    },
-                    {
-                      tag: "div",
-                      when: { attr: "loadingMore" },
-                      props: { className: "titanic-lookup__status" },
-                      text: { attr: "loadingMoreText" }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-});
+  });
+
+  return merged;
+}
+
+function defaultEntityId(item: LookupInputItem): LookupInputValue {
+  return item?.value ?? item?.id ?? null;
+}
+
+function defaultEntityLabel(item: LookupInputItem): string {
+  const itemValue = item?.value;
+  const itemId = item?.id;
+  const label = item?.displayValue
+    || item?.title
+    || (itemValue == null ? "" : String(itemValue))
+    || (itemId == null ? "" : String(itemId));
+
+  return item?.index == null ? label : `${item.index}. ${label}`;
+}
+
+function normalizeLookupValue(value: LookupInputValue): string {
+  return value == null ? "" : String(value);
+}
+
+function normalizeLookupSearchText(value: string): string {
+  return String(value ?? "").trim().toLocaleLowerCase();
+}
+
+function normalizePositiveInteger(value: number): number {
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+}
+
+function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
+  return classNames.filter(Boolean).join(" ");
+}

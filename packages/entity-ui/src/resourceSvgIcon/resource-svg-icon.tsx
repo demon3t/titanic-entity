@@ -22,7 +22,7 @@ export interface ResourceSvgIconProps {
 }
 
 /** Renders an SVG icon from Titanic resource descriptors. */
-export function ResourceSvgIcon({ className, icon, theme }: ResourceSvgIconProps) {
+export const ResourceSvgIcon = Titanic.define<ResourceSvgIconProps>("Titanic.UI.ResourceSvgIcon", function ResourceSvgIcon({ className, icon, theme }: ResourceSvgIconProps) {
   const iconResource = typeof icon === "string"
     ? Titanic.Icons.get(icon, { theme })
     : icon ?? Titanic.Icons.getDefault({ theme });
@@ -33,9 +33,7 @@ export function ResourceSvgIcon({ className, icon, theme }: ResourceSvgIconProps
       {resolvedIcon.shapes.map(renderIconShape)}
     </svg>
   );
-}
-
-Titanic.define<ResourceSvgIconProps>("Titanic.UI.ResourceSvgIcon", ResourceSvgIcon);
+});
 
 function renderIconShape(shape: ResourceSvgIconShape, index: number) {
   switch (shape.kind) {

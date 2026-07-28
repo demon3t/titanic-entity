@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createEmptyValues, type EntityDisplayValues, type EntityValues } from "@titanic-entity/entity-core";
+import { Entity, createEmptyValues, type EntityDisplayValues, type EntityValues } from "@titanic-entity/entity-core";
 import { createBaseModuleMethods } from "../templates/base-module";
 import { createEntityEditPageTemplate } from "../templates/entity-edit/entityEditPageTemplate";
 import type {
@@ -28,11 +28,17 @@ export interface EntityEditPageControllerOptions extends Pick<
  * Headless state API consumed by EntityEditPage and custom template renderers.
  */
 export interface EntityEditPageController {
+  /** Entity instance owning the original, previous, and current value snapshots. */
+  entity: Entity;
+
   /** Normalized template with resolved schema, attributes, methods, and diff. */
   normalizedTemplate: NormalizedEntityEditPageTemplate;
 
   /** Execution context passed to template predicates, renderers, and methods. */
   context: EntityEditPageContext;
+
+  /** Whether current values differ from the latest accepted values. */
+  isDirty: boolean;
 
   /** Submits the current values through the configured onSubmit callback. */
   submit: () => Promise<void>;
@@ -58,46 +64,89 @@ export function useEntityEditPageController({
     () => createInitialValues(normalizedTemplate.attributes, normalizedTemplate.schema, value),
     [normalizedTemplate, value]
   );
+  const entity = useMemo(() => new Entity(normalizedTemplate.schema, initialValues), [normalizedTemplate.schema]);
   const [values, setValuesState] = useState(initialValues);
   const [currentDisplayValues, setDisplayValuesState] = useState<EntityDisplayValues>(displayValues ?? {});
+  const [isDirty, setIsDirtyState] = useState(false);
   const valuesRef = useRef(initialValues);
   const displayValuesRef = useRef<EntityDisplayValues>(displayValues ?? {});
+  const acceptedValuesRef = useRef(initialValues);
+  const acceptedDisplayValuesRef = useRef<EntityDisplayValues>(displayValues ?? {});
+  const isDirtyRef = useRef(false);
   const contextRef = useRef<EntityEditPageContext | null>(null);
   const methodChainsRef = useRef<EntityEditPageMethodChains>({});
 
+  const setIsDirty = useCallback((nextIsDirty: boolean) => {
+    isDirtyRef.current = nextIsDirty;
+    setIsDirtyState((currentIsDirty) => currentIsDirty === nextIsDirty ? currentIsDirty : nextIsDirty);
+  }, []);
+
   useEffect(() => {
+    const preservePendingChanges =
+      isDirtyRef.current && areEntityValuesEqual(initialValues, valuesRef.current);
+
     valuesRef.current = initialValues;
+    entity.acceptChanges(initialValues);
     displayValuesRef.current = displayValues ?? {};
     setValuesState(initialValues);
     setDisplayValuesState(displayValues ?? {});
-  }, [displayValues, initialValues]);
+
+    if (!preservePendingChanges) {
+      acceptedValuesRef.current = initialValues;
+      acceptedDisplayValuesRef.current = displayValues ?? {};
+      setIsDirty(false);
+    }
+  }, [displayValues, entity, initialValues, setIsDirty]);
 
   const setValues = useCallback((updater: EntityEditPageValuesUpdater) => {
     const previousValues = valuesRef.current;
     const nextValues = typeof updater === "function" ? updater(valuesRef.current) : updater;
     const nextDisplayValues = clearChangedDisplayValues(displayValuesRef.current, previousValues, nextValues);
 
+    entity.setValues(nextValues);
     valuesRef.current = nextValues;
     displayValuesRef.current = nextDisplayValues;
     setValuesState(nextValues);
     setDisplayValuesState(nextDisplayValues);
+    const nextIsDirty = !areEntityValuesEqual(nextValues, acceptedValuesRef.current);
+    setIsDirty(nextIsDirty);
 
     const currentContext = contextRef.current;
     if (currentContext) {
-      onChange?.(nextValues, { ...currentContext, values: nextValues, displayValues: nextDisplayValues });
+      onChange?.(nextValues, {
+        ...currentContext,
+        values: nextValues,
+        displayValues: nextDisplayValues,
+        isDirty: nextIsDirty
+      });
     }
-  }, [onChange]);
+  }, [entity, onChange, setIsDirty]);
 
   const setValue = useCallback((key: string, nextValue: unknown) => {
     setValues((currentValues) => ({ ...currentValues, [key]: nextValue }));
   }, [setValues]);
 
   const reset = useCallback(() => {
-    valuesRef.current = initialValues;
-    displayValuesRef.current = displayValues ?? {};
-    setValuesState(initialValues);
-    setDisplayValuesState(displayValues ?? {});
-  }, [displayValues, initialValues]);
+    entity.resetChanges();
+    const resetValues = entity.currentValues;
+    const resetDisplayValues = acceptedDisplayValuesRef.current;
+
+    valuesRef.current = resetValues;
+    displayValuesRef.current = resetDisplayValues;
+    setValuesState(resetValues);
+    setDisplayValuesState(resetDisplayValues);
+    setIsDirty(false);
+
+    const currentContext = contextRef.current;
+    if (currentContext) {
+      onChange?.(resetValues, {
+        ...currentContext,
+        values: resetValues,
+        displayValues: resetDisplayValues,
+        isDirty: false
+      });
+    }
+  }, [entity, onChange, setIsDirty]);
 
   const submit = useCallback(async () => {
     const currentContext = contextRef.current;
@@ -105,8 +154,15 @@ export function useEntityEditPageController({
       return;
     }
 
-    await onSubmit?.(valuesRef.current, { ...currentContext, values: valuesRef.current });
-  }, [onSubmit]);
+    const result = await onSubmit?.(valuesRef.current, { ...currentContext, values: valuesRef.current });
+
+    if (result !== false) {
+      entity.acceptChanges(valuesRef.current);
+      acceptedValuesRef.current = valuesRef.current;
+      acceptedDisplayValuesRef.current = displayValuesRef.current;
+      setIsDirty(false);
+    }
+  }, [entity, onSubmit, setIsDirty]);
 
   const baseModuleMethods = useMemo<EntityEditPageMethods>(
     () => createBaseModuleMethods<EntityEditPageContext>() as EntityEditPageMethods,
@@ -144,9 +200,10 @@ export function useEntityEditPageController({
     }
 
     const currentContext = createMethodContext(methodContext, valuesRef.current, displayValuesRef.current);
-    const methodThis: EntityEditPageMethodThis = {
+    const methodThis = {
       ...currentContext,
       context: currentContext,
+      get: <TValue = unknown,>(key: string) => currentContext.getValue<TValue>(key),
       callParent: (parentArguments?: EntityEditPageMethodArguments) => {
         const parentIndex = methodIndex - 1;
 
@@ -157,7 +214,12 @@ export function useEntityEditPageController({
         const parentCall = normalizeCallParentArguments(parentArguments, currentContext, args);
         return runMethodAtImpl(name, parentIndex, parentCall.context, parentCall.args);
       }
-    };
+    } as EntityEditPageMethodThis;
+
+    for (const [boundMethodName, boundMethodChain] of Object.entries(methodChainsRef.current)) {
+      methodThis[boundMethodName] = (...boundArgs: unknown[]) =>
+        runMethodAtImpl(boundMethodName, boundMethodChain.length - 1, currentContext, boundArgs);
+    }
 
     return method.call(methodThis, currentContext, ...args);
   }, []);
@@ -187,6 +249,7 @@ export function useEntityEditPageController({
   }, [runMethodAt]);
 
   const context = useMemo<EntityEditPageContext>(() => ({
+    entity,
     template: normalizedTemplate,
     schema: normalizedTemplate.schema,
     attributes: normalizedTemplate.attributes,
@@ -194,22 +257,31 @@ export function useEntityEditPageController({
     values,
     displayValues: currentDisplayValues,
     disabled,
+    isDirty,
     getValue: <TValue = unknown,>(key: string) => values[key] as TValue | undefined,
     setValue,
     setValues,
     submit,
     reset,
     runMethod
-  }), [currentDisplayValues, disabled, methods, normalizedTemplate, reset, runMethod, setValue, setValues, submit, values]);
+  }), [currentDisplayValues, disabled, entity, isDirty, methods, normalizedTemplate, reset, runMethod, setValue, setValues, submit, values]);
 
   contextRef.current = context;
 
   return {
+    entity,
     normalizedTemplate,
     context,
+    isDirty,
     submit,
     reset
   };
+}
+
+function areEntityValuesEqual(left: EntityValues, right: EntityValues): boolean {
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+
+  return [...keys].every((key) => Object.is(left[key], right[key]));
 }
 
 function createInitialValues(

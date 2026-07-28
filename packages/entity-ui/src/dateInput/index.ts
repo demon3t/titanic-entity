@@ -1,12 +1,24 @@
 import { defineComponentSchema, defineFieldSchema } from "@titanic-entity/entity-base";
 import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactFieldNames } from "@titanic-entity/entity-react/model";
+import type { BaseInputFieldProps } from "../inputFieldFrame/base-input-field";
 import "../button";
 import "../inputFieldFrame";
 import "./date-input";
-import type { DateInputProps } from "./date-input-props";
+import type { DateInputLabels } from "./date-input-lcz";
 
-export type { DateInputProps } from "./date-input-props";
+export interface DateInputProps extends BaseInputFieldProps<string | null, "date"> {
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  className?: string;
+  locale?: string;
+  labels?: DateInputLabels;
+  placeholder?: string;
+  renderFrame?: boolean;
+  rootClassName?: string;
+  onChange: (value: string | null) => void;
+}
 
 export const DateInput = Titanic.getReactModule<DefinedEntityReactComponent<DateInputProps>>(
   "Titanic.UI.DateInput"
@@ -24,4 +36,10 @@ export const dateInputFieldSchema = defineFieldSchema<DateInputProps>({
   component: DateInput
 });
 export * from "./icons";
-export * from "./lcz";
+export {
+  dateInputLocalizationSchemaName,
+  defaultDateInputCulture,
+  getDateInputLabels,
+  getDateInputLocale
+} from "./date-input-lcz";
+export type { DateInputCulture, DateInputLabels, DateInputResolvedLabels } from "./date-input-lcz";

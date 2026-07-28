@@ -26,7 +26,7 @@ import type {
   NormalizedEntityEditPageTemplate
 } from "./models/EntityEditPageTemplate";
 
-export const baseEntityPageTemplate: EntityEditPageTemplate = {
+export const basePageTemplate: EntityEditPageTemplate = {
   attributes: {},
   methods: {},
   diff: []

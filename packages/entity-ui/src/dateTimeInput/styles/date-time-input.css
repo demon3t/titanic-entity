@@ -1,0 +1,169 @@
+@import "../../dateInput/styles/date-input.css";
+@import "../../timeInput/styles/time-input.css";
+
+.titanic-datetime-input {
+  --titanic-date-time-action-edge: 8px;
+  --titanic-date-time-action-gap: 6px;
+  --titanic-date-time-action-size: 32px;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.titanic-datetime-input__control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  gap: 0;
+  align-items: center;
+  width: 100%;
+  height: var(--titanic-control-height, 44px);
+  min-height: var(--titanic-control-height, 44px);
+  box-sizing: border-box;
+  padding: 0 var(--titanic-date-time-action-edge, 8px) 0 12px;
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface);
+  font: inherit;
+  font-weight: 400;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+/* Composite controls keep the BaseInput border, but their inner segments own vertical spacing. */
+.titanic-datetime-input.titanic-datetime-input .titanic-datetime-input__control.titanic-datetime-input__control,
+.titanic-datetime-input.titanic-datetime-input .titanic-datetime-input__control.titanic-field__control {
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  height: var(--titanic-control-height, 44px);
+  min-height: var(--titanic-control-height, 44px);
+  box-sizing: border-box;
+  padding: 0 var(--titanic-date-time-action-edge, 8px) 0 12px !important;
+}
+
+.titanic-datetime-input__control:hover,
+.titanic-datetime-input__control:focus-within {
+  background: var(--titanic-ui-surface);
+}
+
+.titanic-datetime-input__control:focus-within {
+  box-shadow: none;
+}
+
+.titanic-datetime-input__control_disabled {
+  color: var(--titanic-ui-muted-text);
+  background: var(--titanic-ui-surface-muted);
+  cursor: not-allowed;
+}
+
+.titanic-datetime-input_invalid .titanic-datetime-input__control,
+.titanic-datetime-input__control_invalid {
+  border-color: var(--titanic-ui-danger);
+  box-shadow: none;
+}
+
+.titanic-datetime-input__date,
+.titanic-datetime-input__time {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.titanic-datetime-input__separator {
+  width: 1px;
+  height: 22px;
+  background: var(--titanic-ui-border-muted, var(--titanic-ui-border));
+}
+
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__segment-control {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  border: 0;
+  border-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  outline: 0;
+  box-shadow: none;
+}
+
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__segment-control:hover,
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__segment-control:focus-within,
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__segment-control.titanic-date__control_invalid,
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__segment-control.titanic-time__control_invalid {
+  border-color: transparent;
+  background: transparent;
+  outline: 0;
+  box-shadow: none;
+}
+
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__date .titanic-date__input,
+.titanic-datetime-input .titanic-datetime-input__control .titanic-datetime-input__time .titanic-time__input {
+  display: block;
+  flex: 1 1 auto;
+  align-self: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 22px;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  line-height: 22px;
+  outline: 0;
+  box-shadow: none;
+}
+
+.titanic-datetime-input .titanic-datetime-input__control .titanic-date__calendar-button,
+.titanic-datetime-input .titanic-datetime-input__control .titanic-time__dropdown-button {
+  display: grid;
+  flex: 0 0 var(--titanic-date-time-action-size, 32px);
+  width: var(--titanic-date-time-action-size, 32px);
+  min-width: var(--titanic-date-time-action-size, 32px);
+  height: var(--titanic-date-time-action-size, 32px);
+  min-height: var(--titanic-date-time-action-size, 32px);
+  place-items: center;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.titanic-datetime-input {
+  color: var(--titanic-ui-text);
+  font-family: inherit;
+}
+
+.titanic-datetime-input__control:focus-within {
+  border-color: var(--titanic-ui-border);
+  background: var(--titanic-ui-surface);
+  box-shadow: none;
+}
+
+.titanic-datetime-input .titanic-datetime-input__segment-control:focus-within {
+  border-color: transparent;
+  background: transparent;
+  outline: 0;
+  box-shadow: none;
+}
+
+.titanic-datetime-input_invalid .titanic-datetime-input__control,
+.titanic-datetime-input__control_invalid {
+  border-color: var(--titanic-ui-danger, #b42318);
+  box-shadow: none;
+}
+
+.titanic-datetime-input .titanic-datetime-input__segment-control.titanic-date__control_invalid,
+.titanic-datetime-input .titanic-datetime-input__segment-control.titanic-time__control_invalid {
+  border-color: transparent;
+  box-shadow: none;
+}

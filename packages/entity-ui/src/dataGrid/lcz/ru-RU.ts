@@ -1,6 +1,6 @@
-import type { EntityDataGridLabels } from "./types";
+import { Titanic } from "@titanic-entity/entity-resources";
 
-export const entityDataGridRuRuLabels = {
+Titanic.Localization.define("Titanic.UI.DataGrid", "ru-RU", {
   gridSettings: "Настройки реестра",
   configureColumns: "Настройка реестра",
   configureTotals: "Итоги",
@@ -62,4 +62,4 @@ export const entityDataGridRuRuLabels = {
   selectRow: "Выбрать строку",
   selectAllRows: "Выбрать все строки",
   cancelSelection: "Отменить множественный выбор"
-} satisfies EntityDataGridLabels;
+}, { defaultLocale: "ru-RU" });

@@ -1,734 +1,479 @@
-Titanic.define("Titanic.UI.BaseEntityPage", {
-  attributes: {
-    template: {},
-    value: {},
-    displayValues: {},
-    recordId: {},
-    loadRecord: { default: true },
-    clientName: {},
-    disabled: { default: false },
-    className: { default: "" },
-    top: {},
-    bottom: {},
-    submitLabel: {},
-    manualCommitDelayMs: {},
-    onChange: {},
-    onSubmit: {},
-    loadedRecord: { state: true, default: null },
-    loadedRecordRef: { ref: true, default: null },
-    loadedRecordKeyRef: { ref: true, default: null },
-    recordLoadRequestRef: { ref: true, default: 0 },
-    apiClient: {
-      value(this: any): any {
-        return this.methods.useOptionalEntityApiClient(this.attributes.clientName);
-      }
-    },
-    pageMethods: {
-      memo(this: any): Record<string, unknown> {
-        return {
-          destroy: (context: any) => this.methods.destroy(context),
-          init: (context: any) => this.methods.init(context),
-          loadEntity: (context: any, nextRecordId?: unknown) => this.methods.loadEntity(context, nextRecordId)
-        };
-      },
-      deps: { array: [] }
-    },
-    mergedValue: {
-      memo(this: any): any {
-        return this.methods.mergeEntityValues(this.attributes.loadedRecord?.values, this.attributes.value);
-      },
-      deps: { array: [{ attr: "loadedRecord" }, { attr: "value" }] }
-    },
-    mergedDisplayValues: {
-      memo(this: any): any {
-        return this.methods.mergeEntityDisplayValues(
-          this.attributes.loadedRecord?.displayValues,
-          this.attributes.displayValues
-        );
-      },
-      deps: { array: [{ attr: "displayValues" }, { attr: "loadedRecord" }] }
-    },
-    pageController: {
-      value(this: any): any {
-        return this.methods.useEntityEditPageController({
-          template: this.attributes.template,
-          value: this.attributes.mergedValue,
-          displayValues: this.attributes.mergedDisplayValues,
-          disabled: this.attributes.disabled,
-          methods: this.attributes.pageMethods,
-          onChange: this.attributes.onChange,
-          onSubmit: this.attributes.onSubmit
-        });
-      }
-    },
-    normalizedTemplate: {
-      value(this: any): any {
-        return this.attributes.pageController.normalizedTemplate;
-      }
-    },
-    context: {
-      value(this: any): any {
-        return this.attributes.pageController.context;
-      }
-    },
-    submit: {
-      value(this: any): any {
-        return this.attributes.pageController.submit;
-      }
-    },
-    effectiveRecordId: {
-      value(this: any): unknown {
-        return this.methods.getRecordId(
-          this.attributes.recordId,
-          this.attributes.value,
-          this.attributes.normalizedTemplate.schema.primaryColumn
-        );
-      }
-    },
-    recordLoadKey: {
-      value(this: any): string {
-        return this.attributes.loadRecord && !this.methods.isEmptyRecordId(this.attributes.effectiveRecordId)
-          ? this.methods.createRecordLoadKey(this.attributes.normalizedTemplate.schema, this.attributes.effectiveRecordId)
-          : "";
-      }
-    },
-    initLifecycle: {
-      deps: {
-        array: [
-          { attr: "apiClient" },
-          { attr: "context.runMethod" },
-          { attr: "loadRecord" },
-          { attr: "recordLoadKey" }
-        ]
-      },
-      effect(this: any): () => void {
-        let cancelled = false;
+import {
+  Titanic,
+  createEntityRecordQuery,
+  toEntityDisplayValues,
+  toEntityValues,
+  useEntityEditPageController,
+  useOptionalEntityApiClient,
+  type EntityDisplayValues,
+  type EntityValues
+} from "@titanic-entity/entity-react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode
+} from "react";
+import type {
+  EntityEditPageAction,
+  EntityEditPageContext,
+  EntityEditPageDiffItem,
+  EntityEditPageMethods,
+  EntityEditPagePredicate,
+  EntityEditPageRenderValue
+} from "@titanic-entity/entity-react/templates";
+import { ActionBar } from "../actionBar";
+import { Button, ButtonMethodProvider } from "../button";
+import { Container } from "../container";
+import { Expander } from "../expander";
+import { EntityField } from "../field";
+import { Grid } from "../grid";
+import { Label } from "../label";
+import { getEditPageLabels } from "./edit-page-lcz";
+import type { BasePageProps } from "./index";
 
-        void this.attributes.context.runMethod("init")
-          .catch(() => {
-            if (!cancelled) {
-              this.attributes.loadedRecordKeyRef.current = null;
-              if (this.attributes.loadedRecordRef.current !== null || this.attributes.loadedRecord !== null) {
-                this.methods.setLoadedEntityRecord(null);
-              }
-            }
-          });
+interface LoadedEntityRecord {
+  displayValues: EntityDisplayValues;
+  values: EntityValues;
+}
 
-        return () => {
-          cancelled = true;
-          void this.attributes.context.runMethod("destroy").catch(() => undefined);
-        };
+export const BasePage = Titanic.define<BasePageProps>(
+  "Titanic.UI.BasePage",
+  function BasePage({
+    template,
+    value,
+    displayValues,
+    recordId,
+    loadRecord = true,
+    clientName,
+    disabled = false,
+    className = "",
+    top,
+    bottom,
+    backLabel,
+    cancelLabel,
+    deleteLabel,
+    submitLabel,
+    backDisabled = false,
+    cancelDisabled = false,
+    deleteDisabled = false,
+    submitDisabled = false,
+    actionBarVariant,
+    locale,
+    labels,
+    manualCommitDelayMs,
+    onChange,
+    onBack,
+    onCancel,
+    onDelete,
+    onSubmit
+  }: BasePageProps) {
+    const apiClient = useOptionalEntityApiClient(clientName);
+    const [loadedRecord, setLoadedRecord] = useState<LoadedEntityRecord | null>(null);
+    const loadedRecordRef = useRef<LoadedEntityRecord | null>(null);
+    const loadedRecordKeyRef = useRef<string | null>(null);
+    const recordLoadRequestRef = useRef(0);
+
+    const setLoadedEntityRecord = (nextRecord: LoadedEntityRecord | null) => {
+      loadedRecordRef.current = nextRecord;
+      setLoadedRecord(nextRecord);
+    };
+
+    const clearLoadedEntityRecord = () => {
+      recordLoadRequestRef.current += 1;
+      loadedRecordKeyRef.current = null;
+      if (loadedRecordRef.current !== null) {
+        setLoadedEntityRecord(null);
       }
-    },
-    diffItems: {
-      value(this: any): readonly any[] {
-        return Array.isArray(this.attributes.normalizedTemplate.diff)
-          ? this.attributes.normalizedTemplate.diff
-          : [];
-      }
-    },
-    hasActions: {
-      value(this: any): boolean {
-        return this.methods.hasActionsDiffItem(this.attributes.diffItems);
-      }
-    },
-    resolvedSubmitLabel: {
-      value(this: any): string {
-        return this.attributes.submitLabel ?? this.attributes.normalizedTemplate.submitLabel ?? "Save";
-      }
-    },
-    topContent: {
-      value(this: any): unknown {
-        return this.attributes.top
-          ? this.methods.resolveRenderValue(this.attributes.top, this.attributes.context)
-          : null;
-      }
-    },
-    bottomContent: {
-      value(this: any): unknown {
-        return this.attributes.bottom
-          ? this.methods.resolveRenderValue(this.attributes.bottom, this.attributes.context)
-          : null;
-      }
-    },
-    defaultActionsContent: {
-      value(this: any): unknown {
-        if (this.attributes.hasActions || !this.attributes.onSubmit) {
+    };
+
+    const pageMethods = useMemo<EntityEditPageMethods>(() => ({
+      destroy: () => {
+        recordLoadRequestRef.current += 1;
+        loadedRecordKeyRef.current = null;
+        loadedRecordRef.current = null;
+        return null;
+      },
+      init: (context: EntityEditPageContext) => {
+        if (!loadRecord) {
+          clearLoadedEntityRecord();
           return null;
         }
 
-        return this.renderDiff([
+        const nextRecordId = getRecordId(recordId, context.values, context.schema.primaryColumn);
+        if (isEmptyRecordId(nextRecordId)) {
+          clearLoadedEntityRecord();
+          return null;
+        }
+
+        const loadKey = createRecordLoadKey(context.schema, nextRecordId);
+        return loadedRecordKeyRef.current === loadKey
+          ? loadedRecordRef.current
+          : context.runMethod("loadEntity", nextRecordId);
+      },
+      loadEntity: async (context: EntityEditPageContext, nextRecordId?: unknown) => {
+        const effectiveRecordId = getRecordId(nextRecordId, context.values, context.schema.primaryColumn);
+
+        if (isEmptyRecordId(effectiveRecordId)) {
+          clearLoadedEntityRecord();
+          return null;
+        }
+
+        if (!apiClient) {
+          return null;
+        }
+
+        const loadKey = createRecordLoadKey(context.schema, effectiveRecordId);
+        const requestId = recordLoadRequestRef.current + 1;
+        recordLoadRequestRef.current = requestId;
+        loadedRecordKeyRef.current = loadKey;
+
+        try {
+          const rows = await apiClient.select(createEntityRecordQuery(context.schema, effectiveRecordId));
+          if (recordLoadRequestRef.current !== requestId) {
+            return loadedRecordRef.current;
+          }
+
+          const row = rows[0];
+          const nextLoadedRecord = row
+            ? { values: toEntityValues(row), displayValues: toEntityDisplayValues(row) }
+            : null;
+          setLoadedEntityRecord(nextLoadedRecord);
+          return nextLoadedRecord;
+        } catch (error) {
+          if (recordLoadRequestRef.current === requestId) {
+            loadedRecordKeyRef.current = null;
+          }
+
+          throw error;
+        }
+      },
+      reloadEntity() {
+        return this.loadEntity(this.get("Id"));
+      }
+    }), [apiClient, loadRecord, recordId]);
+
+    const mergedValue = useMemo(
+      () => loadedRecord?.values ? { ...loadedRecord.values, ...value } : value,
+      [loadedRecord, value]
+    );
+    const mergedDisplayValues = useMemo(
+      () => loadedRecord?.displayValues ? { ...loadedRecord.displayValues, ...displayValues } : displayValues,
+      [displayValues, loadedRecord]
+    );
+    const { normalizedTemplate, context } = useEntityEditPageController({
+      template,
+      value: mergedValue,
+      displayValues: mergedDisplayValues,
+      disabled,
+      methods: pageMethods,
+      onChange,
+      onSubmit
+    });
+    const effectiveRecordId = getRecordId(recordId, value, normalizedTemplate.schema.primaryColumn);
+    const recordLoadKey = loadRecord && !isEmptyRecordId(effectiveRecordId)
+      ? createRecordLoadKey(normalizedTemplate.schema, effectiveRecordId)
+      : "";
+
+    useEffect(() => {
+      let cancelled = false;
+
+      void context.runMethod("init").catch(() => {
+        if (!cancelled) {
+          loadedRecordKeyRef.current = null;
+          if (loadedRecordRef.current !== null) {
+            setLoadedEntityRecord(null);
+          }
+        }
+      });
+
+      return () => {
+        cancelled = true;
+        void context.runMethod("destroy").catch(() => undefined);
+      };
+    }, [apiClient, context.runMethod, loadRecord, recordLoadKey]);
+
+    const diffItems = Array.isArray(normalizedTemplate.diff) ? normalizedTemplate.diff : [];
+    const resolvedLabels = { ...getEditPageLabels(locale), ...(labels ?? {}) };
+    const resolvedBackLabel = backLabel ?? resolvedLabels.back;
+    const resolvedCancelLabel = cancelLabel ?? resolvedLabels.cancel;
+    const resolvedDeleteLabel = deleteLabel ?? resolvedLabels.delete;
+    const resolvedSubmitLabel = submitLabel ?? normalizedTemplate.submitLabel ?? resolvedLabels.submit;
+    const topContent = top ? resolveRenderValue(top, context) : null;
+    const bottomContent = bottom ? resolveRenderValue(bottom, context) : null;
+    const hasChanges = context.isDirty;
+    const hasToolbar = Boolean(
+      (hasChanges && (onSubmit || onCancel)) ||
+      (!hasChanges && onBack) ||
+      onDelete
+    );
+
+    const runAction = async (action: EntityEditPageAction, type: string) => {
+      if (action.onClick) {
+        await action.onClick.call(
           {
-            component: "Titanic.UI.EntityContainer",
-            props: {
-              className: "titanic-edit-page__actions"
-            },
-            children: [
-              {
-                component: "Titanic.UI.Button",
-                props: {
-                  disabled: { attr: "disabled" },
-                  type: "submit"
-                },
-                children: [
-                  {
-                    text: { attr: "resolvedSubmitLabel" }
-                  }
-                ]
-              }
-            ]
-          }
-        ]);
-      }
-    },
-    hasTopContent: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.normalizedTemplate.title || this.attributes.topContent);
-      }
-    },
-    hasBottomContent: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.bottomContent || this.attributes.defaultActionsContent);
-      }
-    },
-    rootClassName: {
-      value(this: any): string {
-        return this.methods.joinClassNames(
-          "titanic-base-entity-page",
-          "titanic-edit-page",
-          this.attributes.className
+            ...context,
+            context,
+            get: <TValue = unknown,>(key: string) => context.getValue<TValue>(key),
+            callParent: () => {
+              throw new Error(
+                `Entity edit page action "${action.name ?? "anonymous"}" does not have a parent implementation.`
+              );
+            }
+          },
+          context,
+          ...(action.args ?? [])
         );
+      } else if (action.method) {
+        await context.runMethod(action.method, ...(action.args ?? []));
+      } else if (type === "submit") {
+        await context.submit();
+      } else if (type === "reset") {
+        context.reset();
       }
-    }
-  },
-  methods: {
-    useOptionalEntityApiClient(this: any, clientName?: string): any {
-      const hook = (Titanic as any).EntityReact?.useOptionalEntityApiClient;
+    };
 
-      return typeof hook === "function" ? hook(clientName) : null;
-    },
-
-    useEntityEditPageController(this: any, options: any): any {
-      const hook = (Titanic as any).EntityReact?.useEntityEditPageController;
-
-      if (typeof hook !== "function") {
-        throw new Error("Titanic.EntityReact.useEntityEditPageController is not registered.");
-      }
-
-      return hook(options);
-    },
-
-    setLoadedEntityRecord(this: any, nextRecord: any): void {
-      this.attributes.loadedRecordRef.current = nextRecord;
-      this.attributes.setLoadedRecord(nextRecord);
-    },
-
-    clearLoadedEntityRecord(this: any): void {
-      this.attributes.recordLoadRequestRef.current += 1;
-      this.attributes.loadedRecordKeyRef.current = null;
-      if (this.attributes.loadedRecordRef.current !== null || this.attributes.loadedRecord !== null) {
-        this.methods.setLoadedEntityRecord(null);
-      }
-    },
-
-    async loadEntity(this: any, context: any, nextRecordId?: unknown): Promise<any> {
-      const nextEffectiveRecordId = this.methods.getRecordId(
-        nextRecordId,
-        context.values,
-        context.schema.primaryColumn
-      );
-
-      if (this.methods.isEmptyRecordId(nextEffectiveRecordId)) {
-        this.methods.clearLoadedEntityRecord();
-        return null;
-      }
-
-      if (!this.attributes.apiClient) {
-        return null;
-      }
-
-      const entityCore = (Titanic as any).EntityCore;
-      const loadKey = this.methods.createRecordLoadKey(context.schema, nextEffectiveRecordId);
-      const requestId = this.attributes.recordLoadRequestRef.current + 1;
-      this.attributes.recordLoadRequestRef.current = requestId;
-      this.attributes.loadedRecordKeyRef.current = loadKey;
-
-      try {
-        const rows = await this.attributes.apiClient.select(
-          entityCore.createEntityRecordQuery(context.schema, nextEffectiveRecordId)
-        );
-
-        if (this.attributes.recordLoadRequestRef.current !== requestId) {
-          return this.attributes.loadedRecordRef.current;
-        }
-
-        const row = rows[0];
-        const nextLoadedRecord = row
-          ? {
-            values: entityCore.toEntityValues(row),
-            displayValues: entityCore.toEntityDisplayValues(row)
-          }
-          : null;
-
-        this.methods.setLoadedEntityRecord(nextLoadedRecord);
-        return nextLoadedRecord;
-      } catch (error) {
-        if (this.attributes.recordLoadRequestRef.current === requestId) {
-          this.attributes.loadedRecordKeyRef.current = null;
-          this.methods.setLoadedEntityRecord(null);
-        }
-
-        throw error;
-      }
-    },
-
-    init(this: any, context: any): unknown {
-      if (!this.attributes.loadRecord) {
-        this.methods.clearLoadedEntityRecord();
-        return null;
-      }
-
-      const nextEffectiveRecordId = this.methods.getRecordId(
-        this.attributes.recordId,
-        context.values,
-        context.schema.primaryColumn
-      );
-
-      if (this.methods.isEmptyRecordId(nextEffectiveRecordId)) {
-        this.methods.clearLoadedEntityRecord();
-        return null;
-      }
-
-      const loadKey = this.methods.createRecordLoadKey(context.schema, nextEffectiveRecordId);
-      if (this.attributes.loadedRecordKeyRef.current === loadKey) {
-        return this.attributes.loadedRecordRef.current;
-      }
-
-      return context.runMethod("loadEntity", nextEffectiveRecordId);
-    },
-
-    destroy(this: any): null {
-      this.attributes.recordLoadRequestRef.current += 1;
-      this.attributes.loadedRecordKeyRef.current = null;
-      this.attributes.loadedRecordRef.current = null;
-      return null;
-    },
-
-    async handleSubmit(this: any, event: any): Promise<void> {
-      event.preventDefault();
-      await this.attributes.submit();
-    },
-
-    renderDiffItem(this: any, item: any, index: number): unknown {
-      if (!this.methods.resolvePredicate(item.visible, this.attributes.context, true)) {
-        return null;
-      }
-
-      const key = item.name ?? `${item.type}-${index}`;
-      const style = this.methods.getGridSpanStyle(item.gridSpan);
-
-      switch (item.type) {
-        case "field":
-          return this.methods.renderField(item, key);
-        case "section":
-          return this.renderDiff([
-            {
-              component: "Titanic.UI.EntityContainer",
-              key,
-              props: {
-                className: this.methods.joinClassNames("titanic-edit-page__section", item.className),
-                style
-              },
-              children: [
-                item.title
-                  ? {
-                    component: "Titanic.UI.EntityLabel",
-                    props: {
-                      as: "h3",
-                      value: this.methods.resolveRenderValue(item.title, this.attributes.context)
-                    }
-                  }
-                  : null,
-                {
-                  component: "Titanic.UI.EntityGrid",
-                  props: {
-                    columns: item.columns,
-                    gap: item.gap
-                  },
-                  children: [
-                    {
-                      call: "renderAttributeFields",
-                      args: [item.attributes]
-                    },
-                    {
-                      each: item.items ?? [],
-                      as: "child",
-                      indexAs: "childIndex",
-                      diff: [
-                        {
-                          call: "renderDiffItem",
-                          args: [{ local: "child" }, { local: "childIndex" }]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]);
-        case "row":
-          return this.renderDiff([
-            {
-              component: "Titanic.UI.EntityContainer",
-              key,
-              props: {
-                className: this.methods.joinClassNames("titanic-edit-page__row", item.className),
-                style
-              },
-              children: [
-                {
-                  component: "Titanic.UI.EntityGrid",
-                  props: {
-                    columns: item.columns,
-                    gap: item.gap
-                  },
-                  children: [
-                    {
-                      call: "renderAttributeFields",
-                      args: [item.attributes]
-                    },
-                    {
-                      each: item.items ?? [],
-                      as: "child",
-                      indexAs: "childIndex",
-                      diff: [
-                        {
-                          call: "renderDiffItem",
-                          args: [{ local: "child" }, { local: "childIndex" }]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]);
-        case "text":
-          return this.renderDiff([
-            {
-              component: "Titanic.UI.EntityContainer",
-              key,
-              props: {
-                className: this.methods.joinClassNames("titanic-edit-page__text", item.className),
-                style
-              },
-              children: [
-                {
-                  text: this.methods.resolveRenderValue(item.text, this.attributes.context)
-                }
-              ]
-            }
-          ]);
-        case "actions":
-          return this.methods.renderActions(item, key, style);
-        case "custom":
-          return this.renderDiff([
-            {
-              component: "Titanic.UI.EntityContainer",
-              key,
-              props: {
-                className: this.methods.joinClassNames("titanic-edit-page__custom", item.className),
-                style
-              },
-              children: [
-                {
-                  text: item.render(this.attributes.context)
-                }
-              ]
-            }
-          ]);
-        default:
-          return null;
-      }
-    },
-
-    renderAttributeFields(this: any, attributes: string[] | undefined): unknown[] {
-      return (attributes ?? []).map((attribute, index) =>
-        this.methods.renderField({ type: "field", attribute }, `attribute-${attribute}-${index}`)
-      );
-    },
-
-    renderField(this: any, item: any, key: string): unknown {
-      const column = this.attributes.context.template.columnsByAttribute[item.attribute];
+    const renderField = (item: any, key: string): ReactNode => {
+      const column = context.template.columnsByAttribute[item.attribute];
       if (!column) {
         return null;
       }
 
-      return this.renderDiff([
-        {
-          component: "Titanic.UI.EntityField",
-          key,
-          props: {
-            className: item.className,
-            column: {
-              ...column,
-              gridSpan: item.gridSpan ?? column.gridSpan
-            },
-            disabled: this.attributes.context.disabled || this.methods.resolvePredicate(
-              item.disabled,
-              this.attributes.context,
-              false
-            ),
-            displayValues: this.attributes.context.displayValues,
-            manualCommitDelayMs: this.attributes.manualCommitDelayMs,
-            onChange: { literal: this.attributes.context.setValue },
-            values: this.attributes.context.values
-          }
-        }
-      ]);
-    },
+      return (
+        <EntityField
+          className={item.className}
+          column={{ ...column, gridSpan: item.gridSpan ?? column.gridSpan }}
+          disabled={context.disabled || resolvePredicate(item.disabled, context, false)}
+          displayValues={context.displayValues}
+          key={key}
+          manualCommitDelayMs={manualCommitDelayMs}
+          values={context.values}
+          onChange={context.setValue}
+        />
+      );
+    };
 
-    renderActions(this: any, item: any, key: string, style: any): unknown {
-      return this.renderDiff([
-        {
-          component: "Titanic.UI.EntityContainer",
-          key,
-          props: {
-            className: this.methods.joinClassNames("titanic-edit-page__actions", item.className),
-            style
-          },
-          children: [
-            {
-              each: item.actions,
-              as: "action",
-              indexAs: "actionIndex",
-              diff: [
-                {
-                  call: "renderAction",
-                  args: [{ local: "action" }, { local: "actionIndex" }]
-                }
-              ]
-            }
-          ]
-        }
-      ]);
-    },
-
-    renderAction(this: any, action: any, index: number): unknown {
-      const key = action.name ?? `action-${index}`;
+    const renderAction = (action: EntityEditPageAction, index: number): ReactNode => {
       const type = action.type ?? "button";
       const isNativeSubmit = type === "submit" && !action.method && !action.onClick;
 
-      return this.renderDiff([
-        {
-          component: "Titanic.UI.Button",
-          key,
-          props: {
-            className: this.methods.joinClassNames(
-              this.methods.getActionVariantClassName(action.variant),
-              action.className
-            ),
-            disabled: this.attributes.context.disabled || this.methods.resolvePredicate(
-              action.disabled,
-              this.attributes.context,
-              false
-            ),
-            onClick: isNativeSubmit ? undefined : { literal: this.methods.createActionClickHandler(action, type) },
-            type: isNativeSubmit ? "submit" : "button"
-          },
-          children: [
-            {
-              text: this.methods.resolveRenderValue(action.label, this.attributes.context)
-            }
-          ]
-        }
-      ]);
-    },
+      return (
+        <Button
+          className={joinClassNames(
+            action.variant ? `titanic-edit-page__button_${action.variant}` : "",
+            action.className
+          )}
+          disabled={context.disabled || resolvePredicate(action.disabled, context, false)}
+          key={action.name ?? `action-${index}`}
+          type={isNativeSubmit ? "submit" : "button"}
+          onClick={isNativeSubmit ? undefined : () => void runAction(action, type)}
+        >
+          {resolveRenderValue(action.label, context)}
+        </Button>
+      );
+    };
 
-    createActionClickHandler(this: any, action: any, type: string): () => void {
-      return () => {
-        void this.methods.runAction(action, type);
-      };
-    },
-
-    async runAction(this: any, action: any, type: string): Promise<void> {
-      if (action.onClick) {
-        await action.onClick.call(
-          this.methods.createActionMethodThis(action, this.attributes.context),
-          this.attributes.context,
-          ...(action.args ?? [])
-        );
-        return;
+    const renderDiffItem = (item: EntityEditPageDiffItem, index: number): ReactNode => {
+      if (!resolvePredicate(item.visible, context, true)) {
+        return null;
       }
 
-      if (action.method) {
-        await this.attributes.context.runMethod(action.method, ...(action.args ?? []));
-        return;
-      }
+      const key = item.name ?? `${item.type}-${index}`;
+      const style = getGridSpanStyle(item.gridSpan);
 
-      if (type === "submit") {
-        await this.attributes.context.submit();
-        return;
-      }
-
-      if (type === "reset") {
-        this.attributes.context.reset();
-      }
-    },
-
-    hasActionsDiffItem(this: any, diff: readonly any[]): boolean {
-      return diff.some((item) => {
-        if (item.type === "actions") {
-          return true;
-        }
-
-        return (item.type === "section" || item.type === "row") &&
-          this.methods.hasActionsDiffItem(item.items ?? []);
-      });
-    },
-
-    createActionMethodThis(this: any, action: any, context: any): any {
-      return {
-        ...context,
-        context,
-        callParent: () => {
-          throw new Error(
-            `Entity edit page action "${action.name ?? "anonymous"}" does not have a parent implementation.`
+      switch (item.type) {
+        case "field":
+          return renderField(item, key);
+        case "section":
+          return (
+            <Expander
+              className={joinClassNames("titanic-edit-page__section", item.className)}
+              contentClassName="titanic-edit-page__section-content"
+              defaultExpanded={item.defaultExpanded ?? true}
+              key={key}
+              label={item.title ? resolveRenderValue(item.title, context) : undefined}
+              style={style}
+            >
+              <Grid columns={item.columns} gap={item.gap}>
+                {(item.attributes ?? []).map((attribute, fieldIndex) => (
+                  renderField({ type: "field", attribute }, `attribute-${attribute}-${fieldIndex}`)
+                ))}
+                {(item.items ?? []).map(renderDiffItem)}
+              </Grid>
+            </Expander>
           );
-        }
-      };
-    },
-
-    mergeEntityValues(this: any, loadedValues: any, value: any): any {
-      if (!loadedValues) {
-        return value;
+        case "row":
+          return (
+            <Container
+              className={joinClassNames("titanic-edit-page__row", item.className)}
+              key={key}
+              style={style}
+            >
+              <Grid columns={item.columns} gap={item.gap}>
+                {(item.attributes ?? []).map((attribute, fieldIndex) => (
+                  renderField({ type: "field", attribute }, `attribute-${attribute}-${fieldIndex}`)
+                ))}
+                {(item.items ?? []).map(renderDiffItem)}
+              </Grid>
+            </Container>
+          );
+        case "text":
+          return (
+            <Container
+              className={joinClassNames("titanic-edit-page__text", item.className)}
+              key={key}
+              style={style}
+            >
+              {resolveRenderValue(item.text, context)}
+            </Container>
+          );
+        case "actions":
+          return (
+            <Container
+              className={joinClassNames("titanic-edit-page__actions", item.className)}
+              key={key}
+              style={style}
+            >
+              {item.actions.map(renderAction)}
+            </Container>
+          );
+        case "custom":
+          return (
+            <Container
+              className={joinClassNames("titanic-edit-page__custom", item.className)}
+              key={key}
+              style={style}
+            >
+              {item.render(context)}
+            </Container>
+          );
+        default:
+          return null;
       }
+    };
 
-      return {
-        ...loadedValues,
-        ...value
-      };
-    },
+    return (
+      <ButtonMethodProvider runMethod={context.runMethod}>
+      <form
+        className={joinClassNames("titanic-base-page", "titanic-edit-page", className)}
+        onSubmit={async (event: FormEvent) => {
+          event.preventDefault();
+          await context.runMethod("save");
+        }}
+      >
+        {hasToolbar ? (
+          <ActionBar
+            align="start"
+            className="titanic-edit-page__toolbar"
+            contentClassName="titanic-edit-page__toolbar-actions"
+            variant={actionBarVariant}
+          >
+            {onSubmit && hasChanges ? (
+              <Button disabled={disabled || submitDisabled} method="save" type="button" variant="primary">
+                {resolvedSubmitLabel}
+              </Button>
+            ) : null}
+            {hasChanges && (onSubmit || onCancel) ? (
+              <Button
+                disabled={disabled || cancelDisabled}
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  context.reset();
+                  void onCancel?.(context);
+                }}
+              >
+                {resolvedCancelLabel}
+              </Button>
+            ) : null}
+            {onBack && !hasChanges ? (
+              <Button
+                disabled={disabled || backDisabled}
+                type="button"
+                variant="secondary"
+                onClick={() => void onBack(context)}
+              >
+                {resolvedBackLabel}
+              </Button>
+            ) : null}
+            {onDelete ? (
+              <Button
+                disabled={disabled || deleteDisabled}
+                type="button"
+                variant="danger"
+                onClick={() => void onDelete(context.values, context)}
+              >
+                {resolvedDeleteLabel}
+              </Button>
+            ) : null}
+          </ActionBar>
+        ) : null}
+        {normalizedTemplate.title || topContent ? (
+          <Container className="titanic-edit-page__top">
+            {normalizedTemplate.title ? (
+              <Label as="h2" className="titanic-edit-page__title" value={normalizedTemplate.title} />
+            ) : null}
+            {topContent}
+          </Container>
+        ) : null}
+        <Grid className="titanic-edit-page__grid">
+          {diffItems.map(renderDiffItem)}
+        </Grid>
+        {bottomContent ? (
+          <Container className="titanic-edit-page__bottom">
+            {bottomContent}
+          </Container>
+        ) : null}
+      </form>
+      </ButtonMethodProvider>
+    );
+  }
+);
 
-    mergeEntityDisplayValues(this: any, loadedDisplayValues: any, displayValues: any): any {
-      if (!loadedDisplayValues) {
-        return displayValues;
-      }
+function getRecordId(recordId: unknown, value: EntityValues | undefined, primaryColumn: string | undefined): unknown {
+  return !isEmptyRecordId(recordId) ? recordId : value?.[primaryColumn ?? "Id"];
+}
 
-      return {
-        ...loadedDisplayValues,
-        ...displayValues
-      };
-    },
+function isEmptyRecordId(value: unknown): boolean {
+  return value === null || value === undefined || value === "";
+}
 
-    getRecordId(this: any, recordId: unknown, value: any, primaryColumn: string | undefined): unknown {
-      if (!this.methods.isEmptyRecordId(recordId)) {
-        return recordId;
-      }
+function createRecordLoadKey(
+  schema: { tableName: string; primaryColumn?: string; columns: readonly { path: string; alias?: string }[] },
+  recordId: unknown
+): string {
+  const columnsKey = schema.columns.map((column) => `${column.path}:${column.alias ?? ""}`).join("|");
+  return `${schema.tableName}:${schema.primaryColumn ?? "Id"}:${String(recordId)}:${columnsKey}`;
+}
 
-      return value?.[primaryColumn ?? "Id"];
-    },
+function resolveRenderValue<TValue>(
+  value: EntityEditPageRenderValue<TValue>,
+  context: EntityEditPageContext
+): TValue {
+  return typeof value === "function"
+    ? (value as (context: EntityEditPageContext) => TValue)(context)
+    : value;
+}
 
-    isEmptyRecordId(this: any, value: unknown): boolean {
-      return value === null || value === undefined || value === "";
-    },
+function resolvePredicate(
+  predicate: EntityEditPagePredicate | undefined,
+  context: EntityEditPageContext,
+  defaultValue: boolean
+): boolean {
+  return predicate === undefined
+    ? defaultValue
+    : typeof predicate === "function"
+      ? predicate(context)
+      : predicate;
+}
 
-    createRecordLoadKey(this: any, schema: any, recordId: unknown): string {
-      const columnsKey = schema.columns
-        .map((column: any) => `${column.path}:${column.alias ?? ""}`)
-        .join("|");
+function getGridSpanStyle(gridSpan?: number): CSSProperties | undefined {
+  return gridSpan ? { "--titanic-grid-span": gridSpan } as CSSProperties : undefined;
+}
 
-      return `${schema.tableName}:${schema.primaryColumn ?? "Id"}:${String(recordId)}:${columnsKey}`;
-    },
-
-    resolveRenderValue(this: any, value: any, context: any): any {
-      return typeof value === "function" ? value(context) : value;
-    },
-
-    resolvePredicate(this: any, predicate: any, context: any, defaultValue: boolean): boolean {
-      if (predicate === undefined) {
-        return defaultValue;
-      }
-
-      return typeof predicate === "function" ? predicate(context) : predicate;
-    },
-
-    getGridSpanStyle(this: any, gridSpan?: number): Record<string, unknown> | undefined {
-      return gridSpan ? { "--titanic-grid-span": gridSpan } : undefined;
-    },
-
-    getActionVariantClassName(this: any, variant: string | undefined): string {
-      return variant ? `titanic-edit-page__button_${variant}` : "";
-    },
-
-    joinClassNames(this: any, ...classNames: Array<string | false | null | undefined>): string {
-      return classNames.filter(Boolean).join(" ");
-    }
-  },
-  diff: [
-    {
-      tag: "form",
-      props: {
-        className: { attr: "rootClassName" },
-        onSubmit: { method: "handleSubmit" }
-      },
-      children: [
-        {
-          component: "Titanic.UI.EntityContainer",
-          when: { attr: "hasTopContent" },
-          props: {
-            className: "titanic-edit-page__top"
-          },
-          children: [
-            {
-              component: "Titanic.UI.EntityLabel",
-              when: { attr: "normalizedTemplate.title" },
-              props: {
-                as: "h2",
-                className: "titanic-edit-page__title",
-                value: { attr: "normalizedTemplate.title" }
-              }
-            },
-            {
-              text: { attr: "topContent" }
-            }
-          ]
-        },
-        {
-          component: "Titanic.UI.EntityGrid",
-          props: {
-            className: "titanic-edit-page__grid"
-          },
-          children: [
-            {
-              each: { attr: "diffItems" },
-              as: "item",
-              indexAs: "index",
-              diff: [
-                {
-                  call: "renderDiffItem",
-                  args: [{ local: "item" }, { local: "index" }]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          component: "Titanic.UI.EntityContainer",
-          when: { attr: "hasBottomContent" },
-          props: {
-            className: "titanic-edit-page__bottom"
-          },
-          children: [
-            {
-              text: { attr: "bottomContent" }
-            },
-            {
-              text: { attr: "defaultActionsContent" }
-            }
-          ]
-        }
-      ]
-    }
-  ]
-});
+function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
+  return classNames.filter(Boolean).join(" ");
+}

@@ -1,4 +1,5 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { Titanic } from "@titanic-entity/entity-react";
 import { entityReactComponentNames } from "@titanic-entity/entity-react/model";// Базовая страница реестра записей Entity ORM API: грид, модальное редактирование и настройка формы.
 import { useEffect, useMemo, useState, type CSSProperties, type DragEvent, type PointerEvent } from "react";
 import {
@@ -20,12 +21,13 @@ import {
   type EntityValues
 } from "@titanic-entity/entity-core";
 import { EntityForm } from "../form/form";
-import { EntityDataGrid } from "../dataGrid";
+import { DataGrid } from "../dataGrid";
 import { ResourceSvgIcon } from "../resourceSvgIcon/resource-svg-icon";
-import { titanicCommonIcons } from "../resourceSvgIcon/titanic-icons";
+import { titanicCommonIcons } from "@titanic-entity/entity-icons";
 import { Button } from "../button";
 import type { EntityDataGridColumn, EntityDataGridLabels, EntityDataGridSettings } from "../dataGrid/data-grid-settings";
-import type { EntityDataGridColumnPickerLabels } from "../dataGrid/data-grid-props";
+import type { EntityDataGridColumnPickerLabels } from "../dataGrid";
+import { ModalPages } from "../modalPages";
 
 export interface EntityRecordPageConfig {
   tableName: string;
@@ -88,7 +90,7 @@ export interface EntityRecordsPageProps {
   onFormLayoutSave?: (fields: EntityRecordsFormLayoutField[]) => Promise<void> | void;
 }
 
-export function EntityRecordsPage({
+export const EntityRecordsPage = Titanic.define<EntityRecordsPageProps>("Titanic.UI.EntityRecordsPage", function EntityRecordsPage({
   client,
   columnSettingsClient,
   columnPickerLabels,
@@ -215,7 +217,12 @@ export function EntityRecordsPage({
       return;
     }
 
-    if (!selectedPrimaryValue || !globalThis.confirm(labels.deleteConfirm)) {
+    if (!selectedPrimaryValue) {
+      return;
+    }
+
+    const approved = await ModalPages.showApproved({ message: labels.deleteConfirm, tone: "danger" });
+    if (!approved) {
       return;
     }
 
@@ -269,7 +276,7 @@ export function EntityRecordsPage({
 
       {actionError ? <p className="titanic-records-page__error">{actionError}</p> : null}
 
-      <EntityDataGrid<EntityApiEntity>
+      <DataGrid<EntityApiEntity>
         className="system-designer-page__records-grid"
         activeRowKey={selectedRecordKey}
         client={client}
@@ -280,6 +287,7 @@ export function EntityRecordsPage({
         defaultVisibleColumnKeys={defaultVisibleColumnKeys}
         gridId={gridId}
         orders={orders}
+        primaryColumn={record.primaryColumn}
         refreshKey={refreshKey}
         rowCount={rowCount}
         structure={structure}
@@ -355,7 +363,7 @@ export function EntityRecordsPage({
       ) : null}
     </section>
   );
-}
+});
 
 export function createEntityRecordValues(schema: EntitySchema, primaryColumn: string): EntityValues {
   return Object.fromEntries(schema.columns.map((rawColumn) => {

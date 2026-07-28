@@ -1,271 +1,160 @@
-Titanic.define("Titanic.UI.Button", {
-  attributes: {
-    ariaControls: {
-      value(this: any): unknown {
-        return this.props["aria-controls"];
-      }
-    },
-    ariaExpanded: {
-      value(this: any): unknown {
-        return this.props["aria-expanded"];
-      }
-    },
-    ariaHasPopup: {
-      value(this: any): unknown {
-        return this.props["aria-haspopup"];
-      }
-    },
-    children: {},
-    className: { default: "" },
-    disabled: {},
-    items: {},
-    menuAriaLabel: {},
-    menuClassName: {},
-    menuItemClassName: {},
-    menuSeparatorClassName: {},
-    onClick: {},
-    type: { default: "button" },
-    unstyled: { default: false },
-    variant: { default: "default" },
-    open: { state: true, default: false },
-    menuId: { id: true },
-    rootRef: { ref: true, default: null },
-    menuItems: {
-      value(this: any): readonly any[] {
-        return Array.isArray(this.attributes.items) ? this.attributes.items : [];
-      }
-    },
-    hasMenu: {
-      value(this: any): boolean {
-        return this.attributes.menuItems.length > 0;
-      }
-    },
-    buttonProps: {
-      value(this: any): Record<string, unknown> {
-        return this.methods.getButtonProps();
-      }
-    },
-    outsideMenuEffect: {
-      deps: { array: [{ attr: "open" }] },
-      effect(this: any): void | (() => void) {
-        if (!this.attributes.open) {
-          return;
-        }
+import { Titanic } from "@titanic-entity/entity-react";
+import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { useButtonMethodRunner } from "./button-method-context";
+import type { ButtonMenuAction, ButtonMenuItem, ButtonProps } from "./index";
 
-        const handlePointerDown = (event: PointerEvent) => {
-          const root = this.attributes.rootRef.current;
+export const Button = Titanic.define<ButtonProps>("Titanic.UI.Button", function Button(props: ButtonProps) {
+  const {
+    children,
+    className = "",
+    disabled,
+    items,
+    method,
+    methodArgs,
+    menuAriaLabel,
+    menuClassName,
+    menuItemClassName,
+    menuSeparatorClassName,
+    onClick,
+    type = "button",
+    unstyled = false,
+    variant = "default",
+    ...nativeProps
+  } = props;
+  const [open, setOpen] = useState(false);
+  const runMethod = useButtonMethodRunner();
+  const menuId = useId();
+  const rootRef = useRef<HTMLSpanElement | null>(null);
+  const menuItems = Array.isArray(items) ? items : [];
+  const hasMenu = menuItems.length > 0;
 
-          if (!root || root.contains(event.target as Node)) {
-            return;
-          }
-
-          this.attributes.setOpen(false);
-        };
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-          if (event.key === "Escape") {
-            this.attributes.setOpen(false);
-          }
-        };
-
-        document.addEventListener("pointerdown", handlePointerDown, true);
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-          document.removeEventListener("pointerdown", handlePointerDown, true);
-          document.removeEventListener("keydown", handleKeyDown);
-        };
-      }
+  useEffect(() => {
+    if (!open) {
+      return;
     }
-  },
-  methods: {
-    getNativeButtonProps(this: any): Record<string, unknown> {
-      const nativeProps = { ...this.props } as Record<string, unknown>;
 
-      [
-        "aria-controls",
-        "aria-expanded",
-        "aria-haspopup",
-        "children",
-        "className",
-        "disabled",
-        "items",
-        "menuAriaLabel",
-        "menuClassName",
-        "menuItemClassName",
-        "menuSeparatorClassName",
-        "onClick",
-        "type",
-        "unstyled",
-        "variant"
-      ].forEach((propName) => {
-        delete nativeProps[propName];
-      });
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
 
-      return nativeProps;
-    },
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
 
-    getButtonProps(this: any): Record<string, unknown> {
-      return {
-        ...this.methods.getNativeButtonProps(),
-        "aria-controls": this.attributes.hasMenu ? this.attributes.menuId : this.attributes.ariaControls,
-        "aria-expanded": this.attributes.hasMenu ? this.attributes.open : this.attributes.ariaExpanded,
-        "aria-haspopup": this.attributes.hasMenu ? "menu" : this.attributes.ariaHasPopup,
-        className: this.methods.joinClassNames(
-          this.attributes.unstyled ? undefined : "titanic-button",
-          this.attributes.unstyled ? undefined : `titanic-button_${this.attributes.variant}`,
-          !this.attributes.unstyled && this.attributes.hasMenu ? "titanic-button_has-menu" : undefined,
-          this.attributes.className
-        ),
-        disabled: this.attributes.disabled,
-        onClick: this.methods.handleButtonClick,
-        type: this.attributes.type
-      };
-    },
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
 
-    handleButtonClick(this: any, event: any): void {
-      this.attributes.onClick?.(event);
+  const handleButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
 
-      if (event.defaultPrevented || this.attributes.disabled || !this.attributes.hasMenu) {
-        return;
+    if (!event.defaultPrevented && !disabled && method) {
+      if (!runMethod) {
+        throw new Error(`Button method "${method}" requires a ButtonMethodProvider.`);
       }
 
-      this.attributes.setOpen((current: boolean) => !current);
-    },
-
-    handleMenuItemClick(this: any, event: any, item: any): void {
-      item?.onClick?.(event);
-
-      if (!event.defaultPrevented) {
-        this.attributes.setOpen(false);
-      }
-    },
-
-    isButtonMenuSeparator(this: any, item: any): boolean {
-      return item?.kind === "separator";
-    },
-
-    getMenuItemClassName(this: any, item: any): string {
-      return this.methods.joinClassNames(
-        "titanic-button-menu__item",
-        item?.danger ? "titanic-button-menu__item_danger" : undefined,
-        this.attributes.menuItemClassName,
-        item?.className
-      );
-    },
-
-    getMenuSeparatorClassName(this: any): string {
-      return this.methods.joinClassNames(
-        "titanic-button-menu__separator",
-        this.attributes.menuSeparatorClassName
-      );
-    },
-
-    joinClassNames(this: any, ...classNames: Array<string | false | null | undefined>): string {
-      return classNames.filter(Boolean).join(" ");
+      void runMethod(method, ...(methodArgs ?? []));
     }
-  },
-  diff: [
-    {
-      tag: "button",
-      unless: { attr: "hasMenu" },
-      props: {
-        $spread: { attr: "buttonProps" }
-      },
-      children: [
-        { slot: "children" },
-        {
-          tag: "span",
-          when: { and: [{ not: { attr: "unstyled" } }, { attr: "hasMenu" }] },
-          props: {
-            "aria-hidden": true,
-            className: "titanic-button__menu-indicator"
-          }
-        }
-      ]
-    },
-    {
-      tag: "span",
-      when: { attr: "hasMenu" },
-      props: {
-        className: "titanic-button-menu",
-        ref: { attr: "rootRef" }
-      },
-      children: [
-        {
-          tag: "button",
-          props: {
-            $spread: { attr: "buttonProps" }
-          },
-          children: [
-            { slot: "children" },
-            {
-              tag: "span",
-              when: { and: [{ not: { attr: "unstyled" } }, { attr: "hasMenu" }] },
-              props: {
-                "aria-hidden": true,
-                className: "titanic-button__menu-indicator"
-              }
-            }
-          ]
-        },
-        {
-          tag: "span",
-          when: { attr: "open" },
-          props: {
-            "aria-label": { attr: "menuAriaLabel" },
-            className: {
-              call: "joinClassNames",
-              args: ["titanic-button-menu__menu", { attr: "menuClassName" }]
-            },
-            id: { attr: "menuId" },
-            role: "menu"
-          },
-          children: [
-            {
-              each: { attr: "menuItems" },
-              as: "menuItem",
-              diff: [
-                {
-                  tag: "span",
-                  key: { local: "menuItem.key" },
-                  when: {
-                    call: "isButtonMenuSeparator",
-                    args: [{ local: "menuItem" }]
-                  },
-                  props: {
-                    className: { call: "getMenuSeparatorClassName" },
-                    role: "separator"
-                  }
-                },
-                {
-                  tag: "button",
-                  key: { local: "menuItem.key" },
-                  unless: {
-                    call: "isButtonMenuSeparator",
-                    args: [{ local: "menuItem" }]
-                  },
-                  props: {
-                    className: {
-                      call: "getMenuItemClassName",
-                      args: [{ local: "menuItem" }]
-                    },
-                    disabled: { local: "menuItem.disabled" },
-                    onClick: {
-                      method: "handleMenuItemClick",
-                      args: [{ local: "menuItem" }]
-                    },
-                    role: "menuitem",
-                    title: { local: "menuItem.title" },
-                    type: "button"
-                  },
-                  children: [{ text: { local: "menuItem.label" } }]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+
+    if (!event.defaultPrevented && !disabled && hasMenu) {
+      setOpen((current) => !current);
     }
-  ]
+  };
+  const buttonProps = {
+    ...nativeProps,
+    "aria-controls": hasMenu ? menuId : props["aria-controls"],
+    "aria-expanded": hasMenu ? open : props["aria-expanded"],
+    "aria-haspopup": hasMenu ? "menu" as const : props["aria-haspopup"],
+    className: [
+      unstyled ? undefined : "titanic-button",
+      unstyled ? undefined : `titanic-button_${variant}`,
+      !unstyled && hasMenu ? "titanic-button_has-menu" : undefined,
+      className
+    ].filter(Boolean).join(" "),
+    disabled,
+    type,
+    onClick: handleButtonClick
+  };
+  const content = (
+    <>
+      {children}
+      {!unstyled && hasMenu ? <span aria-hidden="true" className="titanic-button__menu-indicator" /> : null}
+    </>
+  );
+
+  if (!hasMenu) {
+    return <button {...buttonProps}>{content}</button>;
+  }
+
+  return (
+    <span className="titanic-button-menu" ref={rootRef}>
+      <button {...buttonProps}>{content}</button>
+      {open ? (
+        <span
+          aria-label={menuAriaLabel}
+          className={["titanic-button-menu__menu", menuClassName].filter(Boolean).join(" ")}
+          id={menuId}
+          role="menu"
+        >
+          {menuItems.map((item) => renderMenuItem(
+            item,
+            menuItemClassName,
+            menuSeparatorClassName,
+            setOpen
+          ))}
+        </span>
+      ) : null}
+    </span>
+  );
 });
+
+function renderMenuItem(
+  item: ButtonMenuItem,
+  menuItemClassName: string | undefined,
+  menuSeparatorClassName: string | undefined,
+  setOpen: (open: boolean) => void
+) {
+  if (item.kind === "separator") {
+    return (
+      <span
+        className={["titanic-button-menu__separator", menuSeparatorClassName].filter(Boolean).join(" ")}
+        key={item.key}
+        role="separator"
+      />
+    );
+  }
+
+  const action = item as ButtonMenuAction;
+
+  return (
+    <button
+      className={[
+        "titanic-button-menu__item",
+        action.danger ? "titanic-button-menu__item_danger" : undefined,
+        menuItemClassName,
+        action.className
+      ].filter(Boolean).join(" ")}
+      disabled={action.disabled}
+      key={action.key}
+      role="menuitem"
+      title={action.title}
+      type="button"
+      onClick={(event) => {
+        action.onClick?.(event);
+        if (!event.defaultPrevented) {
+          setOpen(false);
+        }
+      }}
+    >
+      {action.label}
+    </button>
+  );
+}

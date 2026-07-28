@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { Titanic } from "@titanic-entity/entity-react";
 import type { EntityDataGridLabels } from "../../dataGrid/data-grid-settings";
 import { BaseModalPage } from "../../baseModalPage";
 import { Button } from "../../button";
-import { EntityContainer } from "../../container";
+import { Container } from "../../container";
 import { columnSettingsDefinedComponentNames } from "./component-names";
 
 export interface ColumnSettingsDialogLayoutProps {
@@ -18,7 +18,7 @@ export interface ColumnSettingsDialogLayoutProps {
   onSaveDefault: () => void;
 }
 
-function ColumnSettingsDialogLayoutNative({
+export const ColumnSettingsDialogLayout = Titanic.define<ColumnSettingsDialogLayoutProps>(columnSettingsDefinedComponentNames.ColumnSettingsDialogLayout, function ColumnSettingsDialogLayout({
   children,
   error,
   labels,
@@ -47,7 +47,7 @@ function ColumnSettingsDialogLayoutNative({
       error={error}
       footer={(
         <>
-          <EntityContainer className="titanic-data-grid-column-modal__footer-spacer" />
+          <Container className="titanic-data-grid-column-modal__footer-spacer" />
           <Button unstyled
             className="titanic-data-grid-column-modal__button titanic-data-grid-column-modal__button_primary"
             disabled={saving}
@@ -77,13 +77,4 @@ function ColumnSettingsDialogLayoutNative({
       {children}
     </BaseModalPage>
   );
-}
-
-Titanic.define<ColumnSettingsDialogLayoutProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsDialogLayout,
-  ColumnSettingsDialogLayoutNative
-);
-
-export const ColumnSettingsDialogLayout = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsDialogLayoutProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsDialogLayout)!;
+});

@@ -1,7 +1,9 @@
 import { defineComponentSchema, defineFieldSchema } from "@titanic-entity/entity-base";
+import { Titanic } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactFieldNames } from "@titanic-entity/entity-react/model";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../button";
+import { getEntityJsonEditorLabels } from "./json-editor-lcz";
 import type {
   EntityJsonEditorLabels,
   EntityJsonEditorMode,
@@ -28,33 +30,14 @@ export interface EntityJsonEditorProps extends EntityJsonEditorOptions {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  locale?: string;
   onChange?: (value: string) => void;
   onValidityChange?: (valid: boolean, error: string | null) => void;
 }
 
-const defaultLabels: EntityJsonEditorLabels = {
-  textMode: "Text",
-  fieldsMode: "Fields",
-  addField: "Add field",
-  addItem: "Add item",
-  removeField: "Remove",
-  requiredField: "Required",
-  fieldName: "Name",
-  fieldType: "Type",
-  value: "Value",
-  invalidJson: "Invalid JSON",
-  emptyObject: "No fields",
-  stringType: "String",
-  numberType: "Number",
-  booleanType: "Boolean",
-  nullType: "Null",
-  objectType: "Object",
-  arrayType: "Array"
-};
-
 const typeOptions: readonly EntityJsonValueKind[] = ["string", "number", "boolean", "null", "object", "array"];
 
-export function EntityJsonEditor({
+export const EntityJsonEditor = Titanic.define<EntityJsonEditorProps>("Titanic.UI.EntityJsonEditor", function EntityJsonEditor({
   id,
   name,
   value,
@@ -65,10 +48,11 @@ export function EntityJsonEditor({
   minRows = 10,
   requiredFields = [],
   labels,
+  locale,
   onChange,
   onValidityChange
 }: EntityJsonEditorProps) {
-  const resolvedLabels = useMemo(() => ({ ...defaultLabels, ...labels }), [labels]);
+  const resolvedLabels = useMemo(() => ({ ...getEntityJsonEditorLabels(locale), ...labels }), [labels, locale]);
   const requiredFieldMap = useMemo(() => createRequiredFieldMap(requiredFields), [requiredFields]);
   const requiredFingerprint = useMemo(() => JSON.stringify(requiredFields), [requiredFields]);
   const lastEmittedRef = useRef<string | null>(null);
@@ -214,7 +198,7 @@ export function EntityJsonEditor({
       {error ? <p className="titanic-json-editor__error">{resolvedLabels.invalidJson}: {error}</p> : null}
     </div>
   );
-}
+});
 
 function JsonFieldsTree({
   disabled,

@@ -43,7 +43,8 @@ export class Entity {
   private readonly options: EntityOptions;
   private resolvedSchema: EntitySchema | undefined;
   private values: EntityValues;
-  private initialValues: EntityValues;
+  private initialValuesState: EntityValues;
+  private lastValuesState: EntityValues;
   private valuesInitialized: boolean;
 
   constructor(schema: EntitySchema, values?: EntityValues | EntityApiEntity);
@@ -51,7 +52,8 @@ export class Entity {
   constructor(options: EntitySchema | EntityOptions, values?: EntityValues | EntityApiEntity) {
     this.options = { ...options };
     this.values = values ? normalizeValues(values) : this.options.columns?.length ? createEmptyValues(this.schema) : {};
-    this.initialValues = { ...this.values };
+    this.initialValuesState = { ...this.values };
+    this.lastValuesState = { ...this.values };
     this.valuesInitialized = Boolean(values) || Boolean(this.options.columns?.length);
   }
 
@@ -95,7 +97,21 @@ export class Entity {
 
   get isChanged(): boolean {
     this.ensureValuesInitialized();
-    return Object.keys(this.values).some((key) => !Object.is(this.values[key], this.initialValues[key]));
+    return Object.keys(this.values).some((key) => !Object.is(this.values[key], this.initialValuesState[key]));
+  }
+
+  get currentValues(): EntityValues {
+    return this.toValues();
+  }
+
+  get initialValues(): EntityValues {
+    this.ensureValuesInitialized();
+    return { ...this.initialValuesState };
+  }
+
+  get lastValues(): EntityValues {
+    this.ensureValuesInitialized();
+    return { ...this.lastValuesState };
   }
 
   getValue<T = unknown>(key: string): T | null {
@@ -109,7 +125,13 @@ export class Entity {
 
   setValue(key: string, value: unknown): void {
     this.ensureValuesInitialized();
-    this.values[key] = value;
+    this.setValues({ ...this.values, [key]: value });
+  }
+
+  setValues(values: EntityValues | EntityApiEntity): void {
+    this.ensureValuesInitialized();
+    this.lastValuesState = { ...this.values };
+    this.values = normalizeValues(values);
   }
 
   toValues(): EntityValues {
@@ -124,13 +146,20 @@ export class Entity {
 
   acceptChanges(values?: EntityValues | EntityApiEntity): void {
     if (values) {
+      this.lastValuesState = { ...this.values };
       this.values = normalizeValues(values);
       this.valuesInitialized = true;
     } else {
       this.ensureValuesInitialized();
     }
 
-    this.initialValues = { ...this.values };
+    this.initialValuesState = { ...this.values };
+  }
+
+  resetChanges(): void {
+    this.ensureValuesInitialized();
+    this.lastValuesState = { ...this.values };
+    this.values = { ...this.initialValuesState };
   }
 
   getSaveValues(): EntityValues {
@@ -144,7 +173,8 @@ export class Entity {
     }
 
     this.values = createEmptyValues(this.schema);
-    this.initialValues = { ...this.values };
+    this.initialValuesState = { ...this.values };
+    this.lastValuesState = { ...this.values };
     this.valuesInitialized = true;
   }
 

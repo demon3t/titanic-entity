@@ -1,1068 +1,556 @@
-Titanic.define("Titanic.UI.DateInput", {
-  attributes: {
-    id: {},
-    name: {},
-    value: {},
-    disabled: { default: false },
-    required: { default: false },
-    className: { default: "" },
-    locale: {},
-    labels: {},
-    placeholder: {},
-    renderFrame: { default: true },
-    rootClassName: { default: "" },
-    editable: { default: true },
-    title: {},
-    validationError: {},
-    visible: { default: true },
-    onChange: {},
+import { Titanic } from "@titanic-entity/entity-react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { Button } from "../button";
+import { InputFieldFrame } from "../inputFieldFrame";
+import { getDateInputLabels, getDateInputLocale } from "./date-input-lcz";
+import type { DateInputProps } from "./index";
 
-    fallbackId: { id: true },
-    rootRef: { ref: true, default: null },
-    open: { state: true, default: false },
-    viewDate: {
-      state: true,
-      default() {
-        return new Date();
-      }
-    },
-    calendarMode: { state: true, default: "day" },
-    inputDraft: { state: true, default: "" },
-    manualDraftActive: { state: true, default: false },
+interface CalendarDay {
+  active: boolean;
+  date: Date;
+  inCurrentMonth: boolean;
+  isoDate: string;
+  label: string;
+  title: string;
+  today: boolean;
+}
 
-    resolvedId: {
-      value(this: any) {
-        return this.attributes.id ?? this.attributes.fallbackId;
+interface MonthOption {
+  label: string;
+  month: number;
+}
+
+type CalendarMode = "day" | "month" | "year";
+
+export const DateInput = Titanic.define<DateInputProps>("Titanic.UI.DateInput", function DateInput({
+  id,
+  name,
+  value,
+  disabled = false,
+  required = false,
+  className = "",
+  locale,
+  labels,
+  placeholder,
+  renderFrame = true,
+  rootClassName = "",
+  editable = true,
+  title,
+  validationError,
+  visible = true,
+  onChange
+}: DateInputProps) {
+  const fallbackId = useId();
+  const resolvedId = id ?? fallbackId;
+  const resolvedName = name ?? resolvedId;
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(() => new Date());
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>("day");
+  const [inputDraft, setInputDraft] = useState("");
+  const [manualDraftActive, setManualDraftActive] = useState(false);
+  const normalizedValue = normalizeDateValue(value);
+  const selectedDate = parseIsoDate(normalizedValue);
+  const currentLocale = getDateInputLocale(locale);
+  const resolvedLabels = { ...getDateInputLabels(currentLocale), ...(labels ?? {}) };
+  const displayValue = formatDisplayDate(selectedDate, currentLocale);
+  const parsedDraftDate = parseManualDate(inputDraft, currentLocale);
+  const draftInvalid = manualDraftActive && inputDraft.trim().length > 0 && !parsedDraftDate;
+  const readOnly = disabled || !editable;
+  const invalid = Boolean(validationError || draftInvalid);
+  const errorId = validationError ? `${resolvedId}-error` : undefined;
+  const titleId = title ? `${resolvedId}-label` : undefined;
+  const todayIsoDate = formatIsoDate(new Date());
+  const calendarDays = useMemo(
+    () => createCalendarDays(viewDate, normalizedValue, todayIsoDate, currentLocale),
+    [currentLocale, normalizedValue, todayIsoDate, viewDate]
+  );
+  const monthOptions = useMemo(() => createMonthOptions(viewDate, currentLocale), [currentLocale, viewDate]);
+  const yearRangeStart = getYearRangeStart(viewDate);
+  const yearOptions = useMemo(() => createYearOptions(yearRangeStart), [yearRangeStart]);
+  const weekdayLabels = useMemo(
+    () => createWeekdayLabels(currentLocale, resolvedLabels.weekdays),
+    [currentLocale, resolvedLabels.weekdays]
+  );
+
+  const finishManualInput = () => {
+    if (!manualDraftActive) {
+      return;
+    }
+
+    const draft = inputDraft.trim();
+
+    if (!draft) {
+      onChange(null);
+      setInputDraft("");
+      setManualDraftActive(false);
+      setOpen(false);
+      return;
+    }
+
+    const parsedDate = parseManualDate(draft, currentLocale);
+
+    if (parsedDate) {
+      const isoDate = formatIsoDate(parsedDate);
+      onChange(isoDate);
+      setInputDraft(formatDisplayDate(parsedDate, currentLocale));
+      setViewDate(parsedDate);
+    } else {
+      setInputDraft(displayValue);
+    }
+
+    setManualDraftActive(false);
+  };
+
+  useEffect(() => {
+    if (!manualDraftActive) {
+      setInputDraft(displayValue);
+    }
+  }, [displayValue, manualDraftActive]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setViewDate(selectedDate ?? new Date());
+    setCalendarMode("day");
+  }, [normalizedValue, open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        finishManualInput();
+        setOpen(false);
       }
-    },
-    resolvedName: {
-      value(this: any) {
-        return this.attributes.name ?? this.attributes.resolvedId;
+    };
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        finishManualInput();
+        setOpen(false);
       }
-    },
-    hiddenInputId: {
-      value(this: any) {
-        return `${this.attributes.resolvedId}-native`;
-      }
-    },
-    titleId: {
-      value(this: any) {
-        return this.attributes.title ? `${this.attributes.resolvedId}-label` : undefined;
-      }
-    },
-    normalizedValue: {
-      value(this: any) {
-        return this.methods.normalizeDateValue(this.attributes.value);
-      }
-    },
-    selectedDate: {
-      value(this: any) {
-        return this.methods.parseIsoDate(this.attributes.normalizedValue);
-      }
-    },
-    currentLocale: {
-      value(this: any) {
-        return this.attributes.locale ?? this.methods.getBrowserLocale();
-      }
-    },
-    resolvedLabels: {
-      value(this: any) {
-        return this.methods.getDateInputLabels(this.attributes.currentLocale, this.attributes.labels);
-      }
-    },
-    displayValue: {
-      value(this: any) {
-        return this.methods.formatDisplayDate(this.attributes.selectedDate, this.attributes.currentLocale);
-      }
-    },
-    parsedDraftDate: {
-      value(this: any) {
-        return this.methods.parseManualDate(this.attributes.inputDraft, this.attributes.currentLocale);
-      }
-    },
-    draftHasText: {
-      value(this: any) {
-        return this.attributes.inputDraft.trim().length > 0;
-      }
-    },
-    draftInvalid: {
-      value(this: any) {
-        return this.attributes.manualDraftActive && this.attributes.draftHasText && !this.attributes.parsedDraftDate;
-      }
-    },
-    readOnly: {
-      value(this: any) {
-        return this.attributes.disabled || this.attributes.editable === false;
-      }
-    },
-    invalid: {
-      value(this: any) {
-        return Boolean(this.attributes.validationError || this.attributes.draftInvalid);
-      }
-    },
-    invalidForControl: {
-      value(this: any) {
-        return this.attributes.invalid ? true : undefined;
-      }
-    },
-    errorId: {
-      value(this: any) {
-        return this.attributes.validationError ? `${this.attributes.resolvedId}-error` : undefined;
-      }
-    },
-    calendarDays: {
-      value(this: any) {
-        return this.methods.createCalendarDays(this.attributes.viewDate);
-      }
-    },
-    monthOptions: {
-      value(this: any) {
-        return this.methods.createMonthOptions(this.attributes.viewDate, this.attributes.currentLocale);
-      }
-    },
-    yearRangeStart: {
-      value(this: any) {
-        return this.methods.getYearRangeStart(this.attributes.viewDate);
-      }
-    },
-    yearOptions: {
-      value(this: any) {
-        return this.methods.createYearOptions(this.attributes.yearRangeStart);
-      }
-    },
-    weekdayLabels: {
-      value(this: any) {
-        return this.methods.createWeekdayLabels(this.attributes.currentLocale, this.attributes.resolvedLabels);
-      }
-    },
-    todayIsoDate: {
-      value(this: any) {
-        return this.methods.formatIsoDate(new Date());
-      }
-    },
-    rootClasses: {
-      value(this: any) {
-        return this.methods.joinClassNames("titanic-date", this.attributes.rootClassName);
-      }
-    },
-    useBaseControlClass: {
-      value(this: any) {
-        return !this.methods.hasClassName(this.attributes.className, "titanic-datetime-input__segment-control");
-      }
-    },
-    controlClasses: {
-      value(this: any) {
-        return this.methods.joinClassNames(
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, inputDraft, manualDraftActive, displayValue, currentLocale]);
+
+  if (!visible) {
+    return null;
+  }
+
+  const changeVisiblePeriod = (offset: number) => {
+    const nextDate = new Date(viewDate);
+
+    if (calendarMode === "year") {
+      nextDate.setFullYear(nextDate.getFullYear() + offset * 16);
+    } else if (calendarMode === "month") {
+      nextDate.setFullYear(nextDate.getFullYear() + offset);
+    } else {
+      nextDate.setMonth(nextDate.getMonth() + offset);
+    }
+
+    setViewDate(nextDate);
+  };
+
+  const selectVisibleMonth = (month: number) => {
+    const nextDate = new Date(viewDate);
+    nextDate.setMonth(month);
+    setViewDate(nextDate);
+    setCalendarMode("day");
+  };
+
+  const selectVisibleYear = (year: number) => {
+    const nextDate = new Date(viewDate);
+    nextDate.setFullYear(year);
+    setViewDate(nextDate);
+    setCalendarMode("month");
+  };
+
+  const selectDate = (isoDate: string) => {
+    const nextDate = parseIsoDate(isoDate);
+    onChange(isoDate);
+    setInputDraft(formatDisplayDate(nextDate, currentLocale));
+    setManualDraftActive(false);
+    setOpen(false);
+  };
+
+  const clearDate = () => {
+    onChange(null);
+    setInputDraft("");
+    setManualDraftActive(false);
+    setOpen(false);
+  };
+
+  const toggleOpen = () => {
+    if (readOnly) {
+      return;
+    }
+
+    if (open) {
+      finishManualInput();
+    }
+
+    setOpen(!open);
+  };
+
+  const control = (
+    <div className={joinClassNames("titanic-date", rootClassName)} ref={rootRef}>
+      <input
+        disabled={disabled}
+        hidden
+        id={`${resolvedId}-native`}
+        name={resolvedName}
+        readOnly
+        type="date"
+        value={normalizedValue}
+      />
+      <div
+        aria-invalid={invalid || undefined}
+        className={joinClassNames(
           "titanic-date__control",
-          this.attributes.useBaseControlClass ? "titanic-field__control" : undefined,
-          this.attributes.className
-        );
-      }
-    },
-    inputClasses: {
-      value(this: any) {
-        return this.methods.joinClassNames(
-          "titanic-date__input",
-          this.attributes.invalid ? "titanic-date__input--invalid" : undefined
-        );
-      }
-    },
-    ariaLabel: {
-      value(this: any) {
-        return this.attributes.resolvedLabels.selectedDate;
-      }
-    },
-    visibleMonthIndex: {
-      value(this: any) {
-        return this.attributes.viewDate.getMonth();
-      }
-    },
-    visibleYear: {
-      value(this: any) {
-        return this.attributes.viewDate.getFullYear();
-      }
-    },
-    visibleMonthLabel: {
-      value(this: any) {
-        return this.methods.capitalizeFirstLetter(
-          this.attributes.viewDate.toLocaleDateString(this.attributes.currentLocale, {
-            month: "long",
-            year: "numeric"
-          })
-        );
-      }
-    },
-    previousLabel: {
-      value(this: any) {
-        if (this.attributes.calendarMode === "year") {
-          return `${this.attributes.yearRangeStart - 16}-${this.attributes.yearRangeStart - 1}`;
-        }
-
-        return this.attributes.resolvedLabels.previousMonth;
-      }
-    },
-    nextLabel: {
-      value(this: any) {
-        if (this.attributes.calendarMode === "year") {
-          return `${this.attributes.yearRangeStart + 16}-${this.attributes.yearRangeStart + 31}`;
-        }
-
-        return this.attributes.resolvedLabels.nextMonth;
-      }
-    },
-
-    syncDraftEffect: {
-      effect(this: any) {
-        if (!this.attributes.manualDraftActive) {
-          this.attributes.setInputDraft(this.attributes.displayValue);
-        }
-      },
-      deps: { array: [{ attr: "displayValue" }, { attr: "manualDraftActive" }] }
-    },
-    openEffect: {
-      effect(this: any) {
-        if (!this.attributes.open) {
-          return;
-        }
-
-        this.attributes.setViewDate(this.attributes.selectedDate ?? new Date());
-        this.attributes.setCalendarMode("day");
-      },
-      deps: { array: [{ attr: "open" }, { attr: "normalizedValue" }] }
-    },
-    outsidePopoverEffect: {
-      effect(this: any) {
-        if (!this.attributes.open) {
-          return undefined;
-        }
-
-        const handlePointerDown = (event: PointerEvent) => {
-          const root = this.attributes.rootRef.current;
-
-          if (root && !root.contains(event.target as Node)) {
-            this.methods.finishManualInput();
-            this.attributes.setOpen(false);
-          }
-        };
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-          if (event.key === "Escape") {
-            this.methods.finishManualInput();
-            this.attributes.setOpen(false);
-          }
-        };
-
-        document.addEventListener("pointerdown", handlePointerDown);
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-          document.removeEventListener("pointerdown", handlePointerDown);
-          document.removeEventListener("keydown", handleKeyDown);
-        };
-      },
-      deps: { array: [{ attr: "open" }] }
-    }
-  },
-  methods: {
-    getDateInputLabels(this: any, locale: string, overrides?: Record<string, any>) {
-      const isRu = String(locale).toLowerCase().startsWith("ru");
-      const defaults = isRu
-        ? {
-            clear: "Clear",
-            days: "Days",
-            month: "Month",
-            nextMonth: "Next month",
-            placeholder: "Select date",
-            previousMonth: "Previous month",
-            selectedDate: "Selected date",
-            today: "Today",
-            weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            year: "Year"
-          }
-        : {
-            clear: "Clear",
-            days: "Days",
-            month: "Month",
-            nextMonth: "Next month",
-            placeholder: "Select date",
-            previousMonth: "Previous month",
-            selectedDate: "Selected date",
-            today: "Today",
-            weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            year: "Year"
-          };
-
-      return { ...defaults, ...(overrides ?? {}) };
-    },
-    createCalendarDays(this: any, viewDate: Date) {
-      const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-      const startOffset = (firstDay.getDay() + 6) % 7;
-      const startDate = new Date(firstDay);
-      startDate.setDate(firstDay.getDate() - startOffset);
-
-      return Array.from({ length: 42 }, (_, index) => {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + index);
-        const isoDate = this.methods.formatIsoDate(date);
-
-        return {
-          date,
-          isoDate,
-          label: String(date.getDate()),
-          inCurrentMonth: date.getMonth() === viewDate.getMonth(),
-          today: isoDate === this.attributes.todayIsoDate,
-          active: isoDate === this.attributes.normalizedValue,
-          title: this.methods.formatFullDate(date, this.attributes.currentLocale)
-        };
-      });
-    },
-    createWeekdayLabels(this: any, locale: string, labels: Record<string, any>) {
-      if (labels.weekdays?.length) {
-        return labels.weekdays;
-      }
-
-      const baseDate = new Date(2021, 5, 7);
-
-      return Array.from({ length: 7 }, (_, index) => {
-        const date = new Date(baseDate);
-        date.setDate(baseDate.getDate() + index);
-        return this.methods.capitalizeFirstLetter(date.toLocaleDateString(locale, { weekday: "short" }));
-      });
-    },
-    createMonthOptions(this: any, viewDate: Date, locale: string) {
-      return Array.from({ length: 12 }, (_, month) => {
-        const date = new Date(viewDate.getFullYear(), month, 1);
-
-        return {
-          month,
-          label: this.methods.capitalizeFirstLetter(date.toLocaleDateString(locale, { month: "short" }))
-        };
-      });
-    },
-    createYearOptions(yearRangeStart: number) {
-      return Array.from({ length: 16 }, (_, index) => yearRangeStart + index);
-    },
-    getYearRangeStart(viewDate: Date) {
-      return Math.floor(viewDate.getFullYear() / 16) * 16;
-    },
-    hasClassName(className: string | undefined, target: string) {
-      return String(className ?? "")
-        .split(/\s+/)
-        .filter(Boolean)
-        .includes(target);
-    },
-    normalizeDateValue(this: any, value: string | null | undefined) {
-      if (!value) {
-        return "";
-      }
-
-      const parsedDate = this.methods.parseIsoDate(value);
-
-      return parsedDate ? this.methods.formatIsoDate(parsedDate) : "";
-    },
-    parseManualDate(this: any, value: string, locale: string) {
-      const draft = value.trim();
-
-      if (!draft) {
-        return null;
-      }
-
-      const isoMatch = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(draft);
-
-      if (isoMatch) {
-        return this.methods.createValidDate(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
-      }
-
-      const dotMatch = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(draft);
-
-      if (dotMatch) {
-        return this.methods.createValidDate(Number(dotMatch[3]), Number(dotMatch[2]) - 1, Number(dotMatch[1]));
-      }
-
-      const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(draft);
-
-      if (slashMatch) {
-        const first = Number(slashMatch[1]);
-        const second = Number(slashMatch[2]);
-        const year = Number(slashMatch[3]);
-        const dayFirst = String(locale).toLowerCase().startsWith("ru") || first > 12;
-        return this.methods.createValidDate(year, dayFirst ? second - 1 : first - 1, dayFirst ? first : second);
-      }
-
-      const parsedTimestamp = Date.parse(draft);
-
-      if (!Number.isNaN(parsedTimestamp)) {
-        const date = new Date(parsedTimestamp);
-        return this.methods.createValidDate(date.getFullYear(), date.getMonth(), date.getDate());
-      }
-
-      return null;
-    },
-    parseIsoDate(this: any, value: string | null | undefined) {
-      if (!value) {
-        return null;
-      }
-
-      const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-
-      if (!match) {
-        return null;
-      }
-
-      return this.methods.createValidDate(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-    },
-    createValidDate(year: number, month: number, day: number) {
-      const date = new Date(year, month, day);
-
-      if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
-        return null;
-      }
-
-      return date;
-    },
-    formatDisplayDate(this: any, date: Date | null, locale: string) {
-      return date ? date.toLocaleDateString(locale) : "";
-    },
-    formatIsoDate(this: any, date: Date) {
-      return [date.getFullYear(), this.methods.padDatePart(date.getMonth() + 1), this.methods.padDatePart(date.getDate())].join("-");
-    },
-    formatFullDate(date: Date, locale: string) {
-      return date.toLocaleDateString(locale, {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
-    },
-    getBrowserLocale() {
-      if (typeof navigator === "undefined") {
-        return "en-US";
-      }
-
-      return navigator.language || "en-US";
-    },
-    padDatePart(value: number) {
-      return String(value).padStart(2, "0");
-    },
-    capitalizeFirstLetter(value: string) {
-      return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
-    },
-    joinClassNames(...classNames: Array<string | false | null | undefined>) {
-      return classNames.filter(Boolean).join(" ");
-    },
-    getDayClassName(this: any, day: Record<string, any>) {
-      return this.methods.joinClassNames(
-        "titanic-date__day",
-        !day.inCurrentMonth ? "titanic-date__day--muted" : undefined,
-        day.today ? "titanic-date__day--today" : undefined,
-        day.active ? "titanic-date__day--active" : undefined
-      );
-    },
-    getMonthOptionClassName(this: any, option: Record<string, any>) {
-      return this.methods.joinClassNames(
-        "titanic-date__month-option",
-        option.month === this.attributes.visibleMonthIndex ? "titanic-date__month-option--active" : undefined
-      );
-    },
-    getYearOptionClassName(this: any, year: number) {
-      return this.methods.joinClassNames(
-        "titanic-date__year-option",
-        year === this.attributes.visibleYear ? "titanic-date__year-option--active" : undefined
-      );
-    },
-    changeVisiblePeriod(this: any, _event: any, offset: number) {
-      const viewDate = new Date(this.attributes.viewDate);
-
-      if (this.attributes.calendarMode === "year") {
-        viewDate.setFullYear(viewDate.getFullYear() + offset * 16);
-      } else if (this.attributes.calendarMode === "month") {
-        viewDate.setFullYear(viewDate.getFullYear() + offset);
-      } else {
-        viewDate.setMonth(viewDate.getMonth() + offset);
-      }
-
-      this.attributes.setViewDate(viewDate);
-    },
-    openDayMode(this: any) {
-      this.attributes.setCalendarMode("day");
-    },
-    openMonthMode(this: any) {
-      this.attributes.setCalendarMode("month");
-    },
-    openYearMode(this: any) {
-      this.attributes.setCalendarMode("year");
-    },
-    selectVisibleMonth(this: any, _event: any, month: number) {
-      const nextDate = new Date(this.attributes.viewDate);
-      nextDate.setMonth(month);
-      this.attributes.setViewDate(nextDate);
-      this.attributes.setCalendarMode("day");
-    },
-    selectVisibleYear(this: any, _event: any, year: number) {
-      const nextDate = new Date(this.attributes.viewDate);
-      nextDate.setFullYear(year);
-      this.attributes.setViewDate(nextDate);
-      this.attributes.setCalendarMode("month");
-    },
-    selectDate(this: any, _event: any, isoDate: string) {
-      const nextDate = this.methods.parseIsoDate(isoDate);
-
-      this.attributes.onChange?.(isoDate);
-      this.attributes.setInputDraft(this.methods.formatDisplayDate(nextDate, this.attributes.currentLocale));
-      this.attributes.setManualDraftActive(false);
-      this.attributes.setOpen(false);
-    },
-    selectToday(this: any) {
-      this.methods.selectDate(null, this.methods.formatIsoDate(new Date()));
-    },
-    clearDate(this: any) {
-      this.attributes.onChange?.(null);
-      this.attributes.setInputDraft("");
-      this.attributes.setManualDraftActive(false);
-      this.attributes.setOpen(false);
-    },
-    handleManualChange(this: any, event: any) {
-      this.attributes.setManualDraftActive(true);
-      this.attributes.setInputDraft(event.target.value);
-
-      if (!this.attributes.open) {
-        this.attributes.setOpen(true);
-      }
-    },
-    finishManualInput(this: any) {
-      if (!this.attributes.manualDraftActive) {
-        return;
-      }
-
-      const draft = this.attributes.inputDraft.trim();
-
-      if (!draft) {
-        this.methods.clearDate();
-        return;
-      }
-
-      const parsedDate = this.methods.parseManualDate(draft, this.attributes.currentLocale);
-
-      if (parsedDate) {
-        const isoDate = this.methods.formatIsoDate(parsedDate);
-        this.attributes.onChange?.(isoDate);
-        this.attributes.setInputDraft(this.methods.formatDisplayDate(parsedDate, this.attributes.currentLocale));
-        this.attributes.setViewDate(parsedDate);
-      } else {
-        this.attributes.setInputDraft(this.attributes.displayValue);
-      }
-
-      this.attributes.setManualDraftActive(false);
-    },
-    handleInputBlur(this: any) {
-      window.setTimeout(() => {
-        if (!this.attributes.open) {
-          this.methods.finishManualInput();
-        }
-      }, 0);
-    },
-    handleInputFocus(this: any) {
-      if (!this.attributes.readOnly) {
-        this.attributes.setOpen(true);
-      }
-    },
-    handleInputKeyDown(this: any, event: any) {
-      if (event.key === "Enter") {
-        this.methods.finishManualInput();
-        this.attributes.setOpen(false);
-      }
-    },
-    toggleOpen(this: any) {
-      if (this.attributes.readOnly) {
-        return;
-      }
-
-      if (this.attributes.open) {
-        this.methods.finishManualInput();
-      }
-
-      this.attributes.setOpen(!this.attributes.open);
-    }
-  },
-  diff: [
-    {
-      component: "Titanic.UI.InputFieldFrame",
-      when: { attr: "renderFrame" },
-      props: {
-        id: { attr: "resolvedId" },
-        title: { attr: "title" },
-        required: { attr: "required" },
-        error: { attr: "validationError" },
-        visible: { attr: "visible" },
-        className: { attr: "rootClassName" },
-        controlClassName: { attr: "className" }
-      },
-      diff: [
-        {
-          tag: "div",
-          props: {
-            ref: { attr: "rootRef" },
-            className: { attr: "rootClasses" }
-          },
-          children: [
-            {
-              tag: "input",
-              props: {
-                id: { attr: "hiddenInputId" },
-                name: { attr: "resolvedName" },
-                type: "date",
-                hidden: true,
-                value: { attr: "normalizedValue" },
-                readOnly: true,
-                disabled: { attr: "disabled" }
+          !hasClassName(className, "titanic-datetime-input__segment-control") && "titanic-field__control",
+          className
+        )}
+      >
+        <input
+          aria-describedby={errorId}
+          aria-invalid={invalid || undefined}
+          aria-label={resolvedLabels.selectedDate}
+          aria-labelledby={titleId}
+          className={joinClassNames("titanic-date__input", invalid && "titanic-date__input--invalid")}
+          disabled={disabled}
+          id={resolvedId}
+          placeholder={placeholder ?? resolvedLabels.placeholder}
+          readOnly={!editable}
+          type="text"
+          value={inputDraft}
+          onBlur={() => {
+            window.setTimeout(() => {
+              if (!open) {
+                finishManualInput();
               }
-            },
-            {
-              tag: "div",
-              props: {
-                className: { attr: "controlClasses" },
-                "aria-invalid": { attr: "invalidForControl" }
-              },
-              children: [
-                {
-                  tag: "input",
-                  props: {
-                    id: { attr: "resolvedId" },
-                    className: { attr: "inputClasses" },
-                    type: "text",
-                    value: { attr: "inputDraft" },
-                    placeholder: { coalesce: [{ attr: "placeholder" }, { path: "resolvedLabels.placeholder" }] },
-                    disabled: { attr: "disabled" },
-                    readOnly: { not: { attr: "editable" } },
-                    "aria-label": { attr: "ariaLabel" },
-                    "aria-invalid": { attr: "invalidForControl" },
-                    "aria-describedby": { attr: "errorId" },
-                    "aria-labelledby": { attr: "titleId" },
-                    onChange: { method: "handleManualChange" },
-                    onFocus: { method: "handleInputFocus" },
-                    onBlur: { method: "handleInputBlur" },
-                    onKeyDown: { method: "handleInputKeyDown" }
-                  }
-                },
-                {
-                  component: "Titanic.UI.Button",
-                  props: {
-                    type: "button",
-                    variant: "ghost",
-                    className: "titanic-date__trigger",
-                    disabled: { attr: "readOnly" },
-                    "aria-label": { path: "resolvedLabels.selectedDate" },
-                    "aria-expanded": { attr: "open" },
-                    onClick: { method: "toggleOpen" }
-                  },
-                  children: [{ tag: "span", props: { "aria-hidden": true }, text: "Calendar" }]
-                }
-              ]
-            },
-            {
-              tag: "div",
-              when: { attr: "open" },
-              props: {
-                className: "titanic-date-time-popover titanic-date__popover",
-                role: "dialog"
-              },
-              children: [
-                {
-                  tag: "div",
-                  props: { className: "titanic-date__header" },
-                  children: [
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        type: "button",
-                        variant: "ghost",
-                        className: "titanic-date__nav-button",
-                        "aria-label": { attr: "previousLabel" },
-                        onClick: { method: "changeVisiblePeriod", args: [-1] }
-                      },
-                      children: [{ tag: "span", props: { "aria-hidden": true }, text: "<" }]
-                    },
-                    {
-                      tag: "div",
-                      props: { className: "titanic-date__header-title" },
-                      children: [
-                        {
-                          component: "Titanic.UI.Button",
-                          props: {
-                            type: "button",
-                            variant: "ghost",
-                            className: "titanic-date__mode-button",
-                            onClick: { method: "openMonthMode" }
-                          },
-                          text: { attr: "visibleMonthLabel" }
-                        },
-                        {
-                          component: "Titanic.UI.Button",
-                          props: {
-                            type: "button",
-                            variant: "ghost",
-                            className: "titanic-date__mode-button",
-                            onClick: { method: "openYearMode" }
-                          },
-                          text: { attr: "visibleYear" }
-                        }
-                      ]
-                    },
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        type: "button",
-                        variant: "ghost",
-                        className: "titanic-date__nav-button",
-                        "aria-label": { attr: "nextLabel" },
-                        onClick: { method: "changeVisiblePeriod", args: [1] }
-                      },
-                      children: [{ tag: "span", props: { "aria-hidden": true }, text: ">" }]
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  when: { eq: [{ attr: "calendarMode" }, "day"] },
-                  props: { className: "titanic-date__calendar", role: "grid" },
-                  children: [
-                    {
-                      tag: "div",
-                      props: { className: "titanic-date__weekdays", role: "row" },
-                      each: { attr: "weekdayLabels" },
-                      as: "weekday",
-                      children: [
-                        {
-                          tag: "span",
-                          props: { className: "titanic-date__weekday", role: "columnheader" },
-                          text: { local: "weekday" }
-                        }
-                      ]
-                    },
-                    {
-                      tag: "div",
-                      props: { className: "titanic-date__days" },
-                      each: { attr: "calendarDays" },
-                      as: "day",
-                      key: { local: "day.isoDate" },
-                      children: [
-                        {
-                          tag: "button",
-                          props: {
-                            type: "button",
-                            className: { call: "getDayClassName", args: [{ local: "day" }] },
-                            title: { local: "day.title" },
-                            "aria-pressed": { local: "day.active" },
-                            onClick: { method: "selectDate", args: [{ local: "day.isoDate" }] }
-                          },
-                          text: { local: "day.label" }
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  when: { eq: [{ attr: "calendarMode" }, "month"] },
-                  props: { className: "titanic-date__month-grid" },
-                  each: { attr: "monthOptions" },
-                  as: "monthOption",
-                  key: { local: "monthOption.month" },
-                  children: [
-                    {
-                      tag: "button",
-                      props: {
-                        type: "button",
-                        className: { call: "getMonthOptionClassName", args: [{ local: "monthOption" }] },
-                        onClick: { method: "selectVisibleMonth", args: [{ local: "monthOption.month" }] }
-                      },
-                      text: { local: "monthOption.label" }
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  when: { eq: [{ attr: "calendarMode" }, "year"] },
-                  props: { className: "titanic-date__year-grid" },
-                  each: { attr: "yearOptions" },
-                  as: "year",
-                  key: { local: "year" },
-                  children: [
-                    {
-                      tag: "button",
-                      props: {
-                        type: "button",
-                        className: { call: "getYearOptionClassName", args: [{ local: "year" }] },
-                        onClick: { method: "selectVisibleYear", args: [{ local: "year" }] }
-                      },
-                      text: { local: "year" }
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  props: { className: "titanic-date__actions" },
-                  children: [
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        type: "button",
-                        variant: "ghost",
-                        className: "titanic-date__action",
-                        onClick: { method: "selectToday" }
-                      },
-                      text: { path: "resolvedLabels.today" }
-                    },
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        type: "button",
-                        variant: "ghost",
-                        className: "titanic-date__action",
-                        disabled: { not: { attr: "normalizedValue" } },
-                        onClick: { method: "clearDate" }
-                      },
-                      text: { path: "resolvedLabels.clear" }
-                    }
-                  ]
-                }
-              ]
+            }, 0);
+          }}
+          onChange={(event) => {
+            setManualDraftActive(true);
+            setInputDraft(event.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => {
+            if (!readOnly) {
+              setOpen(true);
             }
-          ]
-        }
-      ]
-    },
-    {
-      tag: "div",
-      when: { and: [{ attr: "visible" }, { not: { attr: "renderFrame" } }] },
-      props: {
-        ref: { attr: "rootRef" },
-        className: { attr: "rootClasses" }
-      },
-      children: [
-        {
-          tag: "input",
-          props: {
-            id: { attr: "hiddenInputId" },
-            name: { attr: "resolvedName" },
-            type: "date",
-            hidden: true,
-            value: { attr: "normalizedValue" },
-            readOnly: true,
-            disabled: { attr: "disabled" }
-          }
-        },
-        {
-          tag: "div",
-          props: {
-            className: { attr: "controlClasses" },
-            "aria-invalid": { attr: "invalidForControl" }
-          },
-          children: [
-            {
-              tag: "input",
-              props: {
-                id: { attr: "resolvedId" },
-                className: { attr: "inputClasses" },
-                type: "text",
-                value: { attr: "inputDraft" },
-                placeholder: { coalesce: [{ attr: "placeholder" }, { path: "resolvedLabels.placeholder" }] },
-                disabled: { attr: "disabled" },
-                readOnly: { not: { attr: "editable" } },
-                "aria-label": { attr: "ariaLabel" },
-                "aria-invalid": { attr: "invalidForControl" },
-                "aria-describedby": { attr: "errorId" },
-                "aria-labelledby": { attr: "titleId" },
-                onChange: { method: "handleManualChange" },
-                onFocus: { method: "handleInputFocus" },
-                onBlur: { method: "handleInputBlur" },
-                onKeyDown: { method: "handleInputKeyDown" }
-              }
-            },
-            {
-              component: "Titanic.UI.Button",
-              props: {
-                type: "button",
-                variant: "ghost",
-                className: "titanic-date__trigger",
-                disabled: { attr: "readOnly" },
-                "aria-label": { path: "resolvedLabels.selectedDate" },
-                "aria-expanded": { attr: "open" },
-                onClick: { method: "toggleOpen" }
-              },
-              children: [{ tag: "span", props: { "aria-hidden": true }, text: "Calendar" }]
+          }}
+          onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
+            if (event.key === "Enter") {
+              finishManualInput();
+              setOpen(false);
             }
-          ]
-        },
-        {
-          tag: "div",
-          when: { attr: "open" },
-          props: {
-            className: "titanic-date-time-popover titanic-date__popover",
-            role: "dialog"
-          },
-          children: [
-            {
-              tag: "div",
-              props: { className: "titanic-date__header" },
-              children: [
-                {
-                  component: "Titanic.UI.Button",
-                  props: {
-                    type: "button",
-                    variant: "ghost",
-                    className: "titanic-date__nav-button",
-                    "aria-label": { attr: "previousLabel" },
-                    onClick: { method: "changeVisiblePeriod", args: [-1] }
-                  },
-                  children: [{ tag: "span", props: { "aria-hidden": true }, text: "<" }]
-                },
-                {
-                  tag: "div",
-                  props: { className: "titanic-date__header-title" },
-                  children: [
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        type: "button",
-                        variant: "ghost",
-                        className: "titanic-date__mode-button",
-                        onClick: { method: "openMonthMode" }
-                      },
-                      text: { attr: "visibleMonthLabel" }
-                    },
-                    {
-                      component: "Titanic.UI.Button",
-                      props: {
-                        type: "button",
-                        variant: "ghost",
-                        className: "titanic-date__mode-button",
-                        onClick: { method: "openYearMode" }
-                      },
-                      text: { attr: "visibleYear" }
-                    }
-                  ]
-                },
-                {
-                  component: "Titanic.UI.Button",
-                  props: {
-                    type: "button",
-                    variant: "ghost",
-                    className: "titanic-date__nav-button",
-                    "aria-label": { attr: "nextLabel" },
-                    onClick: { method: "changeVisiblePeriod", args: [1] }
-                  },
-                  children: [{ tag: "span", props: { "aria-hidden": true }, text: ">" }]
-                }
-              ]
-            },
-            {
-              tag: "div",
-              when: { eq: [{ attr: "calendarMode" }, "day"] },
-              props: { className: "titanic-date__calendar", role: "grid" },
-              children: [
-                {
-                  tag: "div",
-                  props: { className: "titanic-date__weekdays", role: "row" },
-                  each: { attr: "weekdayLabels" },
-                  as: "weekday",
-                  children: [
-                    {
-                      tag: "span",
-                      props: { className: "titanic-date__weekday", role: "columnheader" },
-                      text: { local: "weekday" }
-                    }
-                  ]
-                },
-                {
-                  tag: "div",
-                  props: { className: "titanic-date__days" },
-                  each: { attr: "calendarDays" },
-                  as: "day",
-                  key: { local: "day.isoDate" },
-                  children: [
-                    {
-                      tag: "button",
-                      props: {
-                        type: "button",
-                        className: { call: "getDayClassName", args: [{ local: "day" }] },
-                        title: { local: "day.title" },
-                        "aria-pressed": { local: "day.active" },
-                        onClick: { method: "selectDate", args: [{ local: "day.isoDate" }] }
-                      },
-                      text: { local: "day.label" }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              tag: "div",
-              when: { eq: [{ attr: "calendarMode" }, "month"] },
-              props: { className: "titanic-date__month-grid" },
-              each: { attr: "monthOptions" },
-              as: "monthOption",
-              key: { local: "monthOption.month" },
-              children: [
-                {
-                  tag: "button",
-                  props: {
-                    type: "button",
-                    className: { call: "getMonthOptionClassName", args: [{ local: "monthOption" }] },
-                    onClick: { method: "selectVisibleMonth", args: [{ local: "monthOption.month" }] }
-                  },
-                  text: { local: "monthOption.label" }
-                }
-              ]
-            },
-            {
-              tag: "div",
-              when: { eq: [{ attr: "calendarMode" }, "year"] },
-              props: { className: "titanic-date__year-grid" },
-              each: { attr: "yearOptions" },
-              as: "year",
-              key: { local: "year" },
-              children: [
-                {
-                  tag: "button",
-                  props: {
-                    type: "button",
-                    className: { call: "getYearOptionClassName", args: [{ local: "year" }] },
-                    onClick: { method: "selectVisibleYear", args: [{ local: "year" }] }
-                  },
-                  text: { local: "year" }
-                }
-              ]
-            },
-            {
-              tag: "div",
-              props: { className: "titanic-date__actions" },
-              children: [
-                {
-                  component: "Titanic.UI.Button",
-                  props: {
-                    type: "button",
-                    variant: "ghost",
-                    className: "titanic-date__action",
-                    onClick: { method: "selectToday" }
-                  },
-                  text: { path: "resolvedLabels.today" }
-                },
-                {
-                  component: "Titanic.UI.Button",
-                  props: {
-                    type: "button",
-                    variant: "ghost",
-                    className: "titanic-date__action",
-                    disabled: { not: { attr: "normalizedValue" } },
-                    onClick: { method: "clearDate" }
-                  },
-                  text: { path: "resolvedLabels.clear" }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+          }}
+        />
+        <Button
+          aria-expanded={open}
+          aria-label={resolvedLabels.selectedDate}
+          className="titanic-date__trigger"
+          disabled={readOnly}
+          type="button"
+          variant="ghost"
+          onClick={toggleOpen}
+        >
+          <span aria-hidden>Calendar</span>
+        </Button>
+      </div>
+
+      {open ? (
+        <div className="titanic-date-time-popover titanic-date__popover" role="dialog">
+          <div className="titanic-date__header">
+            <Button
+              aria-label={calendarMode === "year"
+                ? `${yearRangeStart - 16}-${yearRangeStart - 1}`
+                : resolvedLabels.previousMonth}
+              className="titanic-date__nav-button"
+              type="button"
+              variant="ghost"
+              onClick={() => changeVisiblePeriod(-1)}
+            >
+              <span aria-hidden>{"<"}</span>
+            </Button>
+            <div className="titanic-date__header-title">
+              <Button
+                className="titanic-date__mode-button"
+                type="button"
+                variant="ghost"
+                onClick={() => setCalendarMode("month")}
+              >
+                {capitalizeFirstLetter(viewDate.toLocaleDateString(currentLocale, { month: "long" }))}
+              </Button>
+              <Button
+                className="titanic-date__mode-button"
+                type="button"
+                variant="ghost"
+                onClick={() => setCalendarMode("year")}
+              >
+                {viewDate.getFullYear()}
+              </Button>
+            </div>
+            <Button
+              aria-label={calendarMode === "year"
+                ? `${yearRangeStart + 16}-${yearRangeStart + 31}`
+                : resolvedLabels.nextMonth}
+              className="titanic-date__nav-button"
+              type="button"
+              variant="ghost"
+              onClick={() => changeVisiblePeriod(1)}
+            >
+              <span aria-hidden>{">"}</span>
+            </Button>
+          </div>
+
+          {calendarMode === "day" ? (
+            <div className="titanic-date__calendar" role="grid">
+              <div className="titanic-date__weekdays" role="row">
+                {weekdayLabels.map((weekday, index) => (
+                  <span className="titanic-date__weekday" key={`${weekday}-${index}`} role="columnheader">
+                    {weekday}
+                  </span>
+                ))}
+              </div>
+              <div className="titanic-date__days">
+                {calendarDays.map((day) => (
+                  <button
+                    aria-pressed={day.active}
+                    className={joinClassNames(
+                      "titanic-date__day",
+                      !day.inCurrentMonth && "titanic-date__day--muted",
+                      day.today && "titanic-date__day--today",
+                      day.active && "titanic-date__day--active"
+                    )}
+                    key={day.isoDate}
+                    title={day.title}
+                    type="button"
+                    onClick={() => selectDate(day.isoDate)}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {calendarMode === "month" ? (
+            <div className="titanic-date__month-grid">
+              {monthOptions.map((option) => (
+                <button
+                  className={joinClassNames(
+                    "titanic-date__month-option",
+                    option.month === viewDate.getMonth() && "titanic-date__month-option--active"
+                  )}
+                  key={option.month}
+                  type="button"
+                  onClick={() => selectVisibleMonth(option.month)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {calendarMode === "year" ? (
+            <div className="titanic-date__year-grid">
+              {yearOptions.map((year) => (
+                <button
+                  className={joinClassNames(
+                    "titanic-date__year-option",
+                    year === viewDate.getFullYear() && "titanic-date__year-option--active"
+                  )}
+                  key={year}
+                  type="button"
+                  onClick={() => selectVisibleYear(year)}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="titanic-date__actions">
+            <Button
+              className="titanic-date__action"
+              type="button"
+              variant="ghost"
+              onClick={() => selectDate(formatIsoDate(new Date()))}
+            >
+              {resolvedLabels.today}
+            </Button>
+            <Button
+              className="titanic-date__action"
+              disabled={!normalizedValue}
+              type="button"
+              variant="ghost"
+              onClick={clearDate}
+            >
+              {resolvedLabels.clear}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  return renderFrame ? (
+    <InputFieldFrame
+      control={control}
+      errorId={errorId}
+      htmlFor={resolvedId}
+      required={required}
+      title={title}
+      validationError={validationError}
+    />
+  ) : control;
 });
+
+function createCalendarDays(viewDate: Date, normalizedValue: string, todayIsoDate: string, locale: string): CalendarDay[] {
+  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const startDate = new Date(firstDay);
+  startDate.setDate(firstDay.getDate() - startOffset);
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
+    const isoDate = formatIsoDate(date);
+
+    return {
+      active: isoDate === normalizedValue,
+      date,
+      inCurrentMonth: date.getMonth() === viewDate.getMonth(),
+      isoDate,
+      label: String(date.getDate()),
+      title: formatFullDate(date, locale),
+      today: isoDate === todayIsoDate
+    };
+  });
+}
+
+function createWeekdayLabels(locale: string, labels?: readonly string[]): readonly string[] {
+  if (labels?.length) {
+    return labels;
+  }
+
+  const baseDate = new Date(2021, 5, 7);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(baseDate);
+    date.setDate(baseDate.getDate() + index);
+    return capitalizeFirstLetter(date.toLocaleDateString(locale, { weekday: "short" }));
+  });
+}
+
+function createMonthOptions(viewDate: Date, locale: string): MonthOption[] {
+  return Array.from({ length: 12 }, (_, month) => {
+    const date = new Date(viewDate.getFullYear(), month, 1);
+    return { month, label: capitalizeFirstLetter(date.toLocaleDateString(locale, { month: "short" })) };
+  });
+}
+
+function createYearOptions(yearRangeStart: number): number[] {
+  return Array.from({ length: 16 }, (_, index) => yearRangeStart + index);
+}
+
+function getYearRangeStart(viewDate: Date): number {
+  return Math.floor(viewDate.getFullYear() / 16) * 16;
+}
+
+function normalizeDateValue(value: string | null | undefined): string {
+  if (!value) {
+    return "";
+  }
+
+  const parsedDate = parseIsoDate(value);
+  return parsedDate ? formatIsoDate(parsedDate) : "";
+}
+
+function parseManualDate(value: string, locale: string): Date | null {
+  const draft = value.trim();
+
+  if (!draft) {
+    return null;
+  }
+
+  const isoMatch = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(draft);
+  if (isoMatch) {
+    return createValidDate(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+  }
+
+  const dotMatch = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(draft);
+  if (dotMatch) {
+    return createValidDate(Number(dotMatch[3]), Number(dotMatch[2]) - 1, Number(dotMatch[1]));
+  }
+
+  const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(draft);
+  if (slashMatch) {
+    const first = Number(slashMatch[1]);
+    const second = Number(slashMatch[2]);
+    const year = Number(slashMatch[3]);
+    const dayFirst = locale.toLowerCase().startsWith("ru") || first > 12;
+    return createValidDate(year, dayFirst ? second - 1 : first - 1, dayFirst ? first : second);
+  }
+
+  const parsedTimestamp = Date.parse(draft);
+  if (Number.isNaN(parsedTimestamp)) {
+    return null;
+  }
+
+  const date = new Date(parsedTimestamp);
+  return createValidDate(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function parseIsoDate(value: string | null | undefined): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  return match ? createValidDate(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
+}
+
+function createValidDate(year: number, month: number, day: number): Date | null {
+  const date = new Date(year, month, day);
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day ? date : null;
+}
+
+function formatDisplayDate(date: Date | null, locale: string): string {
+  return date ? date.toLocaleDateString(locale) : "";
+}
+
+function formatIsoDate(date: Date): string {
+  return [date.getFullYear(), padDatePart(date.getMonth() + 1), padDatePart(date.getDate())].join("-");
+}
+
+function formatFullDate(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+}
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+function capitalizeFirstLetter(value: string): string {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
+}
+
+function hasClassName(className: string | undefined, target: string): boolean {
+  return String(className ?? "").split(/\s+/).filter(Boolean).includes(target);
+}
+
+function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
+  return classNames.filter(Boolean).join(" ");
+}

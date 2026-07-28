@@ -1,0 +1,62 @@
+.titanic-collapsible-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.titanic-collapsible-panel__toggle {
+  position: absolute;
+  z-index: 20;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--titanic-ui-border);
+  border-radius: 50%;
+  padding: 0;
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface);
+  box-shadow: var(--titanic-ui-shadow);
+}
+
+.titanic-collapsible-panel_left > .titanic-collapsible-panel__toggle {
+  top: 12px;
+  right: -15px;
+}
+
+.titanic-collapsible-panel_right > .titanic-collapsible-panel__toggle {
+  top: 12px;
+  left: -15px;
+}
+
+.titanic-collapsible-panel_top > .titanic-collapsible-panel__toggle {
+  bottom: -15px;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.titanic-collapsible-panel_bottom > .titanic-collapsible-panel__toggle {
+  top: -15px;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.titanic-collapsible-panel__toggle-icon {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.titanic-collapsible-panel__toggle-icon_right {
+  transform: rotate(180deg);
+}
+
+.titanic-collapsible-panel__toggle-icon_top {
+  transform: rotate(90deg);
+}
+
+.titanic-collapsible-panel__toggle-icon_bottom {
+  transform: rotate(-90deg);
+}

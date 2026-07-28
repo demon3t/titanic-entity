@@ -132,6 +132,7 @@ export interface UiPackageLocalizationModuleSchema<
   TExports extends UiPackageModuleExports = UiPackageModuleExports
 > extends UiPackageModuleSchema<TExports> {
   resourceType: "localization";
+  schemaName?: string;
   groupName?: string;
   defaultLocale?: string;
 }
@@ -160,6 +161,7 @@ export interface UiPackageManifestSchema {
   kind: UiPackageSchema["kind"];
   name: string;
   resourceType?: UiPackageResourceType;
+  schemaName?: string;
   groupName?: string;
   defaultLocale?: string;
   packageName?: string;

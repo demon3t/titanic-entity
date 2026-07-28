@@ -460,6 +460,7 @@ function createSchemaFromDescriptor(
           ...base,
           kind: "module",
           groupName: schemaDescriptor.groupName,
+          schemaName: schemaDescriptor.schemaName,
           defaultLocale: schemaDescriptor.defaultLocale,
           exports: resolveModuleExports(schemaDescriptor, modules)
         });

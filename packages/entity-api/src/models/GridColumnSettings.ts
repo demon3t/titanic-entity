@@ -1,12 +1,33 @@
+/** Field descriptor used by a row to resolve and display a grid value. */
+export interface GridColumnField {
+  /** Logical UI key kept for compatibility with existing layouts. */
+  key?: string;
+
+  /** Entity path used to resolve the field in row data. */
+  path?: string;
+
+  /** Optional query alias used by ESQ responses. */
+  alias?: string;
+
+  /** Optional field caption shown in the UI. */
+  caption?: string;
+
+  /** Additional field metadata supplied by the UI. */
+  [key: string]: unknown;
+}
+
 /** Single grid column setting persisted for a user-defined layout. */
 export interface GridColumnSetting {
   /** Optional stable setting identifier. */
   id?: string;
 
-  /** Logical column key used by the UI. */
-  key: string;
+  /** Logical column key used by the UI.
+   *
+   * @deprecated Use path and field instead.
+   */
+  key?: string;
 
-  /** Optional entity path used to resolve the column value. */
+  /** Entity path used to build the ESQ request. */
   path?: string;
 
   /** Indicates whether the column is visible in the selected mode. */
@@ -21,7 +42,16 @@ export interface GridColumnSetting {
   /** Optional ordering index inside the current mode. */
   order?: number;
 
-  /** Optional custom label shown in the UI. */
+  /** Header caption shown in the UI. */
+  caption?: string;
+
+  /** Row field descriptor used to resolve and display the value. */
+  field?: GridColumnField;
+
+  /** Optional custom label shown in the UI.
+   *
+   * @deprecated Use caption instead.
+   */
   label?: string;
 }
 

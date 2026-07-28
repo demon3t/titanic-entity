@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { ReactNode } from "react";
 import { Titanic as CoreTitanic, type EntityValues } from "@titanic-entity/entity-core";
+import type { TitanicLocalizationTree } from "@titanic-entity/entity-base";
 import type {
   BaseModuleMethod,
   BaseModuleMethodThis,
@@ -12,7 +13,7 @@ import type {
   BaseSectionTemplate,
   NormalizedBaseSectionTemplate
 } from "./base-section";
-import { baseEntityPageTemplate } from "./entity-edit/entityEditPageTemplate";
+import { basePageTemplate } from "./entity-edit/entityEditPageTemplate";
 import type {
   EntityEditPageAttribute,
   EntityEditPageAttributes,
@@ -41,6 +42,7 @@ export type EntityReactComponentModule<TProps extends object = Record<string, ne
 export interface TitanicEntityComponentScope<TProps extends object = Record<string, never>> {
   readonly className: string;
   readonly props: TProps;
+  readonly lzc: TitanicLocalizationTree;
   readonly attributes: Record<string, unknown>;
   readonly state: Record<string, unknown>;
   readonly refs: Record<string, React.RefObject<unknown>>;
@@ -313,7 +315,10 @@ export type TitanicEntityReactModulePatch<
   | TitanicEntityComponentDefinition
   | EntityReactComponentModule;
 
+export interface TitanicUiNamespace {}
+
 export interface TitanicEntityReactModuleApi {
+  UI: TitanicUiNamespace;
   define<TProps extends object = Record<string, never>>(
     className: string,
     definition: EntityReactComponentModule<TProps>
@@ -428,14 +433,14 @@ export function defineEntitySection<
   return className ? defineEntityReactModule(normalizedTemplate, className, "section") : normalizedTemplate;
 }
 
-export const BaseEntityPageTemplate: EntityPageTemplateFactory = {
-  template: baseEntityPageTemplate,
+export const BasePageTemplate: EntityPageTemplateFactory = {
+  template: basePageTemplate,
 
   extend<TEntity extends object>(template: EntityPageTemplate<TEntity>): EntityEditPageTemplate {
     return defineEntityPage({
       ...template,
       base: undefined,
-      extend: template.extend ?? template.extends ?? template.base ?? baseEntityPageTemplate,
+      extend: template.extend ?? template.extends ?? template.base ?? basePageTemplate,
       extends: undefined
     });
   },
@@ -444,7 +449,7 @@ export const BaseEntityPageTemplate: EntityPageTemplateFactory = {
     return defineEntityPage(className, {
       ...template,
       base: undefined,
-      extend: template.extend ?? template.extends ?? template.base ?? baseEntityPageTemplate,
+      extend: template.extend ?? template.extends ?? template.base ?? basePageTemplate,
       extends: undefined
     });
   }
@@ -607,6 +612,7 @@ function overrideTitanicEntityReactModule<
 }
 
 const titanicEntityReactModuleApi: TitanicEntityReactModuleApi = {
+  UI: {} as TitanicUiNamespace,
   define: defineTitanicEntityReactModule,
   extend: extendTitanicEntityReactModule,
   override: overrideTitanicEntityReactModule,
@@ -781,7 +787,7 @@ function resolveEntityReactModuleDefinitionType(
   }
 
   throw new Error(
-    `Cannot infer Titanic React module "${className}" type. Extend BaseEntityPageTemplate or BaseEntitySectionTemplate, or use page attributes/entity schema fields.`
+    `Cannot infer Titanic React module "${className}" type. Extend BasePageTemplate or BaseEntitySectionTemplate, or use page attributes/entity schema fields.`
   );
 }
 
@@ -790,7 +796,7 @@ function inferEntityReactModuleType(value: unknown): EntityReactModuleType | und
     return value.$moduleType;
   }
 
-  if (value === BaseEntityPageTemplate || value === baseEntityPageTemplate) {
+  if (value === BasePageTemplate || value === basePageTemplate) {
     return "page";
   }
 
@@ -993,6 +999,9 @@ function createTitanicEntityComponentScope<TProps extends object>(
   const scope = {
     className,
     props,
+    get lzc(): TitanicLocalizationTree {
+      return CoreTitanic.Localization.forSchema(className);
+    },
     attributes: {},
     state: {},
     refs: {},
@@ -1214,7 +1223,11 @@ function renderTitanicEntityComponentDiffItem<TProps extends object>(
     ) as ReactNode;
   }
 
-  if (Object.prototype.hasOwnProperty.call(item, "text")) {
+  if (
+    Object.prototype.hasOwnProperty.call(item, "text") &&
+    !Object.prototype.hasOwnProperty.call(item, "tag") &&
+    !Object.prototype.hasOwnProperty.call(item, "component")
+  ) {
     return resolveTitanicEntityComponentValue(item.text, scope) as ReactNode;
   }
 

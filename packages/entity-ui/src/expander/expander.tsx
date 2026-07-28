@@ -1,15 +1,17 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
 import type { EntityColumnDefinition, EntityValues } from "@titanic-entity/entity-core";
+import { Titanic } from "@titanic-entity/entity-react";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 import {
   useState,
   type CSSProperties,
   type ReactNode
 } from "react";
-import { EntityContainer } from "../container";
-import { EntityLabel } from "../label";
+import { Container } from "../container";
+import { Label } from "../label";
 import { ResourceSvgIcon, type ResourceSvgIconInput } from "../resourceSvgIcon/resource-svg-icon";
 
-export interface EntityExpanderProps {
+export interface ExpanderProps {
   children?: ReactNode;
   className?: string;
   contentClassName?: string;
@@ -28,7 +30,7 @@ export interface EntityExpanderProps {
   onExpandedChange?: (expanded: boolean) => void;
 }
 
-export function EntityExpander({
+export const Expander = Titanic.define<ExpanderProps>("Titanic.UI.Expander", function Expander({
   children,
   className,
   contentClassName,
@@ -45,7 +47,7 @@ export function EntityExpander({
   style,
   visible = true,
   onExpandedChange
-}: EntityExpanderProps) {
+}: ExpanderProps) {
   const [innerExpanded, setInnerExpanded] = useState(defaultExpanded);
   const isExpanded = expanded ?? innerExpanded;
 
@@ -68,7 +70,7 @@ export function EntityExpander({
   };
 
   return (
-    <EntityContainer
+    <Container
       className={joinClassNames("titanic-expander", isExpanded ? "titanic-expander_expanded" : undefined, className)}
       id={id}
       style={style}
@@ -83,29 +85,32 @@ export function EntityExpander({
         <span className="titanic-expander__icon" aria-hidden="true">
           <ResourceSvgIcon icon={icon} />
         </span>
-        <EntityLabel
+        <Label
           className={joinClassNames("titanic-expander__label", labelClassName)}
           column={labelColumn}
           value={label}
           values={labelValues}
         />
       </button>
-      <EntityContainer
+      <Container
         className={joinClassNames("titanic-expander__content", contentClassName)}
         visible={isExpanded}
       >
         {children}
-      </EntityContainer>
-    </EntityContainer>
+      </Container>
+    </Container>
   );
-}
+});
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
   return classNames.filter(Boolean).join(" ");
 }
 
-export const expanderComponentSchema = defineComponentSchema<EntityExpanderProps>({
+export type EntityExpanderProps = ExpanderProps;
+export const EntityExpander = Expander;
+
+export const expanderComponentSchema = defineComponentSchema<ExpanderProps>({
   kind: "component",
-  name: "EntityExpander",
-  component: EntityExpander
+  name: entityReactComponentNames.Expander,
+  component: Expander
 });

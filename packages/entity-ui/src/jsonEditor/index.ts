@@ -1,3 +1,12 @@
 export * from "./json-editor";
-export * from "./icons";
-export * from "./lcz";
+export {
+  defaultEntityJsonEditorCulture,
+  entityJsonEditorLocalizationSchemaName,
+  getEntityJsonEditorLabels,
+  getEntityJsonEditorLocale
+} from "./json-editor-lcz";
+export type {
+  EntityJsonEditorCulture,
+  EntityJsonEditorLabels,
+  EntityJsonEditorResolvedLabels
+} from "./json-editor-lcz";

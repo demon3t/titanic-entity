@@ -1,3 +1,5 @@
-export * from "./site-panel-toggle-button";
-export * from "./icons";
-export * from "./lcz";
+export {
+  PanelToggleButton as SitePanelToggleButton,
+  sitePanelToggleButtonComponentSchema
+} from "../button";
+export type { PanelToggleButtonProps as SitePanelToggleButtonProps } from "../button";

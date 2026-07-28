@@ -4,10 +4,10 @@ import type {
   PointerEvent as ReactPointerEvent,
   ReactNode
 } from "react";
-import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { Titanic } from "@titanic-entity/entity-react";
 import type { EntityDataGridLabels } from "../../dataGrid/data-grid-settings";
 import { ResourceSvgIcon } from "../../resourceSvgIcon/resource-svg-icon";
-import { titanicCommonIcons, titanicDataGridRowActionIcons } from "../../resourceSvgIcon/titanic-icons";
+import { titanicCommonIcons, titanicDataGridRowActionIcons } from "@titanic-entity/entity-icons";
 import { Button } from "../../button";
 import { EntityDragDropItem } from "../../dragDrop/drag-drop-item";
 import { columnSettingsDefinedComponentNames } from "./component-names";
@@ -30,7 +30,7 @@ export interface ColumnSettingsVisibleFieldSchemaProps {
   onResizeStart: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
-function ColumnSettingsVisibleFieldSchemaNative({
+export const ColumnSettingsVisibleFieldSchema = Titanic.define<ColumnSettingsVisibleFieldSchemaProps>(columnSettingsDefinedComponentNames.ColumnSettingsVisibleField, function ColumnSettingsVisibleFieldSchema({
   canRemove,
   children,
   className,
@@ -90,13 +90,4 @@ function ColumnSettingsVisibleFieldSchemaNative({
       />
     </EntityDragDropItem>
   );
-}
-
-Titanic.define<ColumnSettingsVisibleFieldSchemaProps>(
-  columnSettingsDefinedComponentNames.ColumnSettingsVisibleField,
-  ColumnSettingsVisibleFieldSchemaNative
-);
-
-export const ColumnSettingsVisibleFieldSchema = Titanic.getReactModule<
-  DefinedEntityReactComponent<ColumnSettingsVisibleFieldSchemaProps>
->(columnSettingsDefinedComponentNames.ColumnSettingsVisibleField)!;
+});

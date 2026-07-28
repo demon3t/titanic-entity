@@ -1,5 +1,5 @@
 import type { EntityApiManagerStructureResponse, EntityApiStructureColumnResponse, EntityApiStructureEntityResponse } from "@titanic-entity/entity-api";
-import type { EntityDataGridColumnPickerLabels } from "../../dataGrid/data-grid-props";
+import type { EntityDataGridColumnPickerLabels } from "../../dataGrid";
 import type {
   EntityDataGridColumn,
   EntityDataGridColumnSetting
@@ -48,11 +48,17 @@ export function createGridColumnFromFieldPickerItem<TRow>(
     ...trail.map((trailItem) => trailItem.label),
     item.label
   ].join(" / ");
+  const caption = label || item.label;
 
   return {
     key: item.path,
     path: item.path,
-    label: label || item.label,
+    label: caption,
+    field: {
+      key: item.path,
+      path: item.path,
+      caption
+    },
     defaultVisible: false
   };
 }
@@ -152,7 +158,8 @@ export function createAvailableColumnPathOptions<TRow>(
   const paths = new Set<string>();
 
   for (const setting of settings) {
-    const columnPath = getAvailableColumnPath(setting, columnByKey.get(setting.key));
+    const settingKey = getColumnSettingKey(setting);
+    const columnPath = getAvailableColumnPath(setting, settingKey ? columnByKey.get(settingKey) : undefined);
 
     if (!columnPath) {
       continue;
@@ -238,14 +245,28 @@ export function filterAvailableColumnSettings<TRow>(
   }
 
   return settings.filter((setting) => {
-    const column = columnByKey.get(setting.key);
+    const settingKey = getColumnSettingKey(setting);
+    const settingField = getColumnSettingField(setting);
+    const column = settingKey ? columnByKey.get(settingKey) : undefined;
+    const columnField = getColumnField(column);
 
     return matchesSearchText(normalizedSearch, [
-      setting.key,
+      settingKey,
+      setting.path,
+      setting.caption,
       setting.label,
+      settingField?.key,
+      settingField?.path,
+      settingField?.alias,
+      settingField?.caption,
       column?.key,
       column?.label,
-      column?.path
+      column?.path,
+      column?.alias,
+      columnField?.key,
+      columnField?.path,
+      columnField?.alias,
+      columnField?.caption
     ]);
   });
 }
@@ -262,7 +283,8 @@ export function filterAvailableColumnSettingsByPath<TRow>(
   }
 
   return settings.filter((setting) => {
-    const columnPath = getAvailableColumnPath(setting, columnByKey.get(setting.key));
+    const settingKey = getColumnSettingKey(setting);
+    const columnPath = getAvailableColumnPath(setting, settingKey ? columnByKey.get(settingKey) : undefined);
 
     return columnPath === normalizedPath || Boolean(columnPath?.startsWith(`${normalizedPath}.`));
   });
@@ -318,11 +340,40 @@ export function getAvailableColumnPath<TRow>(
   setting: EntityDataGridColumnSetting,
   column: EntityDataGridColumn<TRow> | undefined
 ): string | undefined {
+  const settingField = getColumnSettingField(setting);
+  const columnField = getColumnField(column);
+
   return normalizeColumnPath(setting.path)
+    ?? normalizeColumnPath(settingField?.path)
     ?? normalizeColumnPath(column?.path)
+    ?? normalizeColumnPath(columnField?.path)
     ?? normalizeColumnPath(column?.key)
-    ?? normalizeColumnPath(setting.key)
+    ?? normalizeColumnPath(columnField?.key)
+    ?? normalizeColumnPath(getColumnSettingKey(setting))
     ?? undefined;
+}
+
+function getColumnSettingKey(setting: EntityDataGridColumnSetting): string {
+  const field = getColumnSettingField(setting);
+
+  return normalizeColumnPath(setting.key)
+    ?? normalizeColumnPath(field?.key)
+    ?? normalizeColumnPath(field?.alias)
+    ?? normalizeColumnPath(field?.path)
+    ?? normalizeColumnPath(setting.path)
+    ?? "";
+}
+
+function getColumnSettingField(setting: EntityDataGridColumnSetting) {
+  return setting.field && typeof setting.field === "object" && !Array.isArray(setting.field)
+    ? setting.field
+    : undefined;
+}
+
+function getColumnField<TRow>(column: EntityDataGridColumn<TRow> | undefined) {
+  return column?.field && typeof column.field === "object" && !Array.isArray(column.field)
+    ? column.field
+    : undefined;
 }
 
 function createColumnPathTrail(path: string): ColumnSettingsFieldPickerTrailItem[] {

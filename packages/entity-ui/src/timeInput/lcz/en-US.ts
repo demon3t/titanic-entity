@@ -1,6 +1,6 @@
-import type { TimeInputResolvedLabels } from "./types";
+import { Titanic } from "@titanic-entity/entity-resources";
 
-export const timeInputEnUsLabels: TimeInputResolvedLabels = {
+Titanic.Localization.define("Titanic.UI.TimeInput", "en-US", {
   clear: "Clear",
   hour: "Hour",
   minute: "Minute",
@@ -8,4 +8,4 @@ export const timeInputEnUsLabels: TimeInputResolvedLabels = {
   placeholder: "Select time",
   selectedTime: "Selected time",
   title: "Time"
-};
+}, { defaultLocale: "en-US" });

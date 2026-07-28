@@ -1,392 +1,13 @@
 import { EntityGridColumnSettingsApiClient } from "@titanic-entity/entity-api";
+import { Titanic } from "@titanic-entity/entity-react";
+import { Fragment, useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Button } from "../button";
+import { Container } from "../container";
 import { columnSettingsDefinedComponentNames } from "../dataGridSettingsModalPage/schemas/component-names";
+import { ResourceSvgIcon } from "../resourceSvgIcon";
+import type { DataGridProps } from "./index";
 
-Titanic.define("Titanic.UI.EntityDataGrid", {
-  attributes: {
-    activeRowKey: {},
-    batchRowCount: {},
-    className: {},
-    client: {},
-    columnLabels: {},
-    columnPickerLabels: {},
-    columnSettingsClient: {},
-    columns: {},
-    createQuery: {},
-    createQueryColumns: {},
-    createToolbarCenterItems: {},
-    createToolbarLeftItems: {},
-    createToolbarRightItems: {},
-    currentUserId: {},
-    defaultMultiSelectEnabled: { default: false },
-    defaultVisibleColumnKeys: {},
-    editable: {},
-    emptyText: {},
-    entity: {},
-    filter: {},
-    filters: {},
-    getRowKey: {},
-    gridId: {},
-    gridKey: {},
-    gridWidth: {},
-    labels: {},
-    loading: {},
-    mapRows: {},
-    onMultiSelectChange: {},
-    onRowClick: {},
-    onRowDoubleClick: {},
-    onRowsLoaded: {},
-    onSelectionChange: {},
-    onVisibleColumnKeysChange: {},
-    orders: {},
-    packages: {},
-    prepareQuery: {},
-    primaryColumn: {},
-    query: {},
-    refreshKey: {},
-    renderRow: {},
-    rowActions: {},
-    rowCount: {},
-    rowMode: { default: "list" },
-    rows: {},
-    settings: {},
-    structure: {},
-    tableName: {},
-    title: {},
-    visibleColumnKeys: {},
-
-    internalRows: { state: true, default: [] },
-    internalLoading: { state: true, default: false },
-    error: { state: true, default: null },
-    refreshVersion: { state: true, default: 0 },
-    multiSelectEnabled: {
-      state: true,
-      default(this: any): boolean {
-        return Boolean(this.props.defaultMultiSelectEnabled);
-      }
-    },
-    selectedRowKeys: { state: true, default: [] },
-    columnSettingsOpen: { state: true, default: false },
-    columnSettingsSaving: { state: true, default: false },
-    columnSettingsError: { state: true, default: null },
-    appliedColumnSettings: { state: true, default: [] },
-    columnSettingsMode: {
-      state: true,
-      default(this: any): string {
-        return this.methods.normalizeColumnSettingsMode(this.props.rowMode);
-      }
-    },
-    columnModeSettings: { state: true, default: undefined },
-    sortSetting: { state: true, default: null },
-    lastRowsLoadedFingerprint: { ref: true, default: "" },
-
-    effectiveSettings: {
-      value(this: any): Record<string, unknown> {
-        return this.methods.resolveSettings();
-      }
-    },
-    effectiveLabels: {
-      value(this: any): Record<string, string> {
-        return this.methods.resolveLabels();
-      }
-    },
-    resolvedEntity: {
-      value(this: any): Record<string, unknown> {
-        return this.methods.resolveEntity();
-      }
-    },
-    normalizedColumns: {
-      value(this: any): any[] {
-        return this.methods.normalizeColumns();
-      }
-    },
-    resolvedGridKey: {
-      value(this: any): string {
-        return this.methods.resolveGridKey();
-      }
-    },
-    activeColumnSettings: {
-      value(this: any): any[] {
-        return this.methods.resolveActiveColumnSettings();
-      }
-    },
-    visibleColumnKeysEffective: {
-      value(this: any): string[] {
-        return this.methods.resolveVisibleColumnKeys();
-      }
-    },
-    visibleColumns: {
-      value(this: any): any[] {
-        const hasExplicitVisibleKeys = Array.isArray(this.attributes.visibleColumnKeys);
-
-        if (!hasExplicitVisibleKeys && this.attributes.activeColumnSettings.length > 0) {
-          const columns = this.methods.applyColumnSettingsToColumns(this.attributes.activeColumnSettings);
-
-          if (columns.length > 0) {
-            return columns;
-          }
-        }
-
-        const visibleKeys = new Set(this.attributes.visibleColumnKeysEffective);
-
-        return this.attributes.normalizedColumns.filter((column: any) => visibleKeys.has(column.key));
-      }
-    },
-    visibleColumnFingerprint: {
-      value(this: any): string {
-        return this.attributes.visibleColumns
-          .map((column: any) => `${column.key}:${column.path ?? ""}`)
-          .join("|");
-      }
-    },
-    effectiveOrders: {
-      value(this: any): unknown {
-        return this.methods.resolveEffectiveOrders();
-      }
-    },
-    queryFingerprint: {
-      value(this: any): string {
-        return this.methods.createQueryFingerprint();
-      }
-    },
-    effectiveRows: {
-      value(this: any): readonly any[] {
-        return this.methods.resolveEffectiveRows();
-      }
-    },
-    rowsLoadedFingerprint: {
-      value(this: any): string {
-        return this.methods.createRowsFingerprint(this.methods.resolveEffectiveRows());
-      }
-    },
-    effectiveLoading: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.loading ?? this.attributes.internalLoading);
-      }
-    },
-    selectedRows: {
-      value(this: any): any[] {
-        const selectedKeys = new Set(this.methods.resolveSelectedRowKeys());
-
-        return this.methods.resolveEffectiveRows().filter((row: any, rowIndex: number) =>
-          selectedKeys.has(this.methods.getResolvedRowKey(row, rowIndex))
-        );
-      }
-    },
-    selectedRowKey: {
-      value(this: any): string | null {
-        const selectedRowKeys = this.methods.resolveSelectedRowKeys();
-
-        return selectedRowKeys.length > 0 ? selectedRowKeys[0] : null;
-      }
-    },
-    selectionChangeFingerprint: {
-      value(this: any): string {
-        return JSON.stringify({
-          multiSelectEnabled: this.attributes.multiSelectEnabled,
-          rows: this.attributes.rowsLoadedFingerprint,
-          selectedRowKeys: this.methods.resolveSelectedRowKeys()
-        });
-      }
-    },
-    toolbarContext: {
-      value(this: any): Record<string, unknown> {
-        return this.methods.createToolbarContext();
-      }
-    },
-    toolbarLeftItems: {
-      value(this: any): readonly unknown[] {
-        return this.methods.resolveToolbarItems(this.attributes.createToolbarLeftItems);
-      }
-    },
-    toolbarCenterItems: {
-      value(this: any): readonly unknown[] {
-        return this.methods.resolveToolbarItems(this.attributes.createToolbarCenterItems);
-      }
-    },
-    toolbarRightItems: {
-      value(this: any): readonly unknown[] {
-        return [
-          ...this.methods.createDefaultToolbarRightItems(),
-          ...this.methods.resolveToolbarItems(this.attributes.createToolbarRightItems)
-        ];
-      }
-    },
-    hasToolbarItems: {
-      value(this: any): boolean {
-        return (
-          this.attributes.toolbarLeftItems.length > 0 ||
-          this.attributes.toolbarCenterItems.length > 0 ||
-          this.attributes.toolbarRightItems.length > 0
-        );
-      }
-    },
-    rootClassName: {
-      value(this: any): string {
-        const mode = this.attributes.rowMode === "tile" ? "tile" : "list";
-
-        return this.methods.joinClassNames(
-          "titanic-data-grid",
-          `titanic-data-grid_layout_${mode}`,
-          `titanic-data-grid--${mode}`,
-          this.attributes.multiSelectEnabled ? "titanic-data-grid_selecting titanic-data-grid--selecting" : null,
-          this.attributes.className
-        );
-      }
-    },
-    rootStyle: {
-      value(this: any): Record<string, string> {
-        const template = this.methods.createGridTemplate();
-
-        return {
-          "--titanic-data-grid-columns": String(Math.max(this.attributes.visibleColumns.length, 1)),
-          "--titanic-data-grid-row-template": template,
-          "--titanic-data-grid-template": template
-        };
-      }
-    },
-    columnCount: {
-      value(this: any): number {
-        return this.attributes.visibleColumns.length + (this.attributes.multiSelectEnabled ? 1 : 0);
-      }
-    },
-    rowCountValue: {
-      value(this: any): number {
-        return this.attributes.effectiveRows.length;
-      }
-    },
-    showColumnHeader: {
-      value(this: any): boolean {
-        return this.attributes.rowMode !== "tile" && this.attributes.visibleColumns.length > 0;
-      }
-    },
-    hasRows: {
-      value(this: any): boolean {
-        return this.attributes.effectiveRows.length > 0;
-      }
-    },
-    showEmpty: {
-      value(this: any): boolean {
-        return !this.attributes.effectiveLoading && !this.attributes.error && !this.attributes.hasRows;
-      }
-    },
-    showStatus: {
-      value(this: any): boolean {
-        return this.attributes.effectiveLoading || this.attributes.showEmpty;
-      }
-    },
-    statusText: {
-      value(this: any): string {
-        return this.methods.resolveStatusText();
-      }
-    },
-    loadRowsEffect: {
-      deps: {
-        array: [
-          { attr: "client" },
-          { attr: "rows" },
-          { attr: "query" },
-          { attr: "createQuery" },
-          { attr: "prepareQuery" },
-          { attr: "refreshKey" },
-          { attr: "refreshVersion" },
-          { attr: "resolvedEntity.tableName" },
-          { attr: "resolvedEntity.entityTypeName" },
-          { attr: "visibleColumnFingerprint" },
-          { attr: "queryFingerprint" }
-        ]
-      },
-      effect(this: any): () => void {
-        let cancelled = false;
-
-        void this.methods.loadRows(() => cancelled);
-
-        return () => {
-          cancelled = true;
-        };
-      }
-    },
-    columnSettingsLoadEffect: {
-      deps: {
-        array: [
-          { attr: "columnSettingsClient" },
-          { attr: "client" },
-          { attr: "currentUserId" },
-          { attr: "gridId" },
-          { attr: "gridKey" },
-          { attr: "resolvedGridKey" },
-          { attr: "effectiveSettings.persistColumnSettings" },
-          { attr: "rowMode" }
-        ]
-      },
-      effect(this: any): () => void {
-        let cancelled = false;
-
-        void this.methods.loadColumnSettings(() => cancelled);
-
-        return () => {
-          cancelled = true;
-        };
-      }
-    },
-    rowsLoadedEffect: {
-      deps: { array: [{ attr: "effectiveLoading" }, { attr: "rowsLoadedFingerprint" }] },
-      effect(this: any): () => void {
-        let cancelled = false;
-        let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-        if (this.attributes.effectiveLoading) {
-          return () => {
-            cancelled = true;
-          };
-        }
-
-        const rows = this.methods.resolveEffectiveRows();
-        const fingerprint = this.attributes.rowsLoadedFingerprint;
-        const lastFingerprintRef = this.attributes.lastRowsLoadedFingerprint;
-
-        if (lastFingerprintRef?.current === fingerprint) {
-          return () => {
-            cancelled = true;
-          };
-        }
-
-        if (lastFingerprintRef) {
-          lastFingerprintRef.current = fingerprint;
-        }
-
-        if (typeof this.attributes.onRowsLoaded === "function") {
-          const loadedRows = [...rows];
-
-          timeoutId = setTimeout(() => {
-            if (!cancelled) {
-              this.attributes.onRowsLoaded(loadedRows);
-            }
-          }, 0);
-        }
-
-        return () => {
-          cancelled = true;
-
-          if (timeoutId !== undefined) {
-            clearTimeout(timeoutId);
-          }
-        };
-      }
-    },
-    selectionChangeEffect: {
-      deps: { array: [{ attr: "selectionChangeFingerprint" }] },
-      effect(this: any): void {
-        if (typeof this.attributes.onSelectionChange === "function") {
-          this.attributes.onSelectionChange({
-            selectedRowKeys: [...this.methods.resolveSelectedRowKeys()],
-            selectedRows: [...this.attributes.selectedRows],
-            selectionModeEnabled: this.attributes.multiSelectEnabled
-          });
-        }
-      }
-    }
-  },
-  methods: {
+const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => any> = {
     getHandle(this: any): Record<string, unknown> {
       return {
         clearSelection: this.methods.clearSelection,
@@ -395,6 +16,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         getGridColumnSettings: this.methods.getGridColumnSettings,
         getSelectedRowKeys: this.methods.getSelectedRowKeys,
         getSelectedRows: this.methods.getSelectedRows,
+        loadMoreRows: this.methods.loadMoreRows,
         openColumnSettings: this.methods.openColumnSettings,
         refresh: this.methods.refresh
       };
@@ -616,13 +238,19 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
     normalizeColumn(this: any, column: any, columnIndex: number): Record<string, unknown> {
       const key = this.methods.getColumnKey(column) ?? `column_${columnIndex}`;
-      const path = column.path ?? column.name ?? key;
+      const field = this.methods.getColumnField(column);
+      const path = this.methods.normalizeColumnSettingText(column.path)
+        || this.methods.normalizeColumnSettingText(field?.path)
+        || this.methods.normalizeColumnSettingText(column.name)
+        || key;
+      const normalizedColumn = { ...column, key, path };
 
       return {
-        ...column,
+        ...normalizedColumn,
         defaultVisible: column.defaultVisible ?? true,
+        field: this.methods.createColumnField(normalizedColumn),
         key,
-        label: this.methods.getColumnLabel({ ...column, key, path }),
+        label: this.methods.getColumnLabel(normalizedColumn),
         path,
         settingId: column.settingId ?? key,
         span: column.span ?? column.width
@@ -630,23 +258,36 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     getColumnKey(this: any, column: any): string | undefined {
-      return column?.key ?? column?.settingId ?? column?.path ?? column?.name;
+      const field = this.methods.getColumnField(column);
+
+      return this.methods.normalizeColumnSettingText(column?.key)
+        || this.methods.normalizeColumnSettingText(column?.settingId)
+        || this.methods.normalizeColumnSettingText(field?.key)
+        || this.methods.normalizeColumnSettingText(field?.alias)
+        || this.methods.normalizeColumnSettingText(column?.path)
+        || this.methods.normalizeColumnSettingText(field?.path)
+        || this.methods.normalizeColumnSettingText(column?.name)
+        || undefined;
     },
 
     getColumnLabel(this: any, column: any): string {
       const key = this.methods.getColumnKey(column);
       const labels = this.attributes.columnLabels ?? {};
+      const field = this.methods.getColumnField(column);
+      const path = this.methods.normalizeColumnSettingText(column?.path)
+        || this.methods.normalizeColumnSettingText(field?.path);
+      const fieldCaption = this.methods.normalizeColumnSettingText(field?.caption);
+      const configuredLabel = (key ? labels[key] : undefined) ?? (path ? labels[path] : undefined);
 
-      return (
-        (key ? labels[key] : undefined) ??
-        column.label ??
-        column.caption ??
-        column.title ??
-        column.name ??
-        column.path ??
-        key ??
-        ""
-      );
+      return configuredLabel
+        || this.methods.normalizeColumnSettingText(column.label)
+        || this.methods.normalizeColumnSettingText(column.caption)
+        || fieldCaption
+        || this.methods.normalizeColumnSettingText(column.title)
+        || this.methods.normalizeColumnSettingText(column.name)
+        || path
+        || key
+        || "";
     },
 
     resolveDefaultVisibleColumnKeys(this: any): string[] {
@@ -664,14 +305,23 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         const availableKeys = new Set(this.attributes.normalizedColumns.map((column: any) => column.key));
         const keys = [...this.attributes.activeColumnSettings]
           .map((setting: any, settingIndex: number) => ({ setting, settingIndex }))
-          .filter(({ setting }: any) => setting?.visible !== false && availableKeys.has(setting.key))
+          .map(({ setting, settingIndex }: any) => ({
+            key: this.methods.getColumnSettingKey(setting),
+            setting,
+            settingIndex
+          }))
+          .filter(({ setting, key }: any) =>
+            setting?.visible !== false &&
+            key &&
+            (availableKeys.has(key) || Boolean(this.methods.createColumnFromSetting({ ...setting, key })))
+          )
           .sort((left: any, right: any) => {
             const leftOrder = Number.isFinite(Number(left.setting.order)) ? Number(left.setting.order) : left.settingIndex;
             const rightOrder = Number.isFinite(Number(right.setting.order)) ? Number(right.setting.order) : right.settingIndex;
 
             return leftOrder - rightOrder;
           })
-          .map(({ setting }: any) => setting.key);
+          .map(({ key }: any) => key);
 
         if (keys.length > 0) {
           return keys;
@@ -686,7 +336,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     resolveActiveColumnSettings(this: any): any[] {
-      const mode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
+      const mode = this.methods.normalizeColumnSettingsMode(this.attributes.effectiveRowMode);
       const modeSettings = this.attributes.columnModeSettings;
 
       if (
@@ -699,6 +349,12 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       }
 
       return Array.isArray(this.attributes.appliedColumnSettings) ? [...this.attributes.appliedColumnSettings] : [];
+    },
+
+    resolveEffectiveRowMode(this: any): string {
+      return this.methods.normalizeColumnSettingsMode(
+        this.attributes.columnSettingsMode ?? this.attributes.rowMode
+      );
     },
 
     normalizeColumnSettingsMode(this: any, value: unknown): string {
@@ -723,12 +379,251 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       return Number.isFinite(width) && width > 0 ? width : undefined;
     },
 
+    hasColumnRelativeSpan(this: any, column: any): boolean {
+      const span = Number(column?.span);
+
+      return Number.isFinite(span) && span > 0;
+    },
+
+    resolveColumnPixelWidth(this: any, column: any): string | undefined {
+      if (this.attributes.effectiveRowMode === "tile") {
+        return undefined;
+      }
+
+      const width = this.methods.normalizeGridWidth(column?.width);
+
+      return width ? `${width}px` : undefined;
+    },
+
+    normalizeColumnSettingText(this: any, value: unknown): string {
+      return typeof value === "string" ? value.trim() : "";
+    },
+
+    getColumnField(this: any, value: any): Record<string, unknown> | undefined {
+      const field = value?.field;
+
+      return field && typeof field === "object" && !Array.isArray(field)
+        ? field as Record<string, unknown>
+        : undefined;
+    },
+
+    getColumnSettingKey(this: any, setting: any): string {
+      const field = this.methods.getColumnField(setting);
+
+      return this.methods.normalizeColumnSettingText(setting?.key)
+        || this.methods.normalizeColumnSettingText(field?.key)
+        || this.methods.normalizeColumnSettingText(field?.alias)
+        || this.methods.normalizeColumnSettingText(field?.path)
+        || this.methods.normalizeColumnSettingText(setting?.path);
+    },
+
+    getColumnSettingPath(this: any, setting: any, column?: any): string {
+      const settingField = this.methods.getColumnField(setting);
+      const columnField = this.methods.getColumnField(column);
+
+      return this.methods.normalizeColumnSettingText(setting?.path)
+        || this.methods.normalizeColumnSettingText(settingField?.path)
+        || this.methods.normalizeColumnSettingText(column?.path)
+        || this.methods.normalizeColumnSettingText(columnField?.path)
+        || this.methods.getColumnSettingKey(setting)
+        || this.methods.normalizeColumnSettingText(this.methods.getColumnKey(column));
+    },
+
+    getColumnSettingCaption(this: any, setting: any): string {
+      const field = this.methods.getColumnField(setting);
+
+      return this.methods.normalizeColumnSettingText(setting?.caption)
+        || this.methods.normalizeColumnSettingText(setting?.label)
+        || this.methods.normalizeColumnSettingText(field?.caption);
+    },
+
+    createColumnField(this: any, column: any, setting?: any): Record<string, unknown> | undefined {
+      const columnField = this.methods.getColumnField(column);
+      const settingField = this.methods.getColumnField(setting);
+      const key = this.methods.normalizeColumnSettingText(this.methods.getColumnKey(column))
+        || this.methods.getColumnSettingKey(setting);
+      const path = this.methods.getColumnSettingPath(setting ?? {}, column)
+        || this.methods.normalizeColumnSettingText(column?.path ?? column?.key);
+      const alias = this.methods.normalizeColumnSettingText(settingField?.alias)
+        || this.methods.normalizeColumnSettingText(columnField?.alias)
+        || this.methods.normalizeColumnSettingText(column?.alias);
+      const caption = this.methods.getColumnSettingCaption(setting)
+        || this.methods.normalizeColumnSettingText(column?.caption)
+        || this.methods.normalizeColumnSettingText(columnField?.caption)
+        || this.methods.normalizeColumnSettingText(column?.label);
+      const nextField = {
+        ...(columnField ?? {}),
+        ...(settingField ?? {}),
+        ...(key ? { key } : {}),
+        ...(path ? { path } : {}),
+        ...(alias ? { alias } : {}),
+        ...(caption ? { caption } : {})
+      };
+
+      return Object.keys(nextField).length > 0 ? nextField : undefined;
+    },
+
+    getLabelFromColumnPath(this: any, path: string): string | undefined {
+      const label = path
+        .split(".")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .pop();
+
+      return label || undefined;
+    },
+
+    splitTechnicalColumnName(this: any, value: string): string {
+      const normalizedValue = value.trim().replace(/Id$/, "");
+
+      return normalizedValue
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() || value;
+    },
+
+    getReadableLabelFromColumnPath(this: any, path: string): string | undefined {
+      const parts = path
+        .split(".")
+        .map((part) => this.methods.splitTechnicalColumnName(part))
+        .filter(Boolean);
+
+      return parts.length > 0 ? parts.join(" / ") : undefined;
+    },
+
+    isColumnSettingPathLeafLabel(this: any, label: string, path: string): boolean {
+      const normalizedPath = this.methods.normalizeColumnSettingText(path);
+
+      if (!normalizedPath.includes(".")) {
+        return false;
+      }
+
+      const leafLabel = this.methods.getLabelFromColumnPath(normalizedPath);
+      return Boolean(leafLabel && leafLabel.localeCompare(label, undefined, { sensitivity: "accent" }) === 0);
+    },
+
+    resolveColumnSettingLabel(this: any, column: any, setting: any): string {
+      const settingLabel = this.methods.getColumnSettingCaption(setting);
+      const path = this.methods.getColumnSettingPath(setting, column);
+
+      if (settingLabel && !this.methods.isColumnSettingPathLeafLabel(settingLabel, path)) {
+        return settingLabel;
+      }
+
+      const columnLabel = this.methods.normalizeColumnSettingText(column?.label);
+
+      if (columnLabel) {
+        return columnLabel;
+      }
+
+      return (path ? this.methods.getReadableLabelFromColumnPath(path) : undefined)
+        || settingLabel
+        || path
+        || "";
+    },
+
+    createColumnFromSetting(this: any, setting: any): any | null {
+      const key = this.methods.getColumnSettingKey(setting);
+      const path = this.methods.getColumnSettingPath(setting, { key });
+
+      if (!key) {
+        return null;
+      }
+
+      const columnPath = path || key;
+      const settingLabel = this.methods.getColumnSettingCaption(setting);
+      const label = settingLabel && !this.methods.isColumnSettingPathLeafLabel(settingLabel, columnPath)
+        ? settingLabel
+        : this.methods.getReadableLabelFromColumnPath(columnPath) || settingLabel || key;
+      const column = {
+        key,
+        label,
+        path: columnPath,
+        defaultVisible: false
+      };
+
+      return {
+        ...column,
+        alias: this.methods.createQueryColumnAlias(column),
+        field: this.methods.createColumnField(column, setting)
+      };
+    },
+
+    createQueryColumnAlias(this: any, column: any): string | undefined {
+      const field = this.methods.getColumnField(column);
+      const path = this.methods.normalizeColumnSettingText(column?.path)
+        || this.methods.normalizeColumnSettingText(field?.path)
+        || this.methods.normalizeColumnSettingText(column?.key)
+        || this.methods.normalizeColumnSettingText(field?.key);
+      const explicitAlias = this.methods.normalizeColumnSettingText(column?.alias)
+        || this.methods.normalizeColumnSettingText(field?.alias);
+
+      if (explicitAlias) {
+        return explicitAlias;
+      }
+
+      if (!path || !path.includes(".")) {
+        return undefined;
+      }
+
+      const key = this.methods.normalizeColumnSettingText(column?.key)
+        || this.methods.normalizeColumnSettingText(field?.key);
+
+      if (key && key !== path && !key.includes(".")) {
+        return key;
+      }
+
+      const alias = path
+        .split(".")
+        .map((part: string) => part.replace(/[^A-Za-z0-9_]/g, ""))
+        .filter(Boolean)
+        .map((part: string, partIndex: number) =>
+          partIndex === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
+        )
+        .join("");
+
+      return alias || undefined;
+    },
+
+    createQueryColumn(this: any, column: any): Record<string, unknown> | null {
+      const field = this.methods.getColumnField(column);
+      const path = this.methods.normalizeColumnSettingText(column?.path)
+        || this.methods.normalizeColumnSettingText(field?.path)
+        || this.methods.normalizeColumnSettingText(column?.key)
+        || this.methods.normalizeColumnSettingText(field?.key);
+
+      if (!path) {
+        return null;
+      }
+
+      const alias = this.methods.createQueryColumnAlias(column);
+
+      return alias && alias !== path ? { path, alias } : { path };
+    },
+
     applyColumnSettingsToColumns(this: any, settings: any[]): any[] {
-      const columnsByKey = new Map(this.attributes.normalizedColumns.map((column: any) => [column.key, column]));
+      const columnsByKey = new Map<string, any>();
+
+      for (const column of this.attributes.normalizedColumns) {
+        const field = this.methods.getColumnField(column);
+        [
+          column.key,
+          column.path,
+          column.alias,
+          field?.key,
+          field?.path,
+          field?.alias
+        ]
+          .map((value: unknown) => this.methods.normalizeColumnSettingText(value))
+          .filter(Boolean)
+          .forEach((key: string) => columnsByKey.set(key, column));
+      }
+
       const renderedKeys = new Set<string>();
       const result = [...settings]
         .map((setting: any, settingIndex: number) => ({ setting, settingIndex }))
-        .filter(({ setting }: any) => setting?.visible !== false && columnsByKey.has(setting.key))
+        .filter(({ setting }: any) => setting?.visible !== false)
         .sort((left: any, right: any) => {
           const leftOrder = Number.isFinite(Number(left.setting.order)) ? Number(left.setting.order) : left.settingIndex;
           const rightOrder = Number.isFinite(Number(right.setting.order)) ? Number(right.setting.order) : right.settingIndex;
@@ -736,18 +631,39 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           return leftOrder - rightOrder;
         })
         .map(({ setting }: any) => {
-          const column = columnsByKey.get(setting.key) as any;
+          const key = this.methods.getColumnSettingKey(setting);
 
-          renderedKeys.add(setting.key);
+          if (!key) {
+            return null;
+          }
+
+          const normalizedSetting = { ...setting, key };
+          const column = columnsByKey.get(key) ?? this.methods.createColumnFromSetting(normalizedSetting);
+
+          if (!column) {
+            return null;
+          }
+
+          renderedKeys.add(column.key);
+          renderedKeys.add(key);
+
+          const path = this.methods.getColumnSettingPath(normalizedSetting, column) || column.path;
+          const hasRelativeSpan = this.methods.hasColumnRelativeSpan(normalizedSetting);
+          const nextColumn = { ...column, ...normalizedSetting, path };
 
           return {
             ...column,
-            label: setting.label ?? column.label,
-            path: setting.path ?? column.path,
-            span: this.methods.normalizeGridSpan(setting.span ?? column.span),
-            width: this.methods.normalizeGridWidth(setting.width ?? column.width)
+            label: this.methods.resolveColumnSettingLabel(column, normalizedSetting),
+            path,
+            alias: this.methods.createQueryColumnAlias(nextColumn),
+            field: this.methods.createColumnField(column, normalizedSetting),
+            span: this.methods.normalizeGridSpan(normalizedSetting.span ?? column.span),
+            width: hasRelativeSpan
+              ? undefined
+              : this.methods.normalizeGridWidth(normalizedSetting.width ?? column.width)
           };
-        });
+        })
+        .filter(Boolean);
 
       for (const column of this.attributes.normalizedColumns) {
         if (!renderedKeys.has(column.key) && (column.required || column.alwaysVisible)) {
@@ -766,16 +682,24 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24
       );
 
-      return this.attributes.normalizedColumns.map((column: any, columnIndex: number) => ({
-        id: column.settingId ?? column.key,
-        key: column.key,
-        label: column.label,
-        order: columnIndex,
-        path: column.path,
-        span: this.methods.normalizeGridSpan(column.span ?? defaultSpan),
-        visible: visibleKeys.has(column.key),
-        width: this.methods.normalizeGridWidth(column.width)
-      }));
+      return this.attributes.normalizedColumns.map((column: any, columnIndex: number) => {
+        const field = this.methods.createColumnField(column);
+        const caption = this.methods.normalizeColumnSettingText(column.caption)
+          || this.methods.normalizeColumnSettingText(field?.caption)
+          || this.methods.normalizeColumnSettingText(column.label);
+
+        return {
+          id: column.settingId ?? column.key,
+          key: column.key,
+          ...(caption ? { caption } : {}),
+          ...(field ? { field } : {}),
+          order: columnIndex,
+          path: column.path,
+          span: this.methods.normalizeGridSpan(column.span ?? defaultSpan),
+          visible: visibleKeys.has(column.key),
+          width: this.methods.normalizeGridWidth(column.width)
+        };
+      });
     },
 
     resolveCurrentColumnSettings(this: any): any[] {
@@ -808,7 +732,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
     createColumnSortSetting(this: any, column: any, direction: "asc" | "desc"): { key: string; path?: string; direction: "asc" | "desc" } | null {
       const key = this.methods.getColumnKey(column);
-      const path = typeof column?.path === "string" ? column.path.trim() : "";
+      const path = this.methods.getColumnSettingPath({}, column);
       const fallbackKey = path || key;
 
       if (!fallbackKey) {
@@ -830,7 +754,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       }
 
       const key = this.methods.getColumnKey(column);
-      const path = typeof column?.path === "string" ? column.path.trim() : "";
+      const path = this.methods.getColumnSettingPath({}, column);
 
       if ((path && sortSetting.path === path) || (key && sortSetting.key === key)) {
         return sortSetting.direction;
@@ -868,6 +792,19 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     createGridTemplate(this: any): string {
+      if (this.attributes.effectiveRowMode === "tile") {
+        const gridWidth = this.methods.normalizeGridSpan(
+          this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24
+        );
+        const tracks = [`repeat(${gridWidth}, minmax(0, 1fr))`];
+
+        if (this.attributes.multiSelectEnabled) {
+          tracks.unshift("40px");
+        }
+
+        return tracks.join(" ");
+      }
+
       const tracks =
         this.attributes.visibleColumns.length > 0
           ? this.attributes.visibleColumns.map((column: any) => {
@@ -894,7 +831,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     createColumnModeSettings(this: any, settings: any[], mode?: string, modeSettings?: Record<string, any>): Record<string, any> {
-      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.rowMode);
+      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.effectiveRowMode);
       const currentSettings =
         this.attributes.columnModeSettings && typeof this.attributes.columnModeSettings === "object"
           ? this.attributes.columnModeSettings
@@ -914,31 +851,29 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     setColumnSettingsState(this: any, settings: any[], mode?: string, modeSettings?: Record<string, any>): void {
-      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.rowMode);
+      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.effectiveRowMode);
       const safeSettings = Array.isArray(settings) ? [...settings] : [];
       const nextModeSettings = this.methods.createColumnModeSettings(safeSettings, activeMode, modeSettings);
-      const currentMode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
-      const currentModeSettings = Array.isArray(nextModeSettings[currentMode]?.columns)
-        ? nextModeSettings[currentMode].columns
+      const visibleSettings = Array.isArray(nextModeSettings[activeMode]?.columns)
+        ? nextModeSettings[activeMode].columns
         : safeSettings;
 
-      this.attributes.setAppliedColumnSettings([...currentModeSettings]);
+      this.attributes.setAppliedColumnSettings([...visibleSettings]);
       this.attributes.setColumnSettingsMode(activeMode);
       this.attributes.setColumnModeSettings(nextModeSettings);
     },
 
     applyColumnSettings(this: any, settings: any[], mode?: string, modeSettings?: Record<string, any>): void {
-      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.rowMode);
+      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.effectiveRowMode);
       const safeSettings = Array.isArray(settings) ? [...settings] : [];
       const nextModeSettings = this.methods.createColumnModeSettings(safeSettings, activeMode, modeSettings);
-      const currentMode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
-      const visibleSettings = Array.isArray(nextModeSettings[currentMode]?.columns)
-        ? nextModeSettings[currentMode].columns
+      const visibleSettings = Array.isArray(nextModeSettings[activeMode]?.columns)
+        ? nextModeSettings[activeMode].columns
         : safeSettings;
 
       this.methods.setColumnSettingsState(safeSettings, activeMode, nextModeSettings);
       this.attributes.setColumnSettingsOpen(false);
-      this.methods.notifyVisibleColumnKeysChange(visibleSettings, currentMode, nextModeSettings);
+      this.methods.notifyVisibleColumnKeysChange(visibleSettings, activeMode, nextModeSettings);
     },
 
     notifyVisibleColumnKeysChange(this: any, settings: any[], mode?: string, modeSettings?: Record<string, any>): void {
@@ -946,7 +881,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return;
       }
 
-      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.rowMode);
+      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.effectiveRowMode);
       const sourceSettings = Array.isArray(modeSettings?.[activeMode]?.columns)
         ? modeSettings?.[activeMode]?.columns
         : settings;
@@ -959,7 +894,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
           return leftOrder - rightOrder;
         })
-        .map(({ setting }: any) => setting.key)
+        .map(({ setting }: any) => this.methods.getColumnSettingKey(setting))
         .filter(Boolean);
 
       this.attributes.onVisibleColumnKeysChange(keys);
@@ -1013,7 +948,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         .join(",");
 
       return [
-        "EntityDataGrid",
+        "DataGrid",
         pagePath,
         tableName || entityTypeName,
         primaryColumn,
@@ -1117,9 +1052,15 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     async loadColumnSettings(this: any, isCancelled?: () => boolean): Promise<void> {
+      const defaultMode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
+
       if (!this.attributes.effectiveSettings.persistColumnSettings) {
+        this.attributes.setColumnSettingsMode(defaultMode);
+        this.attributes.setColumnSettingsReady(true);
         return;
       }
+
+      this.attributes.setColumnSettingsReady(false);
 
       try {
         const dto = await this.methods.getGridColumnSettings({ scope: "personal" });
@@ -1128,28 +1069,26 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           return;
         }
 
-        const currentMode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
-
         if (!dto) {
           const defaultSettings = this.methods.createDefaultColumnSettings();
 
-          this.methods.setColumnSettingsState(defaultSettings, currentMode);
+          this.methods.setColumnSettingsState(defaultSettings, defaultMode);
           this.attributes.setSortSetting(null);
           this.attributes.setColumnSettingsError(null);
           return;
         }
 
-        const savedMode = this.methods.normalizeColumnSettingsMode(dto.columnSettingsMode ?? dto.displayMode);
+        const savedMode = this.methods.normalizeColumnSettingsMode(dto.columnSettingsMode ?? dto.displayMode ?? defaultMode);
         const modeSettings = dto.modeSettings && typeof dto.modeSettings === "object" ? dto.modeSettings : undefined;
-        const settings = Array.isArray(modeSettings?.[currentMode]?.columns)
-          ? modeSettings?.[currentMode]?.columns
-          : Array.isArray(modeSettings?.[savedMode]?.columns)
-            ? modeSettings?.[savedMode]?.columns
-            : Array.isArray(dto.columns)
-              ? dto.columns
+        const settings = Array.isArray(modeSettings?.[savedMode]?.columns)
+          ? modeSettings?.[savedMode]?.columns
+          : Array.isArray(dto.columns)
+            ? dto.columns
+            : Array.isArray(modeSettings?.[defaultMode]?.columns)
+              ? modeSettings?.[defaultMode]?.columns
               : [];
 
-        this.methods.setColumnSettingsState(settings, currentMode, modeSettings);
+        this.methods.setColumnSettingsState(settings, savedMode, modeSettings);
         this.attributes.setSortSetting(this.methods.normalizeSortSetting(dto.sort));
         this.attributes.setColumnSettingsError(null);
       } catch (error) {
@@ -1160,12 +1099,15 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         this.attributes.setColumnSettingsError(
           this.attributes.effectiveLabels.columnSettingsLoadError ?? String(error)
         );
+      } finally {
+        if (!isCancelled?.()) {
+          this.attributes.setColumnSettingsReady(true);
+        }
       }
     },
 
     async saveDefaultColumnSettings(this: any, settings: any[], mode?: string, modeSettings?: Record<string, any>): Promise<void> {
-      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.rowMode);
-      const currentMode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
+      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.effectiveRowMode);
       const safeSettings = Array.isArray(settings) ? [...settings] : [];
       const nextModeSettings = this.methods.createColumnModeSettings(safeSettings, activeMode, modeSettings);
       const client = this.methods.resolveColumnSettingsClient();
@@ -1191,7 +1133,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         const dto = await client.saveEntityGridColumnDefaultSettings({
           columns: safeSettings,
           columnSettingsMode: activeMode,
-          displayMode: currentMode,
+          displayMode: activeMode,
           gridId,
           isDefault: true,
           modeSettings: nextModeSettings,
@@ -1200,15 +1142,15 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         });
         const resultModeSettings =
           dto?.modeSettings && typeof dto.modeSettings === "object" ? dto.modeSettings : nextModeSettings;
-        const resultSettings = Array.isArray(resultModeSettings?.[currentMode]?.columns)
-          ? resultModeSettings?.[currentMode]?.columns
+        const resultSettings = Array.isArray(resultModeSettings?.[activeMode]?.columns)
+          ? resultModeSettings?.[activeMode]?.columns
           : Array.isArray(dto?.columns)
             ? dto.columns
             : safeSettings;
 
-        this.methods.setColumnSettingsState(resultSettings, currentMode, resultModeSettings);
+        this.methods.setColumnSettingsState(resultSettings, activeMode, resultModeSettings);
         this.attributes.setColumnSettingsOpen(false);
-        this.methods.notifyVisibleColumnKeysChange(resultSettings, currentMode, resultModeSettings);
+        this.methods.notifyVisibleColumnKeysChange(resultSettings, activeMode, resultModeSettings);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const label = this.attributes.effectiveLabels.columnSettingsSaveError ?? "Column settings save error";
@@ -1221,8 +1163,8 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
     async savePersonalColumnSettings(this: any, settingsOrSortSetting?: unknown, mode?: string, modeSettings?: Record<string, any>): Promise<void> {
       const hasSettingsPayload = Array.isArray(settingsOrSortSetting);
-      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.rowMode);
-      const currentMode = this.methods.normalizeColumnSettingsMode(this.attributes.rowMode);
+      const activeMode = this.methods.normalizeColumnSettingsMode(mode ?? this.attributes.effectiveRowMode);
+      const currentMode = this.methods.normalizeColumnSettingsMode(this.attributes.effectiveRowMode);
       const safeSettings = hasSettingsPayload
         ? [...(settingsOrSortSetting as any[])]
         : this.methods.resolveCurrentColumnSettings();
@@ -1248,8 +1190,8 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
       const request = {
         columns: safeSettings,
-        columnSettingsMode: hasSettingsPayload ? activeMode : this.attributes.columnSettingsMode ?? currentMode,
-        displayMode: currentMode,
+        columnSettingsMode: hasSettingsPayload ? activeMode : currentMode,
+        displayMode: hasSettingsPayload ? activeMode : currentMode,
         gridId,
         isDefault: false,
         modeSettings: nextModeSettings,
@@ -1282,15 +1224,15 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         if (hasSettingsPayload) {
           const resultModeSettings =
             dto?.modeSettings && typeof dto.modeSettings === "object" ? dto.modeSettings : nextModeSettings;
-          const resultSettings = Array.isArray(resultModeSettings?.[currentMode]?.columns)
-            ? resultModeSettings?.[currentMode]?.columns
+          const resultSettings = Array.isArray(resultModeSettings?.[activeMode]?.columns)
+            ? resultModeSettings?.[activeMode]?.columns
             : Array.isArray(dto?.columns)
               ? dto.columns
               : safeSettings;
 
-          this.methods.setColumnSettingsState(resultSettings, currentMode, resultModeSettings);
+          this.methods.setColumnSettingsState(resultSettings, activeMode, resultModeSettings);
           this.attributes.setColumnSettingsOpen(false);
-          this.methods.notifyVisibleColumnKeysChange(resultSettings, currentMode, resultModeSettings);
+          this.methods.notifyVisibleColumnKeysChange(resultSettings, activeMode, resultModeSettings);
         }
 
         this.attributes.setColumnSettingsError(null);
@@ -1326,19 +1268,77 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         : undefined;
     },
 
-    createQueryContext(this: any): Record<string, unknown> {
-      const primaryColumn = this.attributes.resolvedEntity.primaryColumn;
-      const columnSet = new Set<string>(
-        this.attributes.visibleColumns
-          .map((column: any) => column.path ?? column.key)
-          .filter(Boolean)
-      );
+    normalizePositiveInteger(this: any, value: unknown): number | undefined {
+      const numberValue =
+        typeof value === "number"
+          ? value
+          : typeof value === "string" && value.trim()
+            ? Number(value)
+            : NaN;
 
-      if (primaryColumn) {
-        columnSet.add(primaryColumn);
+      return Number.isFinite(numberValue) && numberValue > 0 ? Math.floor(numberValue) : undefined;
+    },
+
+    normalizeNonNegativeInteger(this: any, value: unknown): number {
+      const numberValue =
+        typeof value === "number"
+          ? value
+          : typeof value === "string" && value.trim()
+            ? Number(value)
+            : NaN;
+
+      return Number.isFinite(numberValue) && numberValue > 0 ? Math.floor(numberValue) : 0;
+    },
+
+    resolveBatchRowCount(this: any): number {
+      return (
+        this.methods.normalizePositiveInteger(this.attributes.batchRowCount) ??
+        this.methods.normalizePositiveInteger(this.attributes.effectiveSettings.batchRowCount) ??
+        this.methods.normalizePositiveInteger(this.attributes.effectiveSettings.defaultRowCount) ??
+        15
+      );
+    },
+
+    resolveTotalRowLimit(this: any): number | undefined {
+      return this.methods.normalizePositiveInteger(this.attributes.rowCount);
+    },
+
+    resolvePageRowCount(this: any, skipRow?: unknown): number {
+      const batchRowCount = this.methods.resolveBatchRowCount();
+      const totalLimit = this.methods.resolveTotalRowLimit();
+      const safeSkipRow = this.methods.normalizeNonNegativeInteger(skipRow);
+
+      if (totalLimit == null) {
+        return batchRowCount;
       }
 
-      const columns = Array.from(columnSet);
+      return Math.max(0, Math.min(batchRowCount, totalLimit - safeSkipRow));
+    },
+
+    createQueryContext(this: any, options?: { rowCount?: unknown; skipRow?: unknown }): Record<string, unknown> {
+      const primaryColumn = this.attributes.resolvedEntity.primaryColumn;
+      const columns: Array<Record<string, unknown>> = [];
+      const seenPaths = new Set<string>();
+
+      for (const column of this.attributes.visibleColumns) {
+        const queryColumn = this.methods.createQueryColumn(column);
+        const path = typeof queryColumn?.path === "string" ? queryColumn.path : "";
+
+        if (!path || seenPaths.has(path)) {
+          continue;
+        }
+
+        seenPaths.add(path);
+        columns.push(queryColumn);
+      }
+
+      if (primaryColumn && !seenPaths.has(primaryColumn)) {
+        columns.push({ path: primaryColumn });
+      }
+
+      const columnPaths = columns
+        .map((column: any) => column.path)
+        .filter(Boolean);
       const filters = [
         ...(Array.isArray(this.attributes.filters) ? this.attributes.filters : []),
         ...(Array.isArray(this.attributes.filter)
@@ -1347,30 +1347,48 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
             ? [this.attributes.filter]
             : [])
       ];
+      const skipRow = this.methods.normalizeNonNegativeInteger(options?.skipRow);
+      const batchRowCount = this.methods.resolveBatchRowCount();
       const rowCount =
-        this.attributes.rowCount ??
-        this.attributes.effectiveSettings.defaultRowCount ??
-        this.attributes.effectiveSettings.batchRowCount ??
-        15;
+        this.methods.normalizePositiveInteger(options?.rowCount) ??
+        this.methods.resolvePageRowCount(skipRow);
 
       return {
-        columnPaths: columns,
+        columnPaths,
         columns,
         entity: this.attributes.resolvedEntity,
         entityTypeName: this.attributes.resolvedEntity.entityTypeName,
         filters,
         orders: this.attributes.effectiveOrders,
-        pageIndex: 0,
+        pageIndex: batchRowCount > 0 ? Math.floor(skipRow / batchRowCount) : 0,
         pageSize: rowCount,
         primaryColumn,
         rowCount,
-        skipRow: 0,
+        skipRow,
         tableName: this.attributes.resolvedEntity.tableName
       };
     },
 
-    buildQuery(this: any): unknown {
-      const context = this.methods.createQueryContext();
+    applyQueryPagination(this: any, query: unknown, context: Record<string, unknown>): unknown {
+      if (!query || typeof query !== "object" || Array.isArray(query)) {
+        return query;
+      }
+
+      const rowCount =
+        this.methods.normalizePositiveInteger(context.rowCount) ??
+        this.methods.resolveBatchRowCount();
+      const skipRow = this.methods.normalizeNonNegativeInteger(context.skipRow);
+
+      return {
+        ...(query as Record<string, unknown>),
+        rowCount,
+        skipRow,
+        skipRowCount: skipRow
+      };
+    },
+
+    buildQuery(this: any, queryContext?: Record<string, unknown>): unknown {
+      const context = queryContext ?? this.methods.createQueryContext();
       let queryInput =
         typeof this.attributes.createQuery === "function"
           ? this.attributes.createQuery(context)
@@ -1397,6 +1415,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           filters,
           orders,
           rowCount: context.rowCount,
+          skipRowCount: context.skipRow,
           skipRow: context.skipRow,
           tableName: context.tableName
         };
@@ -1404,12 +1423,14 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
       const toEntityQueryJson = (Titanic as any).EntityApi?.toEntityQueryJson;
       let query = typeof toEntityQueryJson === "function" ? toEntityQueryJson(queryInput) : queryInput;
+      query = this.methods.applyQueryPagination(query, context);
 
       if (typeof this.attributes.prepareQuery === "function") {
         const preparedQuery = this.attributes.prepareQuery(query, context);
 
         if (preparedQuery) {
           query = typeof toEntityQueryJson === "function" ? toEntityQueryJson(preparedQuery) : preparedQuery;
+          query = this.methods.applyQueryPagination(query, context);
         }
       }
 
@@ -1419,6 +1440,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     createQueryFingerprint(this: any): string {
       try {
         return JSON.stringify({
+          batchRowCount: this.attributes.batchRowCount,
           filter: this.attributes.filter,
           filters: this.attributes.filters,
           orders: this.attributes.effectiveOrders,
@@ -1436,13 +1458,35 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return this.attributes.effectiveLabels.loading;
       }
 
+      if (this.attributes.loadingMoreRows) {
+        return this.attributes.effectiveLabels.loadingMore ?? this.attributes.effectiveLabels.loading;
+      }
+
       return this.attributes.emptyText ?? this.attributes.effectiveLabels.empty;
+    },
+
+    resolveHasMoreRows(this: any, fetchedRowCount: number, requestedRowCount: number, loadedRowCount: number): boolean {
+      if (requestedRowCount <= 0 || fetchedRowCount < requestedRowCount) {
+        return false;
+      }
+
+      const totalLimit = this.methods.resolveTotalRowLimit();
+
+      return totalLimit == null || loadedRowCount < totalLimit;
     },
 
     async loadRows(this: any, isCancelled?: () => boolean): Promise<void> {
       if (Array.isArray(this.attributes.rows)) {
         this.attributes.setInternalRows([]);
+        this.attributes.setLoadedRowCount(0);
+        this.attributes.setHasMoreRows(false);
         this.attributes.setError(null);
+        this.attributes.setInternalLoading(false);
+        this.attributes.setLoadingMoreRows(false);
+        return;
+      }
+
+      if (!this.attributes.columnSettingsReady) {
         this.attributes.setInternalLoading(false);
         return;
       }
@@ -1451,16 +1495,116 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
 
       if (!client) {
         this.attributes.setInternalRows([]);
+        this.attributes.setLoadedRowCount(0);
+        this.attributes.setHasMoreRows(false);
         this.attributes.setError(null);
         this.attributes.setInternalLoading(false);
+        this.attributes.setLoadingMoreRows(false);
+        return;
+      }
+
+      const requestedRowCount = this.methods.resolvePageRowCount(0);
+
+      if (requestedRowCount <= 0) {
+        this.attributes.setInternalRows([]);
+        this.attributes.setLoadedRowCount(0);
+        this.attributes.setHasMoreRows(false);
+        this.attributes.setError(null);
+        this.attributes.setInternalLoading(false);
+        this.attributes.setLoadingMoreRows(false);
         return;
       }
 
       this.attributes.setInternalLoading(true);
+      this.attributes.setLoadingMoreRows(false);
+      this.attributes.setHasMoreRows(false);
+      this.attributes.setLoadedRowCount(0);
       this.attributes.setError(null);
 
       try {
-        const query = this.methods.buildQuery();
+        const context = this.methods.createQueryContext({ rowCount: requestedRowCount, skipRow: 0 });
+        const query = this.methods.buildQuery(context);
+        const result =
+          typeof client.select === "function"
+            ? await client.select(query)
+            : typeof client.selectEntityRows === "function"
+              ? await client.selectEntityRows(query)
+              : [];
+
+        if (isCancelled?.()) {
+          return;
+        }
+
+        const resultRows = this.methods.resolveResultRows(result);
+        const mappedRows =
+          typeof this.attributes.mapRows === "function"
+          ? await this.attributes.mapRows(resultRows)
+          : resultRows;
+
+        if (isCancelled?.()) {
+          return;
+        }
+
+        const safeRows = Array.isArray(mappedRows) ? mappedRows : [];
+        const fetchedRowCount = resultRows.length || safeRows.length;
+
+        this.attributes.setInternalRows(safeRows);
+        this.attributes.setLoadedRowCount(fetchedRowCount);
+        this.attributes.setHasMoreRows(
+          this.methods.resolveHasMoreRows(fetchedRowCount, requestedRowCount, fetchedRowCount)
+        );
+      } catch (error: unknown) {
+        if (!isCancelled?.()) {
+          this.attributes.setError(error instanceof Error ? error.message : String(error));
+          this.attributes.setInternalRows([]);
+          this.attributes.setLoadedRowCount(0);
+          this.attributes.setHasMoreRows(false);
+        }
+      } finally {
+        if (!isCancelled?.()) {
+          this.attributes.setInternalLoading(false);
+          this.attributes.setLoadingMoreRows(false);
+
+          if (this.attributes.loadMorePendingRef) {
+            this.attributes.loadMorePendingRef.current = false;
+          }
+        }
+      }
+    },
+
+    async loadMoreRows(this: any, isCancelled?: () => boolean): Promise<void> {
+      if (
+        Array.isArray(this.attributes.rows) ||
+        !this.attributes.client ||
+        !this.attributes.columnSettingsReady ||
+        !this.attributes.hasMoreRows ||
+        this.attributes.effectiveLoading ||
+        this.attributes.loadingMoreRows
+      ) {
+        return;
+      }
+
+      const skipRow = this.methods.normalizeNonNegativeInteger(
+        this.attributes.loadedRowCount ?? this.attributes.internalRows?.length
+      );
+      const requestedRowCount = this.methods.resolvePageRowCount(skipRow);
+
+      if (requestedRowCount <= 0) {
+        this.attributes.setHasMoreRows(false);
+        return;
+      }
+
+      this.attributes.setLoadingMoreRows(true);
+      this.attributes.setError(null);
+
+      if (this.attributes.loadMorePendingRef) {
+        this.attributes.loadMorePendingRef.current = true;
+      }
+
+      try {
+        const context = this.methods.createQueryContext({ rowCount: requestedRowCount, skipRow });
+        const query = this.methods.buildQuery(context);
+        const client = this.attributes.client;
         const result =
           typeof client.select === "function"
             ? await client.select(query)
@@ -1482,17 +1626,55 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           return;
         }
 
-        this.attributes.setInternalRows(Array.isArray(mappedRows) ? mappedRows : []);
+        const safeRows = Array.isArray(mappedRows) ? mappedRows : [];
+        const existingRows = Array.isArray(this.attributes.internalRows) ? this.attributes.internalRows : [];
+        const fetchedRowCount = resultRows.length || safeRows.length;
+        const loadedRowCount = skipRow + fetchedRowCount;
+
+        this.attributes.setInternalRows([...existingRows, ...safeRows]);
+        this.attributes.setLoadedRowCount(loadedRowCount);
+        this.attributes.setHasMoreRows(
+          this.methods.resolveHasMoreRows(fetchedRowCount, requestedRowCount, loadedRowCount)
+        );
       } catch (error: unknown) {
         if (!isCancelled?.()) {
           this.attributes.setError(error instanceof Error ? error.message : String(error));
-          this.attributes.setInternalRows([]);
         }
       } finally {
         if (!isCancelled?.()) {
-          this.attributes.setInternalLoading(false);
+          this.attributes.setLoadingMoreRows(false);
+
+          if (this.attributes.loadMorePendingRef) {
+            this.attributes.loadMorePendingRef.current = false;
+          }
         }
       }
+    },
+
+    loadMoreRowsIfScrollMissing(this: any): void {
+      const element = this.attributes.tableWrapRef?.current;
+
+      if (!element || element.scrollHeight > element.clientHeight + 1) {
+        return;
+      }
+
+      if (
+        Array.isArray(this.attributes.rows) ||
+        !this.attributes.client ||
+        !this.attributes.columnSettingsReady ||
+        !this.attributes.hasMoreRows ||
+        this.attributes.effectiveLoading ||
+        this.attributes.loadingMoreRows ||
+        this.attributes.loadMorePendingRef?.current
+      ) {
+        return;
+      }
+
+      if (this.attributes.loadMorePendingRef) {
+        this.attributes.loadMorePendingRef.current = true;
+      }
+
+      void this.methods.loadMoreRows();
     },
 
     resolveResultRows(this: any, result: unknown): any[] {
@@ -1540,19 +1722,161 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       }
 
       const path = column.path ?? column.key;
+      const alias = this.methods.createQueryColumnAlias(column);
+      const candidates = Array.from(new Set([column.key, column.alias, alias, path].filter(Boolean).map(String)));
+      const hasValue = (value: unknown) => value !== undefined && value !== null && value !== "";
+      const readCellValue = (value: any): unknown => {
+        if (value && typeof value === "object") {
+          const displayValue =
+            value.displayValue ??
+            value.displayName ??
+            value.name ??
+            value.Name ??
+            value.title ??
+            value.Title;
+
+          if (hasValue(displayValue)) {
+            return displayValue;
+          }
+
+          if ("value" in value) {
+            return value.value ?? null;
+          }
+
+          const objectValue =
+            value.id ??
+            value.Id ??
+            value.key ??
+            value.Key;
+
+          if (hasValue(objectValue)) {
+            return objectValue;
+          }
+        }
+
+        return value;
+      };
+      const getCaseInsensitiveRowKey = (candidate: string) =>
+        Object.keys(row).find((key) => key.toLocaleLowerCase() === candidate.toLocaleLowerCase());
+      const getObjectKey = (source: any, candidate: string) => {
+        if (!source || typeof source !== "object") {
+          return undefined;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(source, candidate)) {
+          return candidate;
+        }
+
+        return Object.keys(source).find((key) => key.toLocaleLowerCase() === candidate.toLocaleLowerCase());
+      };
+      const readNestedPathValue = (source: any, valuePath: string): unknown => {
+        const segments = valuePath.split(".").filter(Boolean);
+
+        if (segments.length === 0) {
+          return undefined;
+        }
+
+        let value = source;
+
+        for (const segment of segments) {
+          const nextKey = getObjectKey(value, segment);
+
+          if (!nextKey) {
+            return undefined;
+          }
+
+          value = value[nextKey];
+        }
+
+        return readCellValue(value);
+      };
+
+      for (const candidate of candidates) {
+        const rowKey = Object.prototype.hasOwnProperty.call(row, candidate)
+          ? candidate
+          : getCaseInsensitiveRowKey(candidate);
+
+        if (rowKey) {
+          const value = readCellValue(row[rowKey]);
+
+          if (hasValue(value) || Object.prototype.hasOwnProperty.call(row, candidate)) {
+            return value;
+          }
+        }
+      }
+
+      const getEntityDisplayValue = (Titanic as any).EntityApi?.getEntityDisplayValue;
       const getEntityValue = (Titanic as any).EntityApi?.getEntityValue;
 
-      if (typeof getEntityValue === "function") {
-        const value = getEntityValue(row, path);
+      for (const candidate of candidates) {
+        if (typeof getEntityDisplayValue === "function") {
+          const displayValue = getEntityDisplayValue(row, candidate);
 
-        if (value !== undefined) {
+          if (displayValue !== undefined && displayValue !== null && displayValue !== "") {
+            return displayValue;
+          }
+        }
+
+        if (typeof getEntityValue === "function") {
+          const value = getEntityValue(row, candidate);
+
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+      }
+
+      for (const candidate of candidates) {
+        if (!candidate.includes(".")) {
+          continue;
+        }
+
+        const value = readNestedPathValue(row, candidate);
+
+        if (hasValue(value)) {
           return value;
         }
       }
 
-      return String(path)
+      const parentCandidates = String(path)
         .split(".")
-        .reduce((value: any, segment: string) => (value == null ? undefined : value[segment]), row);
+        .filter(Boolean)
+        .map((_: string, index: number, parts: string[]) => parts.slice(0, parts.length - index - 1).join("."))
+        .filter(Boolean);
+
+      for (const candidate of parentCandidates) {
+        const rowKey = Object.prototype.hasOwnProperty.call(row, candidate)
+          ? candidate
+          : getCaseInsensitiveRowKey(candidate);
+
+        if (rowKey) {
+          const value = readCellValue(row[rowKey]);
+
+          if (hasValue(value)) {
+            return value;
+          }
+        }
+
+        if (typeof getEntityDisplayValue === "function") {
+          const displayValue = getEntityDisplayValue(row, candidate);
+
+          if (hasValue(displayValue)) {
+            return displayValue;
+          }
+        }
+
+        if (typeof getEntityValue === "function") {
+          const value = getEntityValue(row, candidate);
+
+          if (hasValue(value)) {
+            return value;
+          }
+        }
+      }
+
+      const nestedValue = readNestedPathValue(row, String(path));
+
+      return hasValue(nestedValue) ? nestedValue : undefined;
     },
 
     formatCellValue(this: any, value: unknown, column: any): string {
@@ -1655,12 +1979,41 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       }
     },
 
+    handleGridScroll(this: any, event: any): void {
+      const element = event?.currentTarget;
+
+      if (!element) {
+        return;
+      }
+
+      const distanceToBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+
+      if (
+        distanceToBottom > 96 ||
+        Array.isArray(this.attributes.rows) ||
+        !this.attributes.client ||
+        !this.attributes.columnSettingsReady ||
+        !this.attributes.hasMoreRows ||
+        this.attributes.effectiveLoading ||
+        this.attributes.loadingMoreRows ||
+        this.attributes.loadMorePendingRef?.current
+      ) {
+        return;
+      }
+
+      if (this.attributes.loadMorePendingRef) {
+        this.attributes.loadMorePendingRef.current = true;
+      }
+
+      void this.methods.loadMoreRows();
+    },
+
     createToolbarContext(this: any): Record<string, unknown> {
       return {
         client: this.attributes.client,
         columns: this.attributes.normalizedColumns,
         disableMultiSelect: this.methods.disableMultiSelect,
-        displayMode: this.attributes.rowMode,
+        displayMode: this.attributes.effectiveRowMode,
         enableMultiSelect: this.methods.enableMultiSelect,
         entity: this.attributes.resolvedEntity,
         labels: this.attributes.effectiveLabels,
@@ -1695,27 +2048,17 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       }
 
       return [
-        {
-          component: "Titanic.UI.Button",
-          key: "data-grid-column-settings",
-          props: {
-            "aria-label": { attr: "effectiveLabels.configureColumns" },
-            className: "titanic-data-grid__settings-button",
-            onClick: { method: "openColumnSettings" },
-            title: { attr: "effectiveLabels.configureColumns" },
-            type: "button",
-            unstyled: true
-          },
-          children: [
-            {
-              component: "Titanic.UI.ResourceSvgIcon",
-              props: {
-                className: "titanic-data-grid__settings-icon",
-                icon: "settings.titanicColumns"
-              }
-            }
-          ]
-        }
+        <Button
+          unstyled
+          aria-label={this.attributes.effectiveLabels.configureColumns}
+          className="titanic-data-grid__settings-button"
+          key="data-grid-column-settings"
+          title={this.attributes.effectiveLabels.configureColumns}
+          type="button"
+          onClick={this.methods.openColumnSettings}
+        >
+          <ResourceSvgIcon className="titanic-data-grid__settings-icon" icon="settings.titanicColumns" />
+        </Button>
       ];
     },
 
@@ -1724,24 +2067,14 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return null;
       }
 
-      return this.renderDiff(
-        [
-          {
-            tag: "div",
-            props: {
-              className: `titanic-data-grid__toolbar-section titanic-data-grid__toolbar-section_${placement} titanic-data-grid__toolbar-section--${placement}`
-            },
-            children: [
-              {
-                each: { local: "items" },
-                as: "item",
-                indexAs: "itemIndex",
-                diff: [{ call: "renderToolbarItem", args: [{ local: "item" }, { local: "itemIndex" }] }]
-              }
-            ]
-          }
-        ],
-        { items }
+      return (
+        <div className={`titanic-data-grid__toolbar-section titanic-data-grid__toolbar-section_${placement} titanic-data-grid__toolbar-section--${placement}`}>
+          {items.map((item, itemIndex) => (
+            <Fragment key={`${placement}-${itemIndex}`}>
+              {this.methods.renderToolbarItem(item, itemIndex) as ReactNode}
+            </Fragment>
+          ))}
+        </div>
       );
     },
 
@@ -1752,7 +2085,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return null;
       }
 
-      return this.methods.renderMaybeDiff(value, { item: value, itemIndex });
+      return value;
     },
 
     renderHeaderSelectionCell(this: any): unknown {
@@ -1760,27 +2093,21 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return null;
       }
 
-      return this.renderDiff([
-        {
-          tag: "th",
-          props: {
-            className: "titanic-data-grid__selection-cell titanic-data-grid__selection-cell_head titanic-data-grid__selection-cell--head",
-            scope: "col"
-          },
-          children: [
-            {
-              component: "Titanic.UI.Button",
-              props: {
-                className: "titanic-data-grid__selection-button",
-                onClick: { method: "handleHeaderSelectionClick" },
-                title: { attr: "effectiveLabels.selectAllRows" },
-                unstyled: true
-              },
-              children: [{ tag: "span", props: { className: "titanic-data-grid__selection-box" } }]
-            }
-          ]
-        }
-      ]);
+      return (
+        <div
+          className="titanic-data-grid__selection-cell titanic-data-grid__selection-cell_head titanic-data-grid__selection-cell--head"
+          role="columnheader"
+        >
+          <Button
+            unstyled
+            className="titanic-data-grid__selection-button"
+            title={this.attributes.effectiveLabels.selectAllRows}
+            onClick={this.methods.handleHeaderSelectionClick}
+          >
+            <span className="titanic-data-grid__selection-box" />
+          </Button>
+        </div>
+      );
     },
 
     renderHeaderCell(this: any, column: any): unknown {
@@ -1793,74 +2120,40 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         ? `${this.attributes.effectiveLabels.sortColumns}: ${column.label} (${directionLabel})`
         : `${this.attributes.effectiveLabels.sortColumns}: ${column.label}`;
 
-      return this.renderDiff(
-        [
-          {
-            tag: "th",
-            props: {
-              className: {
-                call: "joinClassNames",
-                args: [
-                  "titanic-data-grid__cell",
-                  "titanic-data-grid__cell_header",
-                  "titanic-data-grid__cell--head",
-                  { local: "className" }
-                ]
-              },
-              scope: "col",
-              style: { object: { width: { local: "width" } } }
-            },
-            children: [
-              {
-                component: "Titanic.UI.Button",
-                props: {
-                  className: {
-                    call: "joinClassNames",
-                    args: [
-                      "titanic-data-grid__sort-header-button",
-                      { local: "activeClassName" }
-                    ]
-                  },
-                  onClick: { method: "handleHeaderSortClick", args: [{ local: "column" }] },
-                  title: { local: "title" },
-                  type: "button",
-                  unstyled: true
-                },
-                children: [
-                  {
-                    tag: "span",
-                    props: { className: "titanic-data-grid__sort-header-label" },
-                    children: [{ text: { local: "label" } }]
-                  },
-                  {
-                    tag: "span",
-                    when: { local: "direction" },
-                    props: {
-                      "aria-hidden": true,
-                      className: {
-                        call: "joinClassNames",
-                        args: [
-                          "titanic-data-grid__sort-header-icon",
-                          { local: "sortIconClassName" }
-                        ]
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        {
-          activeClassName: direction ? "titanic-data-grid__sort-header-button_active" : null,
-          className: column.className,
-          column,
-          direction,
-          label: column.label,
-          sortIconClassName: direction ? `titanic-data-grid__sort-header-icon_${direction}` : null,
-          title,
-          width: column.width ? `${column.width}px` : undefined
-        }
+      return (
+        <div
+          className={this.methods.joinClassNames(
+            "titanic-data-grid__cell",
+            "titanic-data-grid__cell_header",
+            "titanic-data-grid__cell--head",
+            column.className
+          )}
+          key={column.key}
+          role="columnheader"
+          style={{ width: this.methods.resolveColumnPixelWidth(column) }}
+        >
+          <Button
+            unstyled
+            className={this.methods.joinClassNames(
+              "titanic-data-grid__sort-header-button",
+              direction && "titanic-data-grid__sort-header-button_active"
+            )}
+            title={title}
+            type="button"
+            onClick={(event) => this.methods.handleHeaderSortClick(event, column)}
+          >
+            <span className="titanic-data-grid__sort-header-label">{column.label}</span>
+            {direction ? (
+              <span
+                aria-hidden
+                className={this.methods.joinClassNames(
+                  "titanic-data-grid__sort-header-icon",
+                  `titanic-data-grid__sort-header-icon_${direction}`
+                )}
+              />
+            ) : null}
+          </Button>
+        </div>
       );
     },
 
@@ -1872,7 +2165,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           ? this.attributes.renderRow({
               client: this.attributes.client,
               columns: this.attributes.normalizedColumns,
-              displayMode: this.attributes.rowMode,
+              displayMode: this.attributes.effectiveRowMode,
               entity: this.attributes.resolvedEntity,
               gridWidth: this.attributes.effectiveSettings.gridWidth,
               labels: this.attributes.effectiveLabels,
@@ -1885,62 +2178,84 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           : null;
 
       if (customRow != null) {
-        return this.methods.renderMaybeDiff(customRow, { row, rowIndex, rowKey, selected });
+        return <Fragment key={rowKey}>{customRow as ReactNode}</Fragment>;
       }
 
-      return this.renderDiff(
-        [
-          {
-            tag: "tr",
-            props: {
-              "aria-selected": { local: "selected" },
-              className: {
-                call: "joinClassNames",
-                args: [
-                  "titanic-data-grid__row",
-                  { local: "selectedClassName" },
-                  { local: "activeClassName" },
-                  { local: "clickableClassName" }
-                ]
-              },
-              onClick: { method: "handleRowClick", args: [{ local: "row" }, { local: "rowIndex" }] },
-              onDoubleClick: { method: "handleRowDoubleClick", args: [{ local: "row" }, { local: "rowIndex" }] }
-            },
-            children: [
-              { call: "renderSelectionBodyCell", args: [{ local: "row" }, { local: "rowIndex" }] },
-              {
-                each: { attr: "visibleColumns" },
-                as: "column",
-                indexAs: "columnIndex",
-                diff: [
-                  {
-                    call: "renderBodyCell",
-                    args: [
-                      { local: "column" },
-                      { local: "row" },
-                      { local: "rowIndex" },
-                      { local: "columnIndex" }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        {
-          activeClassName: this.attributes.activeRowKey === rowKey
-            ? "titanic-data-grid__row_active titanic-data-grid__row--active"
-            : null,
-          clickableClassName:
-            this.attributes.onRowClick || this.attributes.onRowDoubleClick || this.attributes.multiSelectEnabled
-              ? "titanic-data-grid__row_clickable"
-              : null,
-          row,
-          rowIndex,
-          rowKey,
-          selected,
-          selectedClassName: selected ? "titanic-data-grid__row_selected titanic-data-grid__row--selected" : null
+      return (
+        <div
+          aria-selected={selected}
+          className={this.methods.joinClassNames(
+            "titanic-data-grid__row",
+            selected && "titanic-data-grid__row_selected titanic-data-grid__row--selected",
+            this.attributes.activeRowKey === rowKey && "titanic-data-grid__row_active titanic-data-grid__row--active",
+            (this.attributes.onRowClick || this.attributes.onRowDoubleClick || this.attributes.multiSelectEnabled)
+              && "titanic-data-grid__row_clickable",
+            this.attributes.effectiveRowMode === "tile"
+              && "titanic-data-grid__row_tile titanic-data-grid__row--tile"
+          )}
+          key={rowKey}
+          role="row"
+          onClick={(event) => this.methods.handleRowClick(event, row, rowIndex)}
+          onDoubleClick={(event) => this.methods.handleRowDoubleClick(event, row, rowIndex)}
+        >
+          {this.methods.renderSelectionBodyCell(row, rowIndex) as ReactNode}
+          {this.attributes.visibleColumns.map((column: any, columnIndex: number) => (
+            this.methods.renderBodyCell(column, row, rowIndex, columnIndex)
+          ))}
+          {this.methods.renderTileRowPlaceholderCell() as ReactNode}
+        </div>
+      );
+    },
+
+    getTileRowPlaceholderSpan(this: any): number {
+      if (this.attributes.effectiveRowMode !== "tile") {
+        return 0;
+      }
+
+      const visibleColumns = Array.isArray(this.attributes.visibleColumns)
+        ? this.attributes.visibleColumns
+        : [];
+
+      if (visibleColumns.length === 0) {
+        return 0;
+      }
+
+      const gridWidth = this.methods.normalizeGridSpan(
+        this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24
+      );
+      let occupiedColumns = 0;
+
+      visibleColumns.forEach((column: any) => {
+        const span = this.methods.normalizeGridSpan(column.span ?? gridWidth);
+
+        if (occupiedColumns > 0 && occupiedColumns + span > gridWidth) {
+          occupiedColumns = 0;
         }
+
+        occupiedColumns += Math.min(span, gridWidth);
+
+        if (occupiedColumns >= gridWidth) {
+          occupiedColumns = 0;
+        }
+      });
+
+      return occupiedColumns > 0 ? gridWidth - occupiedColumns : 0;
+    },
+
+    renderTileRowPlaceholderCell(this: any): unknown {
+      const span = this.methods.getTileRowPlaceholderSpan();
+
+      if (span <= 0) {
+        return null;
+      }
+
+      return (
+        <div
+          aria-hidden
+          className="titanic-data-grid__cell titanic-data-grid__cell_placeholder titanic-data-grid__cell--placeholder"
+          role="presentation"
+          style={{ "--titanic-data-grid-cell-span": span } as CSSProperties}
+        />
       );
     },
 
@@ -1949,44 +2264,22 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return null;
       }
 
-      return this.renderDiff(
-        [
-          {
-            tag: "td",
-            props: {
-              className: "titanic-data-grid__selection-cell"
-            },
-            children: [
-              {
-                component: "Titanic.UI.Button",
-                props: {
-                  className: "titanic-data-grid__selection-button",
-                  onClick: { method: "handleRowSelectionClick", args: [{ local: "row" }, { local: "rowIndex" }] },
-                  title: { attr: "effectiveLabels.selectRow" },
-                  unstyled: true
-                },
-                children: [
-                  {
-                    tag: "span",
-                    props: {
-                      className: {
-                        call: "joinClassNames",
-                        args: ["titanic-data-grid__selection-box", { local: "selectedClassName" }]
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        {
-          row,
-          rowIndex,
-          selectedClassName: this.methods.resolveSelectedRowKeys().includes(this.methods.getResolvedRowKey(row, rowIndex))
-            ? "titanic-data-grid__selection-box_selected titanic-data-grid__selection-box--selected"
-            : null
-        }
+      const selected = this.methods.resolveSelectedRowKeys().includes(this.methods.getResolvedRowKey(row, rowIndex));
+
+      return (
+        <div className="titanic-data-grid__selection-cell" role="cell">
+          <Button
+            unstyled
+            className="titanic-data-grid__selection-button"
+            title={this.attributes.effectiveLabels.selectRow}
+            onClick={(event) => this.methods.handleRowSelectionClick(event, row, rowIndex)}
+          >
+            <span className={this.methods.joinClassNames(
+              "titanic-data-grid__selection-box",
+              selected && "titanic-data-grid__selection-box_selected titanic-data-grid__selection-box--selected"
+            )} />
+          </Button>
+        </div>
       );
     },
 
@@ -1994,40 +2287,23 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
       const value = this.methods.getRowValue(row, column);
       const rendered = typeof column.render === "function" ? column.render(row) : undefined;
 
-      return this.renderDiff(
-        [
-          {
-            tag: "td",
-            props: {
-              className: {
-                call: "joinClassNames",
-                args: ["titanic-data-grid__cell", { local: "className" }]
-              },
-              "data-column": { local: "columnKey" },
-              style: {
-                object: {
-                  "--titanic-data-grid-cell-span": { local: "span" },
-                  width: { local: "width" }
-                }
-              }
-            },
-            children: [{ call: "renderCellContent", args: [{ local: "rendered" }, { local: "value" }, { local: "column" }] }]
-          }
-        ],
-        {
-          className: column.className,
-          column,
-          columnIndex,
-          columnKey: column.key,
-          rendered,
-          row,
-          rowIndex,
-          span: this.methods.normalizeGridSpan(
-            column.span ?? this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24
-          ),
-          width: this.methods.normalizeGridWidth(column.width) ? `${this.methods.normalizeGridWidth(column.width)}px` : undefined,
-          value
-        }
+      const span = this.methods.normalizeGridSpan(
+        column.span ?? this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24
+      );
+
+      return (
+        <div
+          className={this.methods.joinClassNames("titanic-data-grid__cell", column.className)}
+          data-column={column.key}
+          key={column.key ?? columnIndex}
+          role="cell"
+          style={{
+            "--titanic-data-grid-cell-span": span,
+            width: this.methods.resolveColumnPixelWidth(column)
+          } as CSSProperties}
+        >
+          {this.methods.renderCellContent(rendered, value, column) as ReactNode}
+        </div>
       );
     },
 
@@ -2036,16 +2312,7 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return this.methods.renderMaybeDiff(rendered, { column, value });
       }
 
-      return this.renderDiff(
-        [
-          {
-            tag: "span",
-            props: { className: "titanic-data-grid__cell-value" },
-            text: { call: "formatCellValue", args: [{ local: "value" }, { local: "column" }] }
-          }
-        ],
-        { column, value }
-      );
+      return <span className="titanic-data-grid__cell-value">{this.methods.formatCellValue(value, column)}</span>;
     },
 
     renderColumnSettingsDialog(this: any): unknown {
@@ -2059,14 +2326,11 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
         return null;
       }
 
-      return this.methods.renderMaybeDiff(
-        renderer({
+      return renderer({
           columnPickerLabels: this.attributes.columnPickerLabels,
           client: this.attributes.client,
           columns: this.attributes.normalizedColumns,
-          columnSettingsMode: this.methods.normalizeColumnSettingsMode(
-            this.attributes.columnSettingsMode ?? this.attributes.rowMode
-          ),
+          columnSettingsMode: this.attributes.effectiveRowMode,
           currentSettings: this.methods.resolveCurrentColumnSettings(),
           error: this.attributes.columnSettingsError,
           gridId: this.attributes.resolvedGridKey,
@@ -2086,23 +2350,10 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
           saving: Boolean(this.attributes.columnSettingsSaving),
           structure: this.attributes.structure,
           title: this.attributes.title ?? this.attributes.effectiveLabels.gridSettings
-        })
-      );
+        });
     },
 
-    renderMaybeDiff(this: any, value: unknown, locals?: Record<string, unknown>): unknown {
-      if (Array.isArray(value)) {
-        return this.renderDiff(value, locals);
-      }
-
-      if (value && typeof value === "object" && !("type" in (value as any))) {
-        const record = value as Record<string, unknown>;
-
-        if ("tag" in record || "component" in record || "text" in record || "call" in record || "each" in record) {
-          return this.renderDiff([record as any], locals);
-        }
-      }
-
+    renderMaybeDiff(this: any, value: unknown): unknown {
       return value;
     },
 
@@ -2111,121 +2362,439 @@ Titanic.define("Titanic.UI.EntityDataGrid", {
     },
 
     noop(): void {}
-  },
-  diff: [
-    {
-      component: "Titanic.UI.EntityContainer",
-      props: {
-        ariaLabel: { coalesce: [{ attr: "title" }, { prop: "aria-label" }, { attr: "resolvedGridKey" }, { attr: "gridId" }] },
-        className: { attr: "rootClassName" },
-        role: "region",
-        style: { attr: "rootStyle" }
-      },
-      children: [
-        {
-          tag: "div",
-          when: { attr: "hasToolbarItems" },
-          props: {
-            className: "titanic-data-grid__toolbar"
-          },
-          children: [
-            { call: "renderToolbarSection", args: ["left", { attr: "toolbarLeftItems" }] },
-            { call: "renderToolbarSection", args: ["center", { attr: "toolbarCenterItems" }] },
-            { call: "renderToolbarSection", args: ["right", { attr: "toolbarRightItems" }] }
-          ]
-        },
-        {
-          tag: "div",
-          props: {
-            className: "titanic-data-grid__table-wrap"
-          },
-          children: [
-            {
-              tag: "table",
-              props: {
-                className: "titanic-data-grid__table"
-              },
-              children: [
-                {
-                  tag: "thead",
-                  when: { attr: "showColumnHeader" },
-                  props: {
-                    className: "titanic-data-grid__head"
-                  },
-                  children: [
-                    {
-                      tag: "tr",
-                      props: {
-                        className: "titanic-data-grid__row titanic-data-grid__row_header titanic-data-grid__row--head"
-                      },
-                      children: [
-                        { call: "renderHeaderSelectionCell" },
-                        {
-                          each: { attr: "visibleColumns" },
-                          as: "column",
-                          indexAs: "columnIndex",
-                          diff: [{ call: "renderHeaderCell", args: [{ local: "column" }, { local: "columnIndex" }] }]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  tag: "tbody",
-                  props: {
-                    className: "titanic-data-grid__body"
-                  },
-                  children: [
-                    {
-                      each: { attr: "effectiveRows" },
-                      as: "row",
-                      indexAs: "rowIndex",
-                      diff: [{ call: "renderBodyRow", args: [{ local: "row" }, { local: "rowIndex" }] }]
-                    },
-                    {
-                      tag: "tr",
-                      when: { attr: "showStatus" },
-                      props: {
-                        className:
-                          "titanic-data-grid__status-row titanic-data-grid__row titanic-data-grid__row_status titanic-data-grid__row--status"
-                      },
-                      children: [
-                        {
-                          tag: "td",
-                          props: {
-                            className: "titanic-data-grid__cell titanic-data-grid__cell_status titanic-data-grid__status",
-                            colSpan: { attr: "columnCount" }
-                          },
-                          children: [{ text: { attr: "statusText" } }]
-                        }
-                      ]
-                    },
-                    {
-                      tag: "tr",
-                      when: { attr: "error" },
-                      props: {
-                        className:
-                          "titanic-data-grid__status-row titanic-data-grid__row titanic-data-grid__row_error titanic-data-grid__row--error"
-                      },
-                      children: [
-                        {
-                          tag: "td",
-                          props: {
-                            className: "titanic-data-grid__cell titanic-data-grid__cell_error titanic-data-grid__error",
-                            colSpan: { attr: "columnCount" }
-                          },
-                          children: [{ text: { attr: "error" } }]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
+  };
+
+export const DataGrid = Titanic.define<DataGridProps<any>>(
+  "Titanic.UI.DataGrid",
+  function DataGrid(props: DataGridProps<any>) {
+  const attributes: any = {};
+  const context: any = { attributes, props };
+  const methods: any = {};
+  context.methods = methods;
+
+  Object.entries(dataGridMethodDefinitions).forEach(([name, method]) => {
+    methods[name] = (...args: any[]) => method.apply(context, args);
+  });
+
+  attributes.activeRowKey = (props as any).activeRowKey === undefined ? undefined : (props as any).activeRowKey;
+  attributes.batchRowCount = (props as any).batchRowCount === undefined ? undefined : (props as any).batchRowCount;
+  attributes.className = (props as any).className === undefined ? undefined : (props as any).className;
+  attributes.client = (props as any).client === undefined ? undefined : (props as any).client;
+  attributes.columnLabels = (props as any).columnLabels === undefined ? undefined : (props as any).columnLabels;
+  attributes.columnPickerLabels = (props as any).columnPickerLabels === undefined ? undefined : (props as any).columnPickerLabels;
+  attributes.columnSettingsClient = (props as any).columnSettingsClient === undefined ? undefined : (props as any).columnSettingsClient;
+  attributes.columns = (props as any).columns === undefined ? undefined : (props as any).columns;
+  attributes.createQuery = (props as any).createQuery === undefined ? undefined : (props as any).createQuery;
+  attributes.createQueryColumns = (props as any).createQueryColumns === undefined ? undefined : (props as any).createQueryColumns;
+  attributes.createToolbarCenterItems = (props as any).createToolbarCenterItems === undefined ? undefined : (props as any).createToolbarCenterItems;
+  attributes.createToolbarLeftItems = (props as any).createToolbarLeftItems === undefined ? undefined : (props as any).createToolbarLeftItems;
+  attributes.createToolbarRightItems = (props as any).createToolbarRightItems === undefined ? undefined : (props as any).createToolbarRightItems;
+  attributes.currentUserId = (props as any).currentUserId === undefined ? undefined : (props as any).currentUserId;
+  attributes.defaultMultiSelectEnabled = (props as any).defaultMultiSelectEnabled === undefined ? false : (props as any).defaultMultiSelectEnabled;
+  attributes.defaultVisibleColumnKeys = (props as any).defaultVisibleColumnKeys === undefined ? undefined : (props as any).defaultVisibleColumnKeys;
+  attributes.editable = (props as any).editable === undefined ? undefined : (props as any).editable;
+  attributes.emptyText = (props as any).emptyText === undefined ? undefined : (props as any).emptyText;
+  attributes.entity = (props as any).entity === undefined ? undefined : (props as any).entity;
+  attributes.filter = (props as any).filter === undefined ? undefined : (props as any).filter;
+  attributes.filters = (props as any).filters === undefined ? undefined : (props as any).filters;
+  attributes.getRowKey = (props as any).getRowKey === undefined ? undefined : (props as any).getRowKey;
+  attributes.gridId = (props as any).gridId === undefined ? undefined : (props as any).gridId;
+  attributes.gridKey = (props as any).gridKey === undefined ? undefined : (props as any).gridKey;
+  attributes.gridWidth = (props as any).gridWidth === undefined ? undefined : (props as any).gridWidth;
+  attributes.labels = (props as any).labels === undefined ? undefined : (props as any).labels;
+  attributes.loading = (props as any).loading === undefined ? undefined : (props as any).loading;
+  attributes.mapRows = (props as any).mapRows === undefined ? undefined : (props as any).mapRows;
+  attributes.onMultiSelectChange = (props as any).onMultiSelectChange === undefined ? undefined : (props as any).onMultiSelectChange;
+  attributes.onRowClick = (props as any).onRowClick === undefined ? undefined : (props as any).onRowClick;
+  attributes.onRowDoubleClick = (props as any).onRowDoubleClick === undefined ? undefined : (props as any).onRowDoubleClick;
+  attributes.onRowsLoaded = (props as any).onRowsLoaded === undefined ? undefined : (props as any).onRowsLoaded;
+  attributes.onSelectionChange = (props as any).onSelectionChange === undefined ? undefined : (props as any).onSelectionChange;
+  attributes.onVisibleColumnKeysChange = (props as any).onVisibleColumnKeysChange === undefined ? undefined : (props as any).onVisibleColumnKeysChange;
+  attributes.orders = (props as any).orders === undefined ? undefined : (props as any).orders;
+  attributes.packages = (props as any).packages === undefined ? undefined : (props as any).packages;
+  attributes.prepareQuery = (props as any).prepareQuery === undefined ? undefined : (props as any).prepareQuery;
+  attributes.primaryColumn = (props as any).primaryColumn === undefined ? undefined : (props as any).primaryColumn;
+  attributes.query = (props as any).query === undefined ? undefined : (props as any).query;
+  attributes.refreshKey = (props as any).refreshKey === undefined ? undefined : (props as any).refreshKey;
+  attributes.renderRow = (props as any).renderRow === undefined ? undefined : (props as any).renderRow;
+  attributes.rowActions = (props as any).rowActions === undefined ? undefined : (props as any).rowActions;
+  attributes.rowCount = (props as any).rowCount === undefined ? undefined : (props as any).rowCount;
+  attributes.rowMode = (props as any).rowMode === undefined ? "list" : (props as any).rowMode;
+  attributes.rows = (props as any).rows === undefined ? undefined : (props as any).rows;
+  attributes.settings = (props as any).settings === undefined ? undefined : (props as any).settings;
+  attributes.structure = (props as any).structure === undefined ? undefined : (props as any).structure;
+  attributes.tableName = (props as any).tableName === undefined ? undefined : (props as any).tableName;
+  attributes.title = (props as any).title === undefined ? undefined : (props as any).title;
+  attributes.visibleColumnKeys = (props as any).visibleColumnKeys === undefined ? undefined : (props as any).visibleColumnKeys;
+  const [internalRows, setInternalRows] = useState<any>(() => []);
+  attributes.internalRows = internalRows;
+  attributes.setInternalRows = setInternalRows;
+  const [internalLoading, setInternalLoading] = useState<any>(() => false);
+  attributes.internalLoading = internalLoading;
+  attributes.setInternalLoading = setInternalLoading;
+  const [loadingMoreRows, setLoadingMoreRows] = useState<any>(() => false);
+  attributes.loadingMoreRows = loadingMoreRows;
+  attributes.setLoadingMoreRows = setLoadingMoreRows;
+  const [loadedRowCount, setLoadedRowCount] = useState<any>(() => 0);
+  attributes.loadedRowCount = loadedRowCount;
+  attributes.setLoadedRowCount = setLoadedRowCount;
+  const [hasMoreRows, setHasMoreRows] = useState<any>(() => false);
+  attributes.hasMoreRows = hasMoreRows;
+  attributes.setHasMoreRows = setHasMoreRows;
+  const [error, setError] = useState<any>(() => null);
+  attributes.error = error;
+  attributes.setError = setError;
+  const [refreshVersion, setRefreshVersion] = useState<any>(() => 0);
+  attributes.refreshVersion = refreshVersion;
+  attributes.setRefreshVersion = setRefreshVersion;
+  const [multiSelectEnabled, setMultiSelectEnabled] = useState<any>(() => (function(this: any): boolean {
+        return Boolean(this.props.defaultMultiSelectEnabled);
+      }).call(context));
+  attributes.multiSelectEnabled = multiSelectEnabled;
+  attributes.setMultiSelectEnabled = setMultiSelectEnabled;
+  const [selectedRowKeys, setSelectedRowKeys] = useState<any>(() => []);
+  attributes.selectedRowKeys = selectedRowKeys;
+  attributes.setSelectedRowKeys = setSelectedRowKeys;
+  const [columnSettingsOpen, setColumnSettingsOpen] = useState<any>(() => false);
+  attributes.columnSettingsOpen = columnSettingsOpen;
+  attributes.setColumnSettingsOpen = setColumnSettingsOpen;
+  const [columnSettingsReady, setColumnSettingsReady] = useState<any>(() => false);
+  attributes.columnSettingsReady = columnSettingsReady;
+  attributes.setColumnSettingsReady = setColumnSettingsReady;
+  const [columnSettingsSaving, setColumnSettingsSaving] = useState<any>(() => false);
+  attributes.columnSettingsSaving = columnSettingsSaving;
+  attributes.setColumnSettingsSaving = setColumnSettingsSaving;
+  const [columnSettingsError, setColumnSettingsError] = useState<any>(() => null);
+  attributes.columnSettingsError = columnSettingsError;
+  attributes.setColumnSettingsError = setColumnSettingsError;
+  const [appliedColumnSettings, setAppliedColumnSettings] = useState<any>(() => []);
+  attributes.appliedColumnSettings = appliedColumnSettings;
+  attributes.setAppliedColumnSettings = setAppliedColumnSettings;
+  const [columnSettingsMode, setColumnSettingsMode] = useState<any>(() => (function(this: any): string {
+        return this.methods.normalizeColumnSettingsMode(this.props.rowMode);
+      }).call(context));
+  attributes.columnSettingsMode = columnSettingsMode;
+  attributes.setColumnSettingsMode = setColumnSettingsMode;
+  const [columnModeSettings, setColumnModeSettings] = useState<any>(() => undefined);
+  attributes.columnModeSettings = columnModeSettings;
+  attributes.setColumnModeSettings = setColumnModeSettings;
+  const [sortSetting, setSortSetting] = useState<any>(() => null);
+  attributes.sortSetting = sortSetting;
+  attributes.setSortSetting = setSortSetting;
+  const lastRowsLoadedFingerprint = useRef<any>("");
+  attributes.lastRowsLoadedFingerprint = lastRowsLoadedFingerprint;
+  const loadMorePendingRef = useRef<any>(false);
+  attributes.loadMorePendingRef = loadMorePendingRef;
+  const tableWrapRef = useRef<any>(null);
+  attributes.tableWrapRef = tableWrapRef;
+  attributes.effectiveRowMode = (function(this: any): string {
+        return this.methods.resolveEffectiveRowMode();
+      }).call(context);
+  attributes.effectiveSettings = (function(this: any): Record<string, unknown> {
+        return this.methods.resolveSettings();
+      }).call(context);
+  attributes.effectiveLabels = (function(this: any): Record<string, string> {
+        return this.methods.resolveLabels();
+      }).call(context);
+  attributes.resolvedEntity = (function(this: any): Record<string, unknown> {
+        return this.methods.resolveEntity();
+      }).call(context);
+  attributes.normalizedColumns = (function(this: any): any[] {
+        return this.methods.normalizeColumns();
+      }).call(context);
+  attributes.resolvedGridKey = (function(this: any): string {
+        return this.methods.resolveGridKey();
+      }).call(context);
+  attributes.activeColumnSettings = (function(this: any): any[] {
+        return this.methods.resolveActiveColumnSettings();
+      }).call(context);
+  attributes.visibleColumnKeysEffective = (function(this: any): string[] {
+        return this.methods.resolveVisibleColumnKeys();
+      }).call(context);
+  attributes.visibleColumns = (function(this: any): any[] {
+        const hasExplicitVisibleKeys = Array.isArray(this.attributes.visibleColumnKeys);
+
+        if (!hasExplicitVisibleKeys && this.attributes.activeColumnSettings.length > 0) {
+          const columns = this.methods.applyColumnSettingsToColumns(this.attributes.activeColumnSettings);
+
+          if (columns.length > 0) {
+            return columns;
+          }
+        }
+
+        const visibleKeys = new Set(this.attributes.visibleColumnKeysEffective);
+
+        return this.attributes.normalizedColumns.filter((column: any) => visibleKeys.has(column.key));
+      }).call(context);
+  attributes.visibleColumnFingerprint = (function(this: any): string {
+        return this.attributes.visibleColumns
+          .map((column: any) => `${column.key}:${column.path ?? ""}`)
+          .join("|");
+      }).call(context);
+  attributes.effectiveOrders = (function(this: any): unknown {
+        return this.methods.resolveEffectiveOrders();
+      }).call(context);
+  attributes.queryFingerprint = (function(this: any): string {
+        return this.methods.createQueryFingerprint();
+      }).call(context);
+  attributes.effectiveRows = (function(this: any): readonly any[] {
+        return this.methods.resolveEffectiveRows();
+      }).call(context);
+  attributes.rowsLoadedFingerprint = (function(this: any): string {
+        return this.methods.createRowsFingerprint(this.methods.resolveEffectiveRows());
+      }).call(context);
+  attributes.effectiveLoading = (function(this: any): boolean {
+        const hasSuppliedRows = Array.isArray(this.attributes.rows);
+        const waitingForColumnSettings = !hasSuppliedRows && !this.attributes.columnSettingsReady;
+
+        return Boolean(this.attributes.loading ?? (this.attributes.internalLoading || waitingForColumnSettings));
+      }).call(context);
+  attributes.selectedRows = (function(this: any): any[] {
+        const selectedKeys = new Set(this.methods.resolveSelectedRowKeys());
+
+        return this.methods.resolveEffectiveRows().filter((row: any, rowIndex: number) =>
+          selectedKeys.has(this.methods.getResolvedRowKey(row, rowIndex))
+        );
+      }).call(context);
+  attributes.selectedRowKey = (function(this: any): string | null {
+        const selectedRowKeys = this.methods.resolveSelectedRowKeys();
+
+        return selectedRowKeys.length > 0 ? selectedRowKeys[0] : null;
+      }).call(context);
+  attributes.selectionChangeFingerprint = (function(this: any): string {
+        return JSON.stringify({
+          multiSelectEnabled: this.attributes.multiSelectEnabled,
+          rows: this.attributes.rowsLoadedFingerprint,
+          selectedRowKeys: this.methods.resolveSelectedRowKeys()
+        });
+      }).call(context);
+  attributes.toolbarContext = (function(this: any): Record<string, unknown> {
+        return this.methods.createToolbarContext();
+      }).call(context);
+  attributes.toolbarLeftItems = (function(this: any): readonly unknown[] {
+        return this.methods.resolveToolbarItems(this.attributes.createToolbarLeftItems);
+      }).call(context);
+  attributes.toolbarCenterItems = (function(this: any): readonly unknown[] {
+        return this.methods.resolveToolbarItems(this.attributes.createToolbarCenterItems);
+      }).call(context);
+  attributes.toolbarRightItems = (function(this: any): readonly unknown[] {
+        return [
+          ...this.methods.createDefaultToolbarRightItems(),
+          ...this.methods.resolveToolbarItems(this.attributes.createToolbarRightItems)
+        ];
+      }).call(context);
+  attributes.hasToolbarItems = (function(this: any): boolean {
+        return (
+          this.attributes.toolbarLeftItems.length > 0 ||
+          this.attributes.toolbarCenterItems.length > 0 ||
+          this.attributes.toolbarRightItems.length > 0
+        );
+      }).call(context);
+  attributes.rootClassName = (function(this: any): string {
+        const mode = this.attributes.effectiveRowMode === "tile" ? "tile" : "list";
+
+        return this.methods.joinClassNames(
+          "titanic-data-grid",
+          `titanic-data-grid_layout_${mode}`,
+          `titanic-data-grid--${mode}`,
+          this.attributes.multiSelectEnabled ? "titanic-data-grid_selecting titanic-data-grid--selecting" : null,
+          this.attributes.className
+        );
+      }).call(context);
+  attributes.rootStyle = (function(this: any): Record<string, string> {
+        const template = this.methods.createGridTemplate();
+        const columnCount = this.attributes.effectiveRowMode === "tile"
+          ? this.methods.normalizeGridSpan(this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24)
+          : Math.max(this.attributes.visibleColumns.length, 1);
+
+        return {
+          "--titanic-data-grid-columns": String(columnCount),
+          "--titanic-data-grid-row-template": template,
+          "--titanic-data-grid-template": template
+        };
+      }).call(context);
+  attributes.columnCount = (function(this: any): number {
+        if (this.attributes.effectiveRowMode === "tile") {
+          return this.methods.normalizeGridSpan(
+            this.attributes.effectiveSettings.gridWidth ?? this.attributes.gridWidth ?? 24
+          ) + (this.attributes.multiSelectEnabled ? 1 : 0);
+        }
+
+        return this.attributes.visibleColumns.length + (this.attributes.multiSelectEnabled ? 1 : 0);
+      }).call(context);
+  attributes.rowCountValue = (function(this: any): number {
+        return this.attributes.effectiveRows.length;
+      }).call(context);
+  attributes.showColumnHeader = (function(this: any): boolean {
+        return this.attributes.effectiveRowMode !== "tile" && this.attributes.visibleColumns.length > 0;
+      }).call(context);
+  attributes.hasRows = (function(this: any): boolean {
+        return this.attributes.effectiveRows.length > 0;
+      }).call(context);
+  attributes.showEmpty = (function(this: any): boolean {
+        return !this.attributes.effectiveLoading && !this.attributes.error && !this.attributes.hasRows;
+      }).call(context);
+  attributes.showStatus = (function(this: any): boolean {
+        return this.attributes.effectiveLoading || this.attributes.loadingMoreRows || this.attributes.showEmpty;
+      }).call(context);
+  attributes.statusText = (function(this: any): string {
+        return this.methods.resolveStatusText();
+      }).call(context);
+  useEffect(() => (function(this: any): () => void {
+        let cancelled = false;
+
+        if (!Array.isArray(this.attributes.rows) && !this.attributes.columnSettingsReady) {
+          return () => {
+            cancelled = true;
+          };
+        }
+
+        void this.methods.loadRows(() => cancelled);
+
+        return () => {
+          cancelled = true;
+        };
+      }).call(context), [attributes?.["client"], attributes?.["rows"], attributes?.["query"], attributes?.["createQuery"], attributes?.["prepareQuery"], attributes?.["refreshKey"], attributes?.["refreshVersion"], attributes?.["batchRowCount"], attributes?.["effectiveSettings"]?.["batchRowCount"], attributes?.["effectiveSettings"]?.["defaultRowCount"], attributes?.["columnSettingsReady"], attributes?.["resolvedEntity"]?.["tableName"], attributes?.["resolvedEntity"]?.["entityTypeName"], attributes?.["visibleColumnFingerprint"], attributes?.["queryFingerprint"]]);
+  useEffect(() => (function(this: any): () => void {
+        let cancelled = false;
+
+        void this.methods.loadColumnSettings(() => cancelled);
+
+        return () => {
+          cancelled = true;
+        };
+      }).call(context), [attributes?.["columnSettingsClient"], attributes?.["client"], attributes?.["currentUserId"], attributes?.["gridId"], attributes?.["gridKey"], attributes?.["resolvedGridKey"], attributes?.["effectiveSettings"]?.["persistColumnSettings"], attributes?.["rowMode"]]);
+  useEffect(() => (function(this: any): () => void {
+        let cancelled = false;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+        if (this.attributes.effectiveLoading || this.attributes.loadingMoreRows) {
+          return () => {
+            cancelled = true;
+          };
+        }
+
+        const rows = this.methods.resolveEffectiveRows();
+        const fingerprint = this.attributes.rowsLoadedFingerprint;
+        const lastFingerprintRef = this.attributes.lastRowsLoadedFingerprint;
+
+        if (lastFingerprintRef?.current === fingerprint) {
+          return () => {
+            cancelled = true;
+          };
+        }
+
+        if (lastFingerprintRef) {
+          lastFingerprintRef.current = fingerprint;
+        }
+
+        if (typeof this.attributes.onRowsLoaded === "function") {
+          const loadedRows = [...rows];
+
+          timeoutId = setTimeout(() => {
+            if (!cancelled) {
+              this.attributes.onRowsLoaded(loadedRows);
             }
-          ]
-        },
-        { call: "renderColumnSettingsDialog" }
-      ]
-    }
-  ]
-});
+          }, 0);
+        }
+
+        return () => {
+          cancelled = true;
+
+          if (timeoutId !== undefined) {
+            clearTimeout(timeoutId);
+          }
+        };
+      }).call(context), [attributes?.["effectiveLoading"], attributes?.["loadingMoreRows"], attributes?.["rowsLoadedFingerprint"]]);
+  useEffect(() => (function(this: any): () => void {
+        let cancelled = false;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+        if (
+          Array.isArray(this.attributes.rows) ||
+          !this.attributes.client ||
+          !this.attributes.columnSettingsReady ||
+          !this.attributes.hasMoreRows ||
+          this.attributes.effectiveLoading ||
+          this.attributes.loadingMoreRows ||
+          this.attributes.loadMorePendingRef?.current
+        ) {
+          return () => {
+            cancelled = true;
+          };
+        }
+
+        timeoutId = setTimeout(() => {
+          if (!cancelled) {
+            this.methods.loadMoreRowsIfScrollMissing();
+          }
+        }, 0);
+
+        return () => {
+          cancelled = true;
+
+          if (timeoutId !== undefined) {
+            clearTimeout(timeoutId);
+          }
+        };
+      }).call(context), [attributes?.["columnSettingsReady"], attributes?.["effectiveLoading"], attributes?.["loadingMoreRows"], attributes?.["hasMoreRows"], attributes?.["rowsLoadedFingerprint"]]);
+  useEffect(() => (function(this: any): void {
+        if (typeof this.attributes.onSelectionChange === "function") {
+          this.attributes.onSelectionChange({
+            selectedRowKeys: [...this.methods.resolveSelectedRowKeys()],
+            selectedRows: [...this.attributes.selectedRows],
+            selectionModeEnabled: this.attributes.multiSelectEnabled
+          });
+        }
+      }).call(context), [attributes?.["selectionChangeFingerprint"]]);
+
+  useImperativeHandle((props as any).ref, () => methods.getHandle());
+
+  return (
+    <Container
+      ariaLabel={(props as any).title ?? (props as any)["aria-label"] ?? attributes.resolvedGridKey ?? (props as any).gridId}
+      className={attributes.rootClassName}
+      role="region"
+      style={attributes.rootStyle as CSSProperties}
+    >
+      {attributes.hasToolbarItems ? (
+        <div className="titanic-data-grid__toolbar">
+          {methods.renderToolbarSection("left", attributes.toolbarLeftItems)}
+          {methods.renderToolbarSection("center", attributes.toolbarCenterItems)}
+          {methods.renderToolbarSection("right", attributes.toolbarRightItems)}
+        </div>
+      ) : null}
+      <div className="titanic-data-grid__table-wrap" ref={attributes.tableWrapRef} onScroll={methods.handleGridScroll}>
+        <div className="titanic-data-grid__table" role="table">
+          {attributes.showColumnHeader ? (
+            <div className="titanic-data-grid__head" role="rowgroup">
+              <div className="titanic-data-grid__row titanic-data-grid__row_header titanic-data-grid__row--head" role="row">
+                {methods.renderHeaderSelectionCell()}
+                {attributes.visibleColumns.map((column: any, columnIndex: number) => methods.renderHeaderCell(column, columnIndex))}
+              </div>
+            </div>
+          ) : null}
+          <div className="titanic-data-grid__body" role="rowgroup">
+            {attributes.effectiveRows.map((row: any, rowIndex: number) => methods.renderBodyRow(row, rowIndex))}
+            {attributes.showStatus ? (
+              <div className="titanic-data-grid__status-row titanic-data-grid__row titanic-data-grid__row_status titanic-data-grid__row--status" role="row">
+                <div className="titanic-data-grid__cell titanic-data-grid__cell_status titanic-data-grid__status" role="cell">
+                  {attributes.statusText}
+                </div>
+              </div>
+            ) : null}
+            {attributes.error ? (
+              <div className="titanic-data-grid__status-row titanic-data-grid__row titanic-data-grid__row_error titanic-data-grid__row--error" role="row">
+                <div className="titanic-data-grid__cell titanic-data-grid__cell_error titanic-data-grid__error" role="cell">
+                  {String(attributes.error)}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+      {methods.renderColumnSettingsDialog()}
+    </Container>
+  );
+  }
+);

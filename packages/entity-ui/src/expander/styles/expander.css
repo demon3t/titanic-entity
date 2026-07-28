@@ -1,0 +1,57 @@
+.titanic-expander {
+  width: 100%;
+  min-width: 0;
+}
+
+.titanic-expander__header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.titanic-expander__header:disabled {
+  cursor: not-allowed;
+  opacity: 0.64;
+}
+
+.titanic-expander__label {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.titanic-expander__icon {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: var(--titanic-ui-muted-text, #64748b);
+  transform: rotate(90deg);
+  transition: transform 160ms ease;
+}
+
+.titanic-expander_expanded .titanic-expander__icon {
+  transform: rotate(-90deg);
+}
+
+.titanic-expander__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.titanic-expander__icon path {
+  stroke-width: 2.75;
+}
+
+.titanic-expander__content {
+  margin-top: 8px;
+}

@@ -1,4 +1,6 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
+import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
 import type {
   CSSProperties,
   DragEvent,
@@ -25,7 +27,10 @@ export interface EntityDragDropItemProps<TValue = unknown> {
   onDrop?: (event: DragEvent<HTMLElement>) => void;
 }
 
-export function EntityDragDropItem<TValue = unknown>({
+type EntityDragDropItemComponent =
+  <TValue = unknown>(props: EntityDragDropItemProps<TValue>) => ReactNode;
+
+export const EntityDragDropItem = Titanic.define<EntityDragDropItemProps<any>>("Titanic.UI.EntityDragDropItem", function EntityDragDropItem<TValue = unknown>({
   as = "div",
   children,
   className,
@@ -75,7 +80,7 @@ export function EntityDragDropItem<TValue = unknown>({
       {children}
     </Component>
   );
-}
+}) as DefinedEntityReactComponent<EntityDragDropItemProps<any>> & EntityDragDropItemComponent;
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
   return classNames.filter(Boolean).join(" ");
@@ -83,6 +88,6 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
 
 export const dragDropItemComponentSchema = defineComponentSchema<EntityDragDropItemProps>({
   kind: "component",
-  name: "EntityDragDropItem",
+  name: entityReactComponentNames.EntityDragDropItem,
   component: EntityDragDropItem
 });

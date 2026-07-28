@@ -1,42 +1,27 @@
-Titanic.define("Titanic.UI.IconButton", {
-  attributes: {
-    buttonClassName: {},
-    icon: {},
-    iconClassName: {},
-    label: {},
-    tooltipClassName: {},
-    type: { default: "button" },
-    onClick: {}
-  },
-  methods: {},
-  diff: [
-    {
-      component: "Titanic.UI.Button",
-      props: {
-        "aria-label": { attr: "label" },
-        className: { attr: "buttonClassName" },
-        onClick: { attr: "onClick" },
-        type: { attr: "type" },
-        unstyled: true
-      },
-      children: [
-        {
-          component: "Titanic.UI.ResourceSvgIcon",
-          props: {
-            className: { attr: "iconClassName" },
-            icon: { attr: "icon" }
-          }
-        },
-        {
-          tag: "span",
-          when: { attr: "tooltipClassName" },
-          props: {
-            className: { attr: "tooltipClassName" },
-            role: "tooltip"
-          },
-          text: { attr: "label" }
-        }
-      ]
-    }
-  ]
+import { Titanic } from "@titanic-entity/entity-react";
+import { ResourceSvgIcon } from "../resourceSvgIcon/resource-svg-icon";
+import { Button } from "./button";
+import type { IconButtonProps } from "./index";
+
+export const IconButton = Titanic.define<IconButtonProps>("Titanic.UI.IconButton", function IconButton({
+  buttonClassName,
+  icon,
+  iconClassName,
+  label,
+  tooltipClassName,
+  type = "button",
+  onClick
+}: IconButtonProps) {
+  return (
+    <Button
+      unstyled
+      aria-label={label}
+      className={buttonClassName}
+      type={type}
+      onClick={onClick}
+    >
+      <ResourceSvgIcon className={iconClassName} icon={icon} />
+      {tooltipClassName ? <span className={tooltipClassName} role="tooltip">{label}</span> : null}
+    </Button>
+  );
 });

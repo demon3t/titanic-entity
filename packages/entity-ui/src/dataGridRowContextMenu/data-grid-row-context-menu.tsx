@@ -1,11 +1,13 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames } from "@titanic-entity/entity-react/model";
+import type { ReactNode } from "react";
 import { ResourceSvgIcon } from "../resourceSvgIcon/resource-svg-icon";
 import { Button } from "../button";
 import type {
   EntityDataGridRowAction,
   EntityDataGridRowActionContext
-} from "../dataGrid/data-grid-props";
+} from "../dataGrid";
 
 export interface EntityDataGridRowContextMenuProps<TRow = unknown> {
   actions: readonly EntityDataGridRowAction<TRow>[];
@@ -17,7 +19,10 @@ export interface EntityDataGridRowContextMenuProps<TRow = unknown> {
   onActionClick: (action: EntityDataGridRowAction<TRow>) => void;
 }
 
-export function EntityDataGridRowContextMenu<TRow = unknown>({
+type EntityDataGridRowContextMenuComponent =
+  <TRow = unknown>(props: EntityDataGridRowContextMenuProps<TRow>) => ReactNode;
+
+export const EntityDataGridRowContextMenu = Titanic.define<EntityDataGridRowContextMenuProps<any>>("Titanic.UI.EntityDataGridRowContextMenu", function EntityDataGridRowContextMenu<TRow = unknown>({
   actions,
   ariaLabel,
   context,
@@ -60,7 +65,8 @@ export function EntityDataGridRowContextMenu<TRow = unknown>({
       })}
     </div>
   );
-}
+}) as DefinedEntityReactComponent<EntityDataGridRowContextMenuProps<any>> &
+  EntityDataGridRowContextMenuComponent;
 
 function resolveRowActionDisabled<TRow>(
   action: EntityDataGridRowAction<TRow>,

@@ -1,3 +1,7 @@
+import "./lcz/en-US";
+import "./lcz/ru-RU";
+import { ModalPages } from "../modalPages";
+
 Titanic.define("Titanic.UI.BaseSection", {
   attributes: {
     actionError: { state: true, default: null },
@@ -22,6 +26,7 @@ Titanic.define("Titanic.UI.BaseSection", {
     getRowPrimaryValue: {},
     gridClassName: {},
     gridRef: { ref: true, default: null },
+    locale: {},
     labelsProp: {
       value(this: any): Record<string, unknown> | undefined {
         return this.props.labels;
@@ -55,17 +60,11 @@ Titanic.define("Titanic.UI.BaseSection", {
     template: {},
     top: {},
     defaultLabels: {
-      value(): Record<string, unknown> {
-        return {
-          createRecord: "Create",
-          deleteRecord: "Delete",
-          deleteRecordConfirm: "Delete record?",
-          deleteRecordError: "Could not delete record.",
-          deleteSelectedRecords: "Delete selected",
-          deleteSelectedRecordsConfirm: "Delete selected records?",
-          deleteSelectedRecordsError: "Could not delete selected records.",
-          selectedRecords: (count: number) => `Selected: ${count}`
-        };
+      value(this: any): Record<string, unknown> {
+        return Titanic.Localization.forSchema("Titanic.UI.BaseSection", {
+          locale: this.attributes.locale,
+          defaultLocale: "en-US"
+        });
       }
     },
     labels: {
@@ -241,6 +240,7 @@ Titanic.define("Titanic.UI.BaseSection", {
         "getRowPrimaryValue",
         "gridClassName",
         "labels",
+        "locale",
         "methods",
         "onDeleteRecord",
         "onDeleteRecords",
@@ -415,11 +415,10 @@ Titanic.define("Titanic.UI.BaseSection", {
         return true;
       }
 
-      if (typeof window === "undefined" || typeof window.confirm !== "function") {
-        return true;
-      }
-
-      return window.confirm(String(fallbackMessage ?? "Delete?"));
+      return ModalPages.showApproved({
+        message: String(fallbackMessage ?? this.attributes.labels.deleteRecordConfirm),
+        tone: "danger"
+      });
     },
 
     createMethodChainsFromMethods(this: any, methods?: Record<string, unknown>): Record<string, unknown[]> {
@@ -877,7 +876,7 @@ Titanic.define("Titanic.UI.BaseSection", {
     createToolbarAction(this: any, action: string, context: any): () => void {
       return () => {
         if (action === "openCreate") {
-          void this.attributes.onOpenCreatePage?.(context);
+          void this.attributes.onOpenCreatePage?.(this.methods.createSectionContext(context));
           return;
         }
 
@@ -897,7 +896,7 @@ Titanic.define("Titanic.UI.BaseSection", {
       if (this.attributes.onOpenEditPage) {
         actions.push({
           key: "open",
-          label: this.attributes.labelsProp?.openRecord ?? "Open",
+          label: this.attributes.labels.openRecord,
           onClick: async (context: any) => {
             await this.methods.handleOpenEditPage(context.row, context.rowIndex);
             context.closeMenu?.();
@@ -910,7 +909,7 @@ Titanic.define("Titanic.UI.BaseSection", {
           danger: true,
           disabled: this.attributes.actionLoading,
           key: "delete",
-          label: this.attributes.labelsProp?.deleteRecord ?? "Delete",
+          label: this.attributes.labels.deleteRecord,
           onClick: async (context: any) => {
             if (this.attributes.onOpenDeletePage) {
               await this.methods.handleOpenDeletePage(context.row, context.rowIndex);
@@ -948,7 +947,15 @@ Titanic.define("Titanic.UI.BaseSection", {
       const label = this.attributes.labels.selectedRecords;
       const count = this.attributes.selectedRows.length;
 
-      return typeof label === "function" ? label(count) : `Selected: ${count}`;
+      if (typeof label === "function") {
+        return label(count);
+      }
+
+      if (typeof label === "string") {
+        return label.replace("{count}", String(count));
+      }
+
+      return "";
     },
 
     renderBottomStatus(this: any): unknown {
@@ -982,7 +989,7 @@ Titanic.define("Titanic.UI.BaseSection", {
   },
   diff: [
     {
-      component: "Titanic.UI.EntityContainer",
+      component: "Titanic.UI.Container",
       props: {
         className: { attr: "rootClassName" }
       },
@@ -992,7 +999,7 @@ Titanic.define("Titanic.UI.BaseSection", {
           when: { attr: "renderTopContainer" }
         },
         {
-          component: "Titanic.UI.EntityContainer",
+          component: "Titanic.UI.Container",
           unless: { attr: "renderTopContainer" },
           props: {
             className: "titanic-records-section__top"
@@ -1000,7 +1007,7 @@ Titanic.define("Titanic.UI.BaseSection", {
           children: [{ text: { attr: "top" } }]
         },
         {
-          component: "Titanic.UI.EntityDataGrid",
+          component: "Titanic.UI.DataGrid",
           props: {
             $spread: { attr: "gridProps" },
             className: { attr: "resolvedGridClassName" },
@@ -1035,7 +1042,7 @@ Titanic.define("Titanic.UI.BaseSection", {
           when: { attr: "renderBottomContainer" }
         },
         {
-          component: "Titanic.UI.EntityContainer",
+          component: "Titanic.UI.Container",
           unless: { attr: "renderBottomContainer" },
           props: {
             className: "titanic-records-section__bottom"

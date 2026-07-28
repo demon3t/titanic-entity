@@ -1,89 +1,57 @@
-Titanic.define("Titanic.UI.NumberInput", {
-  attributes: {
-    id: {},
-    name: {},
-    value: {},
-    disabled: {},
-    className: {},
-    editable: { default: true },
-    required: { default: false },
-    title: {},
-    validationError: {},
-    visible: { default: true },
-    onChange: {},
-    fallbackId: { id: true },
-    resolvedId: {
-      value(this: any): string {
-        return this.attributes.id ?? this.attributes.fallbackId;
-      }
-    },
-    resolvedName: {
-      value(this: any): string {
-        return this.attributes.name ?? this.attributes.id ?? String(this.attributes.fallbackId).replace(/:/g, "");
-      }
-    },
-    readOnly: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.disabled) || !this.attributes.editable;
-      }
-    },
-    errorId: {
-      value(this: any): string | undefined {
-        return this.attributes.validationError ? `${this.attributes.resolvedId}-error` : undefined;
-      }
-    },
-    hasValidationError: {
-      value(this: any): boolean {
-        return Boolean(this.attributes.validationError);
-      }
-    },
-    inputValue: {
-      value(this: any): string | number {
-        return this.attributes.value ?? "";
-      }
-    }
-  },
-  methods: {
-    handleChange(this: any, event: any): void {
-      const onChange = this.attributes.onChange;
+import { Titanic } from "@titanic-entity/entity-react";
+import { useId, type ChangeEvent } from "react";
+import { InputFieldFrame } from "../inputFieldFrame";
+import type { NumberInputProps } from "./index";
 
-      if (typeof onChange !== "function") {
-        return;
-      }
+export const NumberInput = Titanic.define<NumberInputProps>("Titanic.UI.NumberInput", function NumberInput({
+  id,
+  name,
+  value,
+  disabled,
+  className,
+  editable = true,
+  required = false,
+  title,
+  validationError,
+  visible = true,
+  onChange
+}: NumberInputProps) {
+  const fallbackId = useId();
 
-      onChange(event.target.value === "" ? null : Number(event.target.value));
-    }
-  },
-  diff: [
-    {
-      component: "Titanic.UI.InputFieldFrame",
-      when: { attr: "visible" },
-      props: {
-        control: {
-          diff: [
-            {
-              tag: "input",
-              props: {
-                "aria-errormessage": { attr: "errorId" },
-                "aria-invalid": { attr: "hasValidationError" },
-                className: { attr: "className" },
-                disabled: { attr: "readOnly" },
-                id: { attr: "resolvedId" },
-                name: { attr: "resolvedName" },
-                required: { attr: "required" },
-                type: "number",
-                value: { attr: "inputValue" },
-                onChange: { method: "handleChange" }
-              }
-            }
-          ]
-        },
-        errorId: { attr: "errorId" },
-        htmlFor: { attr: "resolvedId" },
-        required: { attr: "required" },
-        title: { attr: "title" },
-        validationError: { attr: "validationError" }
-      }
-    }
-  ]
+  if (!visible) {
+    return null;
+  }
+
+  const resolvedId = id ?? fallbackId;
+  const resolvedName = name ?? id ?? fallbackId.replace(/:/g, "");
+  const readOnly = Boolean(disabled) || !editable;
+  const errorId = validationError ? `${resolvedId}-error` : undefined;
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value === "" ? null : Number(event.target.value));
+  };
+
+  return (
+    <InputFieldFrame
+      control={(
+        <input
+          aria-errormessage={errorId}
+          aria-invalid={Boolean(validationError)}
+          className={className}
+          disabled={readOnly}
+          id={resolvedId}
+          name={resolvedName}
+          required={required}
+          type="number"
+          value={value ?? ""}
+          onChange={handleChange}
+        />
+      )}
+      errorId={errorId}
+      htmlFor={resolvedId}
+      required={required}
+      title={title}
+      validationError={validationError}
+    />
+  );
 });

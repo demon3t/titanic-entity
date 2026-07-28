@@ -1,0 +1,11 @@
+.titanic-drag-drop-item {
+  min-width: 0;
+}
+
+.titanic-drag-drop-item_draggable {
+  cursor: grab;
+}
+
+.titanic-drag-drop-item_draggable:active {
+  cursor: grabbing;
+}

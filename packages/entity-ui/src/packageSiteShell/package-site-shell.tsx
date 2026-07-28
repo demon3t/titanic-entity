@@ -1,10 +1,15 @@
 import { defineComponentSchema } from "@titanic-entity/entity-base";
+import { Titanic } from "@titanic-entity/entity-react";
 import { entityReactComponentNames } from "@titanic-entity/entity-react/model";// Общий shell пакетного UI: рабочие места, разделы, основное окно и правая панель действий.
 import { useState, type ReactNode } from "react";
 import type { UiPackageSectionSchema, UiPackageWorkspaceSchema } from "@titanic-entity/entity-base";
 import { Button } from "../button";
+import {
+  CollapsiblePanel,
+  type CollapsiblePanelDirection,
+  type CollapsiblePanelItem
+} from "../collapsiblePanel";
 import type { ResourceSvgIconInput } from "../resourceSvgIcon/resource-svg-icon";
-import { SiteCollapsiblePanel } from "../siteCollapsiblePanel/site-collapsible-panel";
 import { SiteLayout } from "../siteLayout/site-layout";
 
 export interface PackageSiteShellWorkspaceNavigation {
@@ -72,7 +77,7 @@ export interface PackageSiteShellClassNames {
   panelToggle?: string;
   sectionsPanelToggle?: string;
   rightPanelToggle?: string;
-  panelToggleIcon?: (direction: "left" | "right") => string;
+  panelToggleIcon?: (direction: CollapsiblePanelDirection) => string;
 }
 
 export interface PackageSiteShellResolvers {
@@ -138,7 +143,7 @@ const defaultClassNames = {
   rightPanelToggle: "site-shell__panel-toggle--right"
 } satisfies Required<Omit<PackageSiteShellClassNames, "rightbarZonePlacement" | "panelToggleIcon">>;
 
-export function PackageSiteShell({
+export const PackageSiteShell = Titanic.define<PackageSiteShellProps>("Titanic.UI.PackageSiteShell", function PackageSiteShell({
   activeSectionName,
   brand,
   children,
@@ -171,86 +176,166 @@ export function PackageSiteShell({
     rightPanelCollapsible && rightbarCollapsed ? classes.rightbarCollapsed : ""
   ].filter(Boolean).join(" ");
   const hasWorkspaces = workspaces.length > 0;
+  const sectionPanelItems: readonly CollapsiblePanelItem[] = [
+    {
+      key: "brand",
+      position: "before-toggle",
+      expanded: renderBrand(classes, brand, false),
+      collapsed: renderBrand(classes, brand, true)
+    },
+    {
+      key: "navigation",
+      expanded: renderNavigation({
+        activeSectionName,
+        classes,
+        compact: false,
+        hasWorkspaces,
+        navigationView: resolvedNavigationView,
+        onSectionChange,
+        resolvers,
+        sections,
+        workspaces
+      }),
+      collapsed: renderNavigation({
+        activeSectionName,
+        classes,
+        compact: true,
+        hasWorkspaces,
+        navigationView: resolvedNavigationView,
+        onSectionChange,
+        resolvers,
+        sections,
+        workspaces
+      })
+    }
+  ];
+  const rightPanelTop = renderRightbarZone(classes, rightPanelItems, "top");
+  const rightPanelContent = (
+    <div className={classes.rightbarContent}>
+      {(["middle", "bottom"] as const).map((placement) => renderRightbarZone(classes, rightPanelItems, placement))}
+    </div>
+  );
+  const collapsibleRightPanelItems: readonly CollapsiblePanelItem[] = [
+    {
+      key: "top",
+      position: "before-toggle",
+      expanded: rightPanelTop,
+      collapsed: rightPanelTop
+    },
+    {
+      key: "content",
+      expanded: rightPanelContent,
+      collapsed: rightPanelContent
+    }
+  ];
 
   return (
     <SiteLayout
       className={rootClassName}
       leftPanel={
-        <SiteCollapsiblePanel
+        <CollapsiblePanel
           ariaLabel={labels.sections}
           className={classes.sectionsPanel}
           collapsed={sectionsCollapsed}
-          collapsedIconDirection="right"
+          collapseDirection="left"
           collapseLabel={labels.collapseSections}
-          expandedIconDirection="left"
           expandLabel={labels.expandSections}
-          header={
-            <div className={classes.panelHead}>
-              <div className={classes.brand}>
-                <span className={classes.brandMark}>{brand.mark}</span>
-                <div className={classes.brandCopy}>
-                  <strong>{brand.title}</strong>
-                  {brand.subtitle ? <span>{brand.subtitle}</span> : null}
-                </div>
-              </div>
-            </div>
-          }
           icon={panelChevronIcon}
-          togglePlacement="after-header"
+          items={sectionPanelItems}
           toggleClassName={[classes.panelToggle, classes.sectionsPanelToggle].filter(Boolean).join(" ")}
           toggleIconClassName={(direction) => getPanelToggleIconClassName(classes, direction)}
           onToggle={() => setSectionsCollapsed((value) => !value)}
-        >
-          <nav className={hasWorkspaces ? [classes.nav, classes.navWorkspaces].join(" ") : classes.nav}>
-            {hasWorkspaces ? (
-              workspaces.map((item) => renderWorkspaceNavigation({
-                activeSectionName,
-                classes,
-                item,
-                navigationView: resolvedNavigationView,
-                onSectionChange,
-                resolvers
-              }))
-            ) : (
-              sections.map((section) => renderSectionButton({
-                activeSectionName,
-                classes,
-                navigationView: resolvedNavigationView,
-                onSectionChange,
-                resolvers,
-                section
-              }))
-            )}
-          </nav>
-        </SiteCollapsiblePanel>
+        />
       }
       mainAriaLabel={labels.workspace}
       mainClassName={classes.workspacePanel}
       mainWindowClassName={classes.mainWindow}
       rightPanel={rightPanelCollapsible ? (
-        <SiteCollapsiblePanel
+        <CollapsiblePanel
           ariaLabel={labels.quickActions}
           className={classes.rightbarPanel}
           collapsed={rightbarCollapsed}
-          collapsedIconDirection="left"
+          collapseDirection="right"
           collapseLabel={labels.collapseActions}
-          expandedIconDirection="right"
           expandLabel={labels.expandActions}
-          header={renderRightbarZone(classes, rightPanelItems, "top")}
           icon={panelChevronIcon}
-          togglePlacement="after-header"
+          items={collapsibleRightPanelItems}
           toggleClassName={[classes.panelToggle, classes.rightPanelToggle].filter(Boolean).join(" ")}
           toggleIconClassName={(direction) => getPanelToggleIconClassName(classes, direction)}
           onToggle={() => setRightbarCollapsed((value) => !value)}
-        >
-          <div className={classes.rightbarContent}>
-            {(["middle", "bottom"] as const).map((placement) => renderRightbarZone(classes, rightPanelItems, placement))}
-          </div>
-        </SiteCollapsiblePanel>
+        />
       ) : renderStaticRightPanel(classes, labels, rightPanelItems)}
     >
       {children}
     </SiteLayout>
+  );
+});
+
+function renderBrand(
+  classes: Required<Omit<PackageSiteShellClassNames, "rightbarZonePlacement" | "panelToggleIcon">> & PackageSiteShellClassNames,
+  brand: PackageSiteShellBrand,
+  compact: boolean
+) {
+  return (
+    <div className={classes.panelHead}>
+      <div className={classes.brand}>
+        <span className={classes.brandMark}>{brand.mark}</span>
+        {compact ? null : (
+          <div className={classes.brandCopy}>
+            <strong>{brand.title}</strong>
+            {brand.subtitle ? <span>{brand.subtitle}</span> : null}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function renderNavigation({
+  activeSectionName,
+  classes,
+  compact,
+  hasWorkspaces,
+  navigationView,
+  onSectionChange,
+  resolvers,
+  sections,
+  workspaces
+}: {
+  activeSectionName: string;
+  classes: Required<Omit<PackageSiteShellClassNames, "rightbarZonePlacement" | "panelToggleIcon">> & PackageSiteShellClassNames;
+  compact: boolean;
+  hasWorkspaces: boolean;
+  navigationView: Required<PackageSiteShellNavigationView>;
+  onSectionChange: (sectionName: string) => void;
+  resolvers?: PackageSiteShellResolvers;
+  sections: readonly UiPackageSectionSchema<any>[];
+  workspaces: readonly PackageSiteShellWorkspaceNavigation[];
+}) {
+  return (
+    <nav className={hasWorkspaces ? [classes.nav, classes.navWorkspaces].join(" ") : classes.nav}>
+      {hasWorkspaces ? (
+        workspaces.map((item) => renderWorkspaceNavigation({
+          activeSectionName,
+          classes,
+          compact,
+          item,
+          navigationView,
+          onSectionChange,
+          resolvers
+        }))
+      ) : (
+        sections.map((section) => renderSectionButton({
+          activeSectionName,
+          classes,
+          compact,
+          navigationView,
+          onSectionChange,
+          resolvers,
+          section
+        }))
+      )}
+    </nav>
   );
 }
 
@@ -286,6 +371,7 @@ function renderStaticRightPanel(
 function renderWorkspaceNavigation({
   activeSectionName,
   classes,
+  compact,
   item,
   navigationView,
   onSectionChange,
@@ -293,6 +379,7 @@ function renderWorkspaceNavigation({
 }: {
   activeSectionName: string;
   classes: Required<Omit<PackageSiteShellClassNames, "rightbarZonePlacement" | "panelToggleIcon">> & PackageSiteShellClassNames;
+  compact: boolean;
   item: PackageSiteShellWorkspaceNavigation;
   navigationView: Required<PackageSiteShellNavigationView>;
   onSectionChange: (sectionName: string) => void;
@@ -307,21 +394,25 @@ function renderWorkspaceNavigation({
   return (
     <div className={workspaceActive ? [classes.workspaceGroup, classes.workspaceGroupActive].join(" ") : classes.workspaceGroup} key={`${item.workspace.packageName}.${item.workspace.name}`}>
       <Button unstyled
+        aria-label={compact ? title : undefined}
         className={classes.workspaceNavItem}
         title={title}
         type="button"
         onClick={() => firstSection ? onSectionChange(firstSection.name) : undefined}
       >
-        {navigationView.showWorkspaceIcons ? <span className={classes.navIcon}>{icon}</span> : null}
-        <span className={classes.workspaceCopy}>
-          <span>{title}</span>
-          {navigationView.showWorkspaceCaptions && caption ? <small>{caption}</small> : null}
-        </span>
+        {compact || navigationView.showWorkspaceIcons ? <span className={classes.navIcon}>{icon}</span> : null}
+        {compact ? null : (
+          <span className={classes.workspaceCopy}>
+            <span>{title}</span>
+            {navigationView.showWorkspaceCaptions && caption ? <small>{caption}</small> : null}
+          </span>
+        )}
       </Button>
       <div className={classes.workspaceSectionList}>
         {item.sections.map((section) => renderSectionButton({
           activeSectionName,
           classes,
+          compact,
           navigationView,
           nested: true,
           onSectionChange,
@@ -336,6 +427,7 @@ function renderWorkspaceNavigation({
 function renderSectionButton({
   activeSectionName,
   classes,
+  compact,
   navigationView,
   nested = false,
   onSectionChange,
@@ -344,6 +436,7 @@ function renderSectionButton({
 }: {
   activeSectionName: string;
   classes: Required<Omit<PackageSiteShellClassNames, "rightbarZonePlacement" | "panelToggleIcon">> & PackageSiteShellClassNames;
+  compact: boolean;
   navigationView: Required<PackageSiteShellNavigationView>;
   nested?: boolean;
   onSectionChange: (sectionName: string) => void;
@@ -361,24 +454,27 @@ function renderSectionButton({
 
   return (
     <Button unstyled
+      aria-label={compact ? sectionTitle : undefined}
       className={className}
       key={`${section.packageName}.${section.name}`}
       title={sectionTitle}
       type="button"
       onClick={() => onSectionChange(section.name)}
     >
-      {navigationView.showSectionIcons ? <span className={classes.navIcon}>{sectionIcon}</span> : null}
-      <span className={classes.navCopy}>
-        <span>{sectionTitle}</span>
-        {navigationView.showSectionCaptions && sectionCaption ? <small>{sectionCaption}</small> : null}
-      </span>
+      {compact || navigationView.showSectionIcons ? <span className={classes.navIcon}>{sectionIcon}</span> : null}
+      {compact ? null : (
+        <span className={classes.navCopy}>
+          <span>{sectionTitle}</span>
+          {navigationView.showSectionCaptions && sectionCaption ? <small>{sectionCaption}</small> : null}
+        </span>
+      )}
     </Button>
   );
 }
 
 function getPanelToggleIconClassName(
   classes: PackageSiteShellClassNames,
-  direction: "left" | "right"
+  direction: CollapsiblePanelDirection
 ): string {
   return classes.panelToggleIcon
     ? classes.panelToggleIcon(direction)

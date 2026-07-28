@@ -1,11 +1,17 @@
 import { defineComponentSchema, defineFieldSchema } from "@titanic-entity/entity-base";
 import { Titanic, type DefinedEntityReactComponent } from "@titanic-entity/entity-react";
 import { entityReactComponentNames, entityReactFieldNames } from "@titanic-entity/entity-react/model";
+import type { BaseInputFieldProps } from "../inputFieldFrame/base-input-field";
 import "../inputFieldFrame";
 import "./number-input";
-import type { NumberInputProps } from "./number-input-props";
 
-export type { NumberInputProps } from "./number-input-props";
+export interface NumberInputProps extends BaseInputFieldProps<number | null, "number"> {
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  className?: string;
+  onChange: (value: number | null) => void;
+}
 
 export const NumberInput = Titanic.getReactModule<DefinedEntityReactComponent<NumberInputProps>>(
   "Titanic.UI.NumberInput"
@@ -22,6 +28,3 @@ export const numberInputFieldSchema = defineFieldSchema<NumberInputProps>({
   name: entityReactFieldNames.NumberInput,
   component: NumberInput
 });
-
-export * from "./icons";
-export * from "./lcz";

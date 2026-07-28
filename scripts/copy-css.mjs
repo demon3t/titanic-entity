@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 const [, , sourceArg, targetArg] = process.argv;
@@ -16,4 +16,5 @@ if (!existsSync(source)) {
 }
 
 mkdirSync(dirname(target), { recursive: true });
+rmSync(target, { recursive: true, force: true });
 cpSync(source, target, { recursive: true, force: true });

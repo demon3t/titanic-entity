@@ -1,5 +1,5 @@
 import { EntityColumnKind, normalizeEntityColumn } from "@titanic-entity/entity-core";
-import type { EntityFieldProps } from "./field-props";
+import type { EntityFieldProps } from "./index";
 
 export type InputKind =
   | "string"

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { EntityApiClient, EntityApiManagerStructureResponse } from "@titanic-entity/entity-api";
-import type { EntityDataGridColumnPickerLabels } from "../../dataGrid/data-grid-props";
+import type { EntityDataGridColumnPickerLabels } from "../../dataGrid";
 import type {
   EntityDataGridColumnSetting,
   EntityDataGridColumn,
