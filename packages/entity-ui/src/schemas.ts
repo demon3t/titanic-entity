@@ -5,14 +5,12 @@ import { dateInputIconSchemas } from "./dateInput/icons";
 import { entityUiFieldSchemas } from "./fields";
 import { entityUiGridSchemas } from "./grids";
 import { packageSiteShellIconSchemas } from "./packageSiteShell/icons";
-import { recordsPageIconSchemas } from "./recordsPage/icons";
 import { entityUiTemplateSchemas } from "./templates";
 
 export const entityUiIconSchemas = [
   ...dateInputIconSchemas,
   ...dataGridIconSchemas,
   ...dataGridRowContextMenuIconSchemas,
-  ...recordsPageIconSchemas,
   ...packageSiteShellIconSchemas
 ] as const;
 

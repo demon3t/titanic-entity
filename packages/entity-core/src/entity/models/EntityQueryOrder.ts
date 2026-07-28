@@ -1,7 +1,7 @@
 import type { EntityOrderDirection } from "../enums/EntityOrderDirection";
 
-/** Sort descriptor used inside an ESQ payload. */
-export interface ESQOrder {
+/** Sort descriptor used inside an entity query payload. */
+export interface EntityQueryOrder {
   /** Entity path of the ordered column. */
   path: string;
 

@@ -1,6 +1,6 @@
 # @titanic-entity/entity-react
 
-React/TypeScript библиотека для работы с `Titanic.Entity` и Entity ORM API. Пакеты репозитория закрывают HTTP-клиент, ESQ builder, core-модели, React provider/headless hooks, ресурсы и runtime-регистрацию через глобальный фасад `Titanic`.
+React/TypeScript библиотека для работы с `Titanic.Entity` и Entity ORM API. Пакеты репозитория закрывают HTTP-клиент, EntityQuery builder, core-модели, React provider/headless hooks, ресурсы и runtime-регистрацию через глобальный фасад `Titanic`.
 
 Новые сущности объявляются через `Titanic.Entity.define(...)`, существующие расширяются через `Titanic.Entity.override(...)`, а новые сущности на основе существующих создаются через `Titanic.Entity.extend(...)`. Runtime-компоненты, страницы и секции объявляются через `Titanic.define(...)`; локализация - через `Titanic.Localization.define(...)`.
 
@@ -8,7 +8,7 @@ React/TypeScript библиотека для работы с `Titanic.Entity` и
 
 - Выполнять `Select`, `Save`, `Delete`, `Batch` и загрузку структуры провайдера через `EntityApiClient`.
 - Описывать сущности через `Titanic.Entity.define(...)`, `Titanic.Entity.override(...)`, `Titanic.Entity.extend(...)` и типизированные колонки.
-- Строить ESQ-запросы через `entityQuery(...)`, без ручной сборки JSON.
+- Строить EntityQuery-запросы через `entityQuery(...)`, без ручной сборки JSON.
 - Подключать один или несколько Entity API провайдеров через `EntityApiProvider`.
 - Использовать headless hooks для загрузки данных и управления состоянием Entity-форм.
 - Объявлять runtime-компоненты, страницы и секции через `Titanic.define(...)`.
@@ -38,8 +38,8 @@ import "@titanic-entity/entity-react/styles.css";
 ```text
 packages/
   entity-base/       базовый фасад Titanic, реестры ресурсов и общие типы
-  entity-core/       Entity-модели, схемы, фильтры и доменные utilities
-  entity-api/        HTTP-клиент, ESQ builder и API-модели
+  entity-core/       Entity-модели, схемы, EntityQuery builder, фильтры и доменные utilities
+  entity-api/        HTTP-клиент и API-модели
   entity-resources/  системные ресурсы, SVG descriptors и Titanic.Localization.define
   entity-icons/      расширяемые коллекции иконок
   entity-react/      React provider, headless hooks, runtime Titanic.define и стили
@@ -190,8 +190,8 @@ export const PortalAppUser = Titanic.Entity.extend(
 
 - `execute(request)` - выполнить одну операцию Entity API.
 - `batch(request)` - выполнить пакет операций.
-- `select(query)` - выполнить ESQ select.
-- `selectEntityRows(request)` - выполнить простой select по таблице через объект запроса.
+- `select(query)` - выполнить EntityQuery select.
+- `queryEntityRows(request)` - выполнить простой query по таблице через объект запроса.
 - `selectRows(tableName, columns, options)` - выполнить короткий select по таблице.
 - `save(tableName, values)` - создать или обновить запись.
 - `delete(tableName, filter)` - удалить записи по фильтру.
@@ -202,7 +202,9 @@ export const PortalAppUser = Titanic.Entity.extend(
 
 ## Query builder
 
-Для ESQ-запросов используйте цепочку методов:
+EntityQuery builder, EntityQuery-модели и enum-ы экспортируются из `@titanic-entity/entity-core`. `@titanic-entity/entity-api` сохраняет re-export-ы для старых импортов и использует core-модели внутри HTTP-клиента.
+
+Для EntityQuery-запросов используйте цепочку методов:
 
 ```ts
 const query = entityQuery("app_user")
@@ -238,9 +240,9 @@ const customerQuery = entityQuery("customer")
   .addAggregateColumn(EntityAggregationType.Sum, paidInvoiceAmounts, "paidAmount");
 ```
 
-В ESQ такая колонка уйдет как `{ aggregationType, alias, subQuery }`. Для короткой записи доступны методы `.sum/.count/.avg/.min/.max`.
+В EntityQuery такая колонка уйдет как `{ aggregationType, alias, subQuery }`. Для короткой записи доступны методы `.sum/.count/.avg/.min/.max`.
 
-`column` и `addColumn` принимают строку, готовый `ESQColumn` или options-объект: `.column("Amount", { alias: "total", aggregationType: EntityAggregationType.Sum })`.
+`column` и `addColumn` принимают строку, готовый `EntityQueryColumn` или options-объект: `.column("Amount", { alias: "total", aggregationType: EntityAggregationType.Sum })`.
 
 Группы фильтров можно собирать так:
 
@@ -250,7 +252,7 @@ const query = entityQuery("app_user")
   .and((filter) => filter.equal("IsActive", true).isNotNull("Login"));
 ```
 
-Если нужен готовый ESQ-фильтр без query builder, `entity-core` добавляет factory-методы в `Titanic`:
+Если нужен готовый EntityQuery-фильтр без query builder, `entity-core` добавляет factory-методы в `Titanic`:
 
 ```ts
 import { Titanic } from "@titanic-entity/entity-core";
@@ -263,7 +265,7 @@ const filters = Titanic.createFilterCollection([
 
 Доступны `createIsEqualFilter`, `createIsNotEqualFilter`, `createIsGreaterThanFilter`, `createIsGreaterThanOrEqualFilter`, `createIsLessThanFilter`, `createIsLessThanOrEqualFilter`, `createIsInFilter`, `createIsNotInFilter`, `createIsContainsFilter`, `createIsNullFilter`, `createIsNotNullFilter`, а также `createAndFilter`, `createOrFilter` и `createFilterCollection`.
 
-Для ручной типизации ESQ доступны типы `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection` и `ESQOrder`.
+Для ручной типизации EntityQuery доступны типы `EntityQuery`, `EntityQueryColumn`, `EntityQueryFilter`, `EntityQueryFilterCollection` и `EntityQueryOrder`.
 
 ## React provider
 
@@ -300,7 +302,7 @@ const { values, setValue, getValues } = useEntityFormState({
 });
 ```
 
-`useEntityFormState` управляет значениями формы, построенной по `schema` сущности. `useEntityQuery` выполняет ESQ-запрос через текущий `EntityApiProvider`. `useEntityEditPageController` строит контроллер для template-контекста: нормализует template, собирает context, submit и reset.
+`useEntityFormState` управляет значениями формы, построенной по `schema` сущности. `useEntityQuery` выполняет EntityQuery-запрос через текущий `EntityApiProvider`. `useEntityEditPageController` строит контроллер для template-контекста: нормализует template, собирает context, submit и reset.
 
 ## Titanic.define
 
@@ -451,7 +453,7 @@ const maybeSearchIcon = Titanic.Icons.find("search");
 Для нового кода используйте стабильные entrypoints:
 
 - `@titanic-entity/entity-react` - основной фасад для приложения.
-- `@titanic-entity/entity-core` - колонки, фильтры и базовые модели.
+- `@titanic-entity/entity-core` - колонки, EntityQuery builder, фильтры и базовые модели.
 - `@titanic-entity/entity-react/headless` - hooks и контроллеры без визуального слоя.
 - `@titanic-entity/entity-resources` - ресурсы и `Titanic.Localization.define(...)`.
 - `@titanic-entity/entity-react/system` - системные Entity helpers для React-слоя.

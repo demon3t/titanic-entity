@@ -1,25 +1,14 @@
 import { defineEnumSchema, Titanic } from "@titanic-entity/entity-base";
-import { ConditionOperator } from "../enums/ConditionOperator";
-import { EntityAggregationType } from "../enums/EntityAggregationType";
 import { EntityApiBatchExecutionMode } from "../enums/EntityApiBatchExecutionMode";
 import { EntityApiOperationType } from "../enums/EntityApiOperationType";
-import { EntityLogicalOperation } from "../enums/EntityLogicalOperation";
-import { EntityOrderDirection } from "../enums/EntityOrderDirection";
 import { entityApiEnumNames } from "../models/EntityApiSchemaNames";
 
-/** UI package schema for the `ConditionOperator` enum. */
-export const conditionOperatorEnumSchema = defineEnumSchema({
-  kind: "enum",
-  name: entityApiEnumNames.ConditionOperator,
-  values: Titanic.Package.toEnumValues(ConditionOperator)
-});
-
-/** UI package schema for the `EntityAggregationType` enum. */
-export const entityAggregationTypeEnumSchema = defineEnumSchema({
-  kind: "enum",
-  name: entityApiEnumNames.EntityAggregationType,
-  values: Titanic.Package.toEnumValues(EntityAggregationType)
-});
+export {
+  conditionOperatorEnumSchema,
+  entityAggregationTypeEnumSchema,
+  entityLogicalOperationEnumSchema,
+  entityOrderDirectionEnumSchema
+} from "@titanic-entity/entity-core";
 
 /** UI package schema for the `EntityApiBatchExecutionMode` enum. */
 export const entityApiBatchExecutionModeEnumSchema = defineEnumSchema({
@@ -35,28 +24,10 @@ export const entityApiOperationTypeEnumSchema = defineEnumSchema({
   values: Titanic.Package.toEnumValues(EntityApiOperationType)
 });
 
-/** UI package schema for the `EntityLogicalOperation` enum. */
-export const entityLogicalOperationEnumSchema = defineEnumSchema({
-  kind: "enum",
-  name: entityApiEnumNames.EntityLogicalOperation,
-  values: Titanic.Package.toEnumValues(EntityLogicalOperation)
-});
-
-/** UI package schema for the `EntityOrderDirection` enum. */
-export const entityOrderDirectionEnumSchema = defineEnumSchema({
-  kind: "enum",
-  name: entityApiEnumNames.EntityOrderDirection,
-  values: Titanic.Package.toEnumValues(EntityOrderDirection)
-});
-
 /** Complete list of enum schemas exposed by the `entity-api` package. */
 export const entityApiEnumSchemas = [
-  conditionOperatorEnumSchema,
-  entityAggregationTypeEnumSchema,
   entityApiBatchExecutionModeEnumSchema,
-  entityApiOperationTypeEnumSchema,
-  entityLogicalOperationEnumSchema,
-  entityOrderDirectionEnumSchema
+  entityApiOperationTypeEnumSchema
 ] as const;
 
 /** Backward-compatible alias for `entityApiEnumSchemas`. */

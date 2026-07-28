@@ -32,7 +32,6 @@ export * from "./navigationTrail";
 export * from "./numberInput";
 export * from "./packageSiteShell";
 export * from "./randomGifLoader";
-export * from "./recordsPage";
 export * from "./resourceSvgIcon";
 export * from "./siteLayout";
 export * from "./timeInput";

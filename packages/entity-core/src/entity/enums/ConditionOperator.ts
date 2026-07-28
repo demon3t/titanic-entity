@@ -1,4 +1,4 @@
-/** Comparison operators supported by ESQ filters. */
+/** Comparison operators supported by EntityQuery filters. */
 export enum ConditionOperator {
   /** Equal comparison. */
   Equal = 0,

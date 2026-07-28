@@ -1,9 +1,7 @@
-import type { EntityQueryInput } from "../query";
-import type { ESQFilter } from "./ESQFilter";
-import type { ESQOrder } from "./ESQOrder";
+import type { EntityQueryInput, EntityQueryFilter, EntityQueryOrder } from "@titanic-entity/entity-core";
 
-/** High-level select request used by {@link EntityApiClient.selectEntityRows}. */
-export interface SelectRequest {
+/** High-level entity query request used by {@link EntityApiClient.queryEntityRows}. */
+export interface EntityQueryRequest {
   /** Root table name used when `query` is not provided. */
   tableName: string;
 
@@ -11,10 +9,10 @@ export interface SelectRequest {
   columns?: string[];
 
   /** Flat list of filters applied to the root entity. */
-  filters?: ESQFilter[];
+  filters?: EntityQueryFilter[];
 
   /** Sort expressions applied to the result set. */
-  orders?: ESQOrder[];
+  orders?: EntityQueryOrder[];
 
   /** Maximum number of rows to return. */
   rowCount?: number;
@@ -22,6 +20,6 @@ export interface SelectRequest {
   /** Enables loading of all root columns when no explicit column list is provided. */
   allColumns?: boolean;
 
-  /** Optional prebuilt ESQ query that overrides the shorthand fields above. */
+  /** Optional prebuilt EntityQuery query that overrides the shorthand fields above. */
   query?: EntityQueryInput;
 }

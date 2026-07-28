@@ -1,5 +1,5 @@
 import type { EntityApiOperationType } from "../enums/EntityApiOperationType";
-import type { ESQ } from "./ESQ";
+import type { EntityQuery } from "@titanic-entity/entity-core";
 
 /** Single manager request payload for the Entity API endpoint. */
 export interface ApiRequest {
@@ -9,8 +9,8 @@ export interface ApiRequest {
   /** Operation type that should be executed by the backend. */
   operation: EntityApiOperationType;
 
-  /** Optional ESQ payload used by select and filter-based delete operations. */
-  query?: ESQ | null;
+  /** Optional EntityQuery payload used by select and filter-based delete operations. */
+  query?: EntityQuery | null;
 
   /** Target table name for save and delete operations. */
   tableName?: string | null;

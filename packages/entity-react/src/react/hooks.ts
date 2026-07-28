@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  toEntityQueryJson,
   type EntityApiDeleteResult,
-  type EntityApiEntity,
-  type EntityQueryInput,
-  type ESQ
+  type EntityApiEntity
 } from "@titanic-entity/entity-api";
 import {
   createLookupQuery,
   createSchemaSelectQuery,
   mapLookupRows,
+  toEntityQueryJson,
   type EntityColumnSchema,
+  type EntityQueryInput,
   type EntitySchema,
   type EntityValues,
+  type EntityQuery,
   type LookupOption
 } from "@titanic-entity/entity-core";
 import { useEntityApiClient, useOptionalEntityApiClient } from "./EntityApiProvider";
@@ -325,6 +325,6 @@ export function useEntityDelete(tableName: string) {
   return { ...state, deleteByFilter };
 }
 
-export function useSchemaSelectQuery(schema: EntitySchema, rowCount = 50): ESQ {
+export function useSchemaSelectQuery(schema: EntitySchema, rowCount = 50): EntityQuery {
   return useMemo(() => createSchemaSelectQuery(schema, rowCount), [schema, rowCount]);
 }

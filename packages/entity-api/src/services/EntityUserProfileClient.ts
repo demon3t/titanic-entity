@@ -1,5 +1,5 @@
 import { createEntityGuid, getEntityValue, normalizeEntityProfileKey } from "../client/entityHelpers";
-import { ConditionOperator } from "../enums/ConditionOperator";
+import { ConditionOperator } from "@titanic-entity/entity-core";
 import type { EntityApiClient } from "../client/EntityApiClient";
 import type { EntityApiEntity } from "../models/EntityApiEntity";
 import type { EntityUserProfileDto, EntityUserProfileOptions } from "../models/EntityUserProfile";

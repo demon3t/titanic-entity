@@ -205,11 +205,11 @@ defineSectionSchema({
 entityName: "app_user"
 ```
 
-## Entity API и ESQ
+## Entity API и EntityQuery
 
-`@titanic-entity/entity-api` содержит HTTP-клиент, модели запросов и fluent builder `entityQuery(...)` для сборки ESQ без ручного JSON.
+`@titanic-entity/entity-core` содержит EntityQuery-модели, query enum-ы и fluent builder `entityQuery(...)` для сборки запросов без ручного JSON.
 
-Публичные ESQ-модели доступны под короткими именами: `ESQ`, `ESQColumn`, `ESQFilter`, `ESQFilterCollection`, `ESQOrder`.
+Публичные query-модели доступны под едиными именами: `EntityQuery`, `EntityQueryColumn`, `EntityQueryFilter`, `EntityQueryFilterCollection`, `EntityQueryOrder`.
 
 `@titanic-entity/entity-core` расширяет статический `Titanic` factory-методами для фильтров: `Titanic.createIsEqualFilter(...)`, `Titanic.createIsNullFilter(...)`, `Titanic.createAndFilter(...)`, `Titanic.createFilterCollection(...)` и другими методами по `ConditionOperator`.
 

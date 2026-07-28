@@ -22,7 +22,6 @@ export const entityReactComponentNames = {
   Label: "Label",
   LookupInput: "LookupInput",
   NavigationTrail: "NavigationTrail",
-  EntityRecordsPage: "EntityRecordsPage",
   EntityRecordsSection: "BaseSection",
   DateInput: "DateInput",
   DateTimeInput: "DateTimeInput",

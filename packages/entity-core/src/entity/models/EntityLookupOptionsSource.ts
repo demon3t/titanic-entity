@@ -1,4 +1,6 @@
-import type { ESQFilter, ESQFilterCollection, ESQOrder } from "@titanic-entity/entity-api";
+import type { EntityQueryFilter } from "./EntityQueryFilter";
+import type { EntityQueryFilterCollection } from "./EntityQueryFilterCollection";
+import type { EntityQueryOrder } from "./EntityQueryOrder";
 
 export type EntityLookupInputMode = "enum" | "lookup";
 
@@ -26,10 +28,10 @@ export interface EntityLookupOptionsSource {
   displayAlias?: string;
 
   /** Необязательные фильтры справочника. */
-  filters?: ESQFilterCollection | ESQFilter[];
+  filters?: EntityQueryFilterCollection | EntityQueryFilter[];
 
   /** Необязательная сортировка справочника. По умолчанию displayColumn ASC. */
-  orders?: ESQOrder[];
+  orders?: EntityQueryOrder[];
 
   /** Максимальное количество запрашиваемых опций. */
   rowCount?: number;

@@ -1,4 +1,4 @@
-/** Sort directions supported by ESQ order clauses. */
+/** Sort directions supported by EntityQuery order clauses. */
 export enum EntityOrderDirection {
   /** Ascending order. */
   Ascending = 0,

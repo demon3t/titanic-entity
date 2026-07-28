@@ -30,7 +30,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@titanic-entity/entity-api": "file:../entity-api",
     "@titanic-entity/entity-base": "file:../entity-base"
   }
 }

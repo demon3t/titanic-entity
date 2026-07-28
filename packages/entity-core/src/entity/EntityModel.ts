@@ -1,5 +1,4 @@
-import type { EntityApiEntity } from "@titanic-entity/entity-api";
-import { toApiEntity, toEntityValues } from "./api";
+import { toApiEntity, toEntityValues, type EntityApiEntity } from "./api";
 import { EntityColumn } from "./columns/EntityColumn";
 import type { EntityColumnDefinition } from "./models/EntityColumnSchema";
 import type { EntitySchema } from "./models/EntitySchema";

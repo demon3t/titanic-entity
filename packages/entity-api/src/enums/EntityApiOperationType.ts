@@ -3,7 +3,7 @@ export enum EntityApiOperationType {
   /** Operation type is missing or unknown. */
   Unknown = 0,
 
-  /** Select entities via ESQ. */
+  /** Select entities via EntityQuery. */
   Select = 1,
 
   /** Create or update an entity. */

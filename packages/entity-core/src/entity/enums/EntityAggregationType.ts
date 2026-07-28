@@ -1,4 +1,4 @@
-/** Aggregation types supported by ESQ selected columns. */
+/** Aggregation types supported by EntityQuery selected columns. */
 export enum EntityAggregationType {
   /** No aggregation. */
   None = 0,

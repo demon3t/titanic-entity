@@ -1,4 +1,5 @@
 import { definePackage } from "@titanic-entity/entity-base";
+import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
 import { entityApiSchemas } from "./schemas";
 
 // Client
@@ -8,12 +9,14 @@ export * from "./client/entityHelpers";
 export * from "./client/http";
 
 // Enums
-export * from "./enums/ConditionOperator";
-export * from "./enums/EntityAggregationType";
+export {
+  ConditionOperator,
+  EntityAggregationType,
+  EntityLogicalOperation,
+  EntityOrderDirection
+} from "@titanic-entity/entity-core";
 export * from "./enums/EntityApiBatchExecutionMode";
 export * from "./enums/EntityApiOperationType";
-export * from "./enums/EntityLogicalOperation";
-export * from "./enums/EntityOrderDirection";
 
 // Errors
 export * from "./errors/EntityApiError";
@@ -30,7 +33,7 @@ export * from "./models/ApiOperationResult";
 export * from "./models/ApiRequest";
 export * from "./models/GridColumnSettings";
 export * from "./models/Primitive";
-export * from "./models/SelectRequest";
+export * from "./models/EntityQueryRequest";
 export * from "./models/UserProfile";
 export * from "./models/EntityApiBatchRequest";
 export * from "./models/EntityApiBatchResponse";
@@ -43,14 +46,15 @@ export * from "./models/EntityApiOperationResult";
 export * from "./models/EntityApiRequest";
 export * from "./models/EntityGridColumnSettings";
 export * from "./models/EntityPrimitive";
-export * from "./models/EntitySelectRequest";
 export * from "./models/EntityUserProfile";
 export * from "./models/EntityApiSchemaNames";
-export * from "./models/ESQ";
-export * from "./models/ESQColumn";
-export * from "./models/ESQFilter";
-export * from "./models/ESQFilterCollection";
-export * from "./models/ESQOrder";
+export type {
+  EntityQuery,
+  EntityQueryColumn,
+  EntityQueryFilter,
+  EntityQueryFilterCollection,
+  EntityQueryOrder
+} from "@titanic-entity/entity-core";
 
 // Query
 export * from "./query";
@@ -66,6 +70,9 @@ export * from "./services/EntityUserProfileClient";
 export const titanicEntityApiPackage = definePackage({
   name: "Titanic.EntityApi",
   version: "0.1.0",
+  dependsOn: [
+    titanicEntityCorePackage.name
+  ],
   schemas: entityApiSchemas
 });
 
