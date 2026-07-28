@@ -12,7 +12,7 @@ export const titanicRecordsPageIconGroups = {
 } as const;
 
 export const recordsPageIconModuleSchema = defineIconModuleSchema({
-  name: "Titanic.EntityUi.RecordsPage.Icons",
+  name: "Titanic.UI.RecordsPage.Icons",
   exports: {
     icons: titanicRecordsPageIconGroups,
     titanicRecordsPageIconGroups,

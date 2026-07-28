@@ -1,1 +1,1 @@
-export * from "./EntityDataGrid";
+export {};

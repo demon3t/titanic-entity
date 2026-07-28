@@ -1,7 +1,7 @@
-import { editPageTemplateSchema } from "./editPage";
+import { basePageTemplateSchema } from "./editPage";
 
 export const entityUiTemplateSchemas = [
-  editPageTemplateSchema
+  basePageTemplateSchema
 ] as const;
 
 export const entityReactTemplateSchemas = entityUiTemplateSchemas;

@@ -1,5 +1,7 @@
 import type { ESQFilter, ESQFilterCollection, ESQOrder } from "@titanic-entity/entity-api";
 
+export type EntityLookupInputMode = "enum" | "lookup";
+
 /**
  * Источник Entity ORM API для lookup-опций. Backend локализует возвращаемые
  * значения через UserConnection, поэтому UI только преобразует строки API в элементы select.
@@ -31,6 +33,14 @@ export interface EntityLookupOptionsSource {
 
   /** Максимальное количество запрашиваемых опций. */
   rowCount?: number;
+
+  mode?: EntityLookupInputMode;
+
+  /** Задержка поиска после ввода текста, мс. По умолчанию 1500. */
+  searchDelayMs?: number;
+
+  /** Минимальное количество символов для поиска. По умолчанию 3. */
+  minSearchLength?: number;
 
   /** Отключить загрузку через API без удаления метаданных источника. */
   enabled?: boolean;

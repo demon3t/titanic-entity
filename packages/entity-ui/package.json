@@ -20,43 +20,195 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./components": {
-      "types": "./dist/components.d.ts",
-      "import": "./dist/components.js"
-    },
-    "./fields": {
-      "types": "./dist/fields.d.ts",
-      "import": "./dist/fields.js"
-    },
-    "./grids": {
-      "types": "./dist/grids.d.ts",
-      "import": "./dist/grids.js"
-    },
-    "./templates": {
-      "types": "./dist/templates.d.ts",
-      "import": "./dist/templates.js"
-    },
     "./schemas": {
       "types": "./dist/schemas.d.ts",
       "import": "./dist/schemas.js"
     },
     "./styles.css": "./dist/styles.css",
-    "./*/icons": {
-      "types": "./dist/*/icons/index.d.ts",
-      "import": "./dist/*/icons/index.js"
+    "./actionBar": {
+      "types": "./dist/actionBar/index.d.ts",
+      "import": "./dist/actionBar/index.js"
     },
-    "./*/resources": {
-      "types": "./dist/*/resources/index.d.ts",
-      "import": "./dist/*/resources/index.js"
+    "./actionBar/styles.css": "./dist/actionBar/styles/action-bar.css",
+    "./dataGrid/icons": {
+      "types": "./dist/dataGrid/icons/index.d.ts",
+      "import": "./dist/dataGrid/icons/index.js"
     },
-    "./*": {
-      "types": "./dist/*/index.d.ts",
-      "import": "./dist/*/index.js"
-    }
+    "./dataGridRowContextMenu/icons": {
+      "types": "./dist/dataGridRowContextMenu/icons/index.d.ts",
+      "import": "./dist/dataGridRowContextMenu/icons/index.js"
+    },
+    "./dateInput/icons": {
+      "types": "./dist/dateInput/icons/index.d.ts",
+      "import": "./dist/dateInput/icons/index.js"
+    },
+    "./packageSiteShell/icons": {
+      "types": "./dist/packageSiteShell/icons/index.d.ts",
+      "import": "./dist/packageSiteShell/icons/index.js"
+    },
+    "./recordsPage/icons": {
+      "types": "./dist/recordsPage/icons/index.d.ts",
+      "import": "./dist/recordsPage/icons/index.js"
+    },
+    "./baseSection": {
+      "types": "./dist/baseSection/index.d.ts",
+      "import": "./dist/baseSection/index.js"
+    },
+    "./baseModalPage": {
+      "types": "./dist/baseModalPage/index.d.ts",
+      "import": "./dist/baseModalPage/index.js"
+    },
+    "./baseModalPage/styles.css": "./dist/baseModalPage/styles/base-modal-page.css",
+    "./button": {
+      "types": "./dist/button/index.d.ts",
+      "import": "./dist/button/index.js"
+    },
+    "./button/styles.css": "./dist/button/styles/button.css",
+    "./collapsiblePanel": {
+      "types": "./dist/collapsiblePanel/index.d.ts",
+      "import": "./dist/collapsiblePanel/index.js"
+    },
+    "./collapsiblePanel/styles.css": "./dist/collapsiblePanel/styles/collapsible-panel.css",
+    "./container": {
+      "types": "./dist/container/index.d.ts",
+      "import": "./dist/container/index.js"
+    },
+    "./container/styles.css": "./dist/container/styles/container.css",
+    "./dataGrid": {
+      "types": "./dist/dataGrid/index.d.ts",
+      "import": "./dist/dataGrid/index.js"
+    },
+    "./dataGrid/styles.css": "./dist/dataGrid/styles/data-grid.css",
+    "./dataGridSettingsModalPage": {
+      "types": "./dist/dataGridSettingsModalPage/index.d.ts",
+      "import": "./dist/dataGridSettingsModalPage/index.js"
+    },
+    "./dataGridSettingsModalPage/styles.css": "./dist/dataGridSettingsModalPage/styles/data-grid-settings-modal-page.css",
+    "./dataGridRowContextMenu": {
+      "types": "./dist/dataGridRowContextMenu/index.d.ts",
+      "import": "./dist/dataGridRowContextMenu/index.js"
+    },
+    "./dataGridRowContextMenu/styles.css": "./dist/dataGridRowContextMenu/styles/data-grid-row-context-menu.css",
+    "./dateInput": {
+      "types": "./dist/dateInput/index.d.ts",
+      "import": "./dist/dateInput/index.js"
+    },
+    "./dateInput/styles.css": "./dist/dateInput/styles/date-input.css",
+    "./dateTimeInput": {
+      "types": "./dist/dateTimeInput/index.d.ts",
+      "import": "./dist/dateTimeInput/index.js"
+    },
+    "./dateTimeInput/styles.css": "./dist/dateTimeInput/styles/date-time-input.css",
+    "./dragDrop": {
+      "types": "./dist/dragDrop/index.d.ts",
+      "import": "./dist/dragDrop/index.js"
+    },
+    "./dragDrop/styles.css": "./dist/dragDrop/styles/drag-drop.css",
+    "./editPage": {
+      "types": "./dist/editPage/index.d.ts",
+      "import": "./dist/editPage/index.js"
+    },
+    "./editPage/styles.css": "./dist/editPage/styles/edit-page.css",
+    "./expander": {
+      "types": "./dist/expander/index.d.ts",
+      "import": "./dist/expander/index.js"
+    },
+    "./expander/styles.css": "./dist/expander/styles/expander.css",
+    "./field": {
+      "types": "./dist/field/index.d.ts",
+      "import": "./dist/field/index.js"
+    },
+    "./field/styles.css": "./dist/field/styles/field.css",
+    "./form": {
+      "types": "./dist/form/index.d.ts",
+      "import": "./dist/form/index.js"
+    },
+    "./form/styles.css": "./dist/form/styles/form.css",
+    "./grid": {
+      "types": "./dist/grid/index.d.ts",
+      "import": "./dist/grid/index.js"
+    },
+    "./grid/styles.css": "./dist/grid/styles/grid.css",
+    "./inputFieldFrame": {
+      "types": "./dist/inputFieldFrame/index.d.ts",
+      "import": "./dist/inputFieldFrame/index.js"
+    },
+    "./inputFieldFrame/styles.css": "./dist/inputFieldFrame/styles/input-field-frame.css",
+    "./jsonEditor": {
+      "types": "./dist/jsonEditor/index.d.ts",
+      "import": "./dist/jsonEditor/index.js"
+    },
+    "./jsonEditor/styles.css": "./dist/jsonEditor/styles/json-editor.css",
+    "./label": {
+      "types": "./dist/label/index.d.ts",
+      "import": "./dist/label/index.js"
+    },
+    "./label/styles.css": "./dist/label/styles/label.css",
+    "./lookupInput": {
+      "types": "./dist/lookupInput/index.d.ts",
+      "import": "./dist/lookupInput/index.js"
+    },
+    "./lookupInput/styles.css": "./dist/lookupInput/styles/lookup-input.css",
+    "./modalPages": {
+      "types": "./dist/modalPages/index.d.ts",
+      "import": "./dist/modalPages/index.js"
+    },
+    "./modalPages/styles.css": "./dist/modalPages/styles/modal-pages.css",
+    "./numberInput": {
+      "types": "./dist/numberInput/index.d.ts",
+      "import": "./dist/numberInput/index.js"
+    },
+    "./navigationTrail": {
+      "types": "./dist/navigationTrail/index.d.ts",
+      "import": "./dist/navigationTrail/index.js"
+    },
+    "./navigationTrail/styles.css": "./dist/navigationTrail/styles/navigation-trail.css",
+    "./packageSiteShell": {
+      "types": "./dist/packageSiteShell/index.d.ts",
+      "import": "./dist/packageSiteShell/index.js"
+    },
+    "./packageSiteShell/styles.css": "./dist/packageSiteShell/styles/package-site-shell.css",
+    "./randomGifLoader": {
+      "types": "./dist/randomGifLoader/index.d.ts",
+      "import": "./dist/randomGifLoader/index.js"
+    },
+    "./randomGifLoader/styles.css": "./dist/randomGifLoader/styles/random-gif-loader.css",
+    "./recordsPage": {
+      "types": "./dist/recordsPage/index.d.ts",
+      "import": "./dist/recordsPage/index.js"
+    },
+    "./recordsPage/styles.css": "./dist/recordsPage/styles/records-page.css",
+    "./resourceSvgIcon": {
+      "types": "./dist/resourceSvgIcon/index.d.ts",
+      "import": "./dist/resourceSvgIcon/index.js"
+    },
+    "./siteIconButton": {
+      "types": "./dist/siteIconButton/index.d.ts",
+      "import": "./dist/siteIconButton/index.js"
+    },
+    "./siteIconDropdown": {
+      "types": "./dist/siteIconDropdown/index.d.ts",
+      "import": "./dist/siteIconDropdown/index.js"
+    },
+    "./siteIconDropdown/styles.css": "./dist/siteIconDropdown/styles/site-icon-dropdown.css",
+    "./siteLayout": {
+      "types": "./dist/siteLayout/index.d.ts",
+      "import": "./dist/siteLayout/index.js"
+    },
+    "./sitePanelToggleButton": {
+      "types": "./dist/sitePanelToggleButton/index.d.ts",
+      "import": "./dist/sitePanelToggleButton/index.js"
+    },
+    "./timeInput": {
+      "types": "./dist/timeInput/index.d.ts",
+      "import": "./dist/timeInput/index.js"
+    },
+    "./timeInput/styles.css": "./dist/timeInput/styles/time-input.css"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node ../../scripts/copy-css.mjs ./src/styles.css ./dist/styles.css",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && node ../../scripts/copy-css.mjs ./src/styles ./dist/styles && node ../../scripts/copy-component-css.mjs ./src ./dist && node ../../scripts/copy-css.mjs ./src/react-styles.css ./dist/react-styles.css && node ../../scripts/copy-css.mjs ./src/styles.css ./dist/styles.css",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test \"test/**/*.test.mjs\""
   },
   "dependencies": {
     "@titanic-entity/entity-api": "file:../entity-api",
@@ -67,6 +219,7 @@
     "@titanic-entity/entity-resources": "file:../entity-resources"
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   }
 }

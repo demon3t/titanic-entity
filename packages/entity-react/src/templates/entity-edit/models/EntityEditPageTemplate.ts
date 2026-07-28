@@ -1,16 +1,29 @@
 import type { ReactNode } from "react";
 import type {
+  Entity,
+  EntityColumnDefinition,
   EntityColumnSchema,
   EntityDisplayValues,
   EntitySchema,
   EntityValues,
   LookupOption
 } from "@titanic-entity/entity-core";
+import type {
+  BaseModuleMethod,
+  BaseModuleMethodArguments,
+  BaseModuleMethodChains,
+  BaseModuleMethodThis,
+  BaseModuleMethods,
+  BaseModuleTemplate,
+  NormalizedBaseModuleTemplate
+} from "../../base-module";
 
 export type EntityEditPageRenderValue<TValue> = TValue | ((context: EntityEditPageContext) => TValue);
 export type EntityEditPagePredicate = boolean | ((context: EntityEditPageContext) => boolean);
 export type EntityEditPageAttributes = Record<string, EntityEditPageAttribute>;
-export type EntityEditPageMethods = Record<string, EntityEditPageMethod>;
+export type EntityEditPageMethods = BaseModuleMethods<EntityEditPageContext, EntityEditPageMethodThis, EntityEditPageMethod>;
+export type EntityEditPageMethodChains = BaseModuleMethodChains<EntityEditPageContext, EntityEditPageMethodThis, EntityEditPageMethod>;
+export type EntityEditPageMethodArguments = BaseModuleMethodArguments;
 export type EntityEditPageValuesUpdater = EntityValues | ((values: EntityValues) => EntityValues);
 export type EntityEditPageLookupOptionLocalization = Record<string, string> | LookupOption[];
 export type EntityEditPageAttributeType = "entity" | "page";
@@ -52,7 +65,7 @@ export interface EntityEditPageAttribute<TValue = unknown> extends Partial<Omit<
   type?: EntityEditPageAttributeType;
 
   /** Полная схема колонки для Entity-поля. Если не задана, diff поля может создать ее по имени атрибута. */
-  column?: EntityColumnSchema<TValue>;
+  column?: EntityColumnDefinition<TValue>;
 
   /** Начальное значение для page-атрибутов и Entity-полей. */
   defaultValue?: TValue;
@@ -64,18 +77,27 @@ export interface EntityEditPageAttribute<TValue = unknown> extends Partial<Omit<
   transient?: boolean;
 }
 
-export interface EntityEditPageMixin {
+export interface EntityEditPageMixin extends BaseModuleTemplate<
+  EntityEditPageContext,
+  EntityEditPageMethods,
+  EntityEditPageDiffItem[]
+> {
   name?: string;
   attributes?: EntityEditPageAttributes;
-  methods?: EntityEditPageMethods;
+  diffOverrides?: EntityEditPageDiffOverride[];
 }
 
-export interface EntityEditPageTemplate {
+export interface EntityEditPageTemplate extends BaseModuleTemplate<
+  EntityEditPageContext,
+  EntityEditPageMethods,
+  EntityEditPageDiffItem[]
+> {
   /** Родительский шаблон страницы. Дочерние пакеты могут переопределять methods, attributes, mixins и diff. */
   base?: EntityEditPageTemplate;
 
   /** Готовую схему можно передать напрямую; attributes и diff могут расширить ее. */
   schema?: EntitySchema;
+  entity?: Entity;
 
   /** Имя таблицы Entity. Используется, если schema не передана. */
   tableName?: string;
@@ -88,14 +110,19 @@ export interface EntityEditPageTemplate {
   title?: string;
   submitLabel?: ReactNode;
   localization?: EntityEditPageLocalization;
-  columns?: EntityColumnSchema[];
+  columns?: EntityColumnDefinition[];
   attributes?: EntityEditPageAttributes;
-  methods?: EntityEditPageMethods;
   mixins?: EntityEditPageMixin[];
-  diff?: EntityEditPageDiffItem[];
+  diffOverrides?: EntityEditPageDiffOverride[];
 }
 
-export interface NormalizedEntityEditPageTemplate extends Required<Pick<EntityEditPageTemplate, "attributes" | "methods" | "diff">> {
+export interface NormalizedEntityEditPageTemplate extends NormalizedBaseModuleTemplate<
+  EntityEditPageContext,
+  EntityEditPageMethods,
+  EntityEditPageMethodChains,
+  EntityEditPageDiffItem[]
+> {
+  attributes: EntityEditPageAttributes;
   schema: EntitySchema;
   title?: string;
   submitLabel?: ReactNode;
@@ -104,6 +131,7 @@ export interface NormalizedEntityEditPageTemplate extends Required<Pick<EntityEd
 }
 
 export interface EntityEditPageContext {
+  entity: Entity;
   template: NormalizedEntityEditPageTemplate;
   schema: EntitySchema;
   attributes: EntityEditPageAttributes;
@@ -111,6 +139,7 @@ export interface EntityEditPageContext {
   values: EntityValues;
   displayValues: EntityDisplayValues;
   disabled: boolean;
+  isDirty: boolean;
   getValue: <TValue = unknown>(key: string) => TValue | undefined;
   setValue: (key: string, value: unknown) => void;
   setValues: (updater: EntityEditPageValuesUpdater) => void;
@@ -119,7 +148,19 @@ export interface EntityEditPageContext {
   runMethod: (name: string, ...args: unknown[]) => Promise<unknown>;
 }
 
-export type EntityEditPageMethod = (context: EntityEditPageContext, ...args: unknown[]) => unknown | Promise<unknown>;
+export interface EntityEditPageMethodScope extends EntityEditPageContext {
+  context: EntityEditPageContext;
+}
+
+export interface EntityEditPageMethodThis extends BaseModuleMethodThis, EntityEditPageMethodScope {
+  /** Reads the current value of a page/entity attribute inside a page method. */
+  get: <TValue = unknown>(key: string) => TValue | undefined;
+
+  /** Registered page methods are exposed as bound methods on `this`. */
+  [methodName: string]: any;
+}
+
+export type EntityEditPageMethod = BaseModuleMethod<EntityEditPageContext, EntityEditPageMethodThis>;
 
 interface EntityEditPageDiffItemBase {
   name?: string;
@@ -138,6 +179,7 @@ export interface EntityEditPageFieldDiffItem extends EntityEditPageDiffItemBase 
 export interface EntityEditPageSectionDiffItem extends EntityEditPageDiffItemBase {
   type: "section";
   title?: EntityEditPageRenderValue<ReactNode>;
+  defaultExpanded?: boolean;
   columns?: number;
   gap?: number;
   /** Имена Entity-атрибутов, выводимых внутри блока. Это оставляет diff.json сфокусированным на блоках страницы. */
@@ -176,6 +218,19 @@ export type EntityEditPageDiffItem =
   | EntityEditPageActionsDiffItem
   | EntityEditPageCustomDiffItem;
 
+export type EntityEditPageDiffOverrideOperation = "remove" | "insert" | "merge";
+export type EntityEditPageDiffInsertPosition = "before" | "after" | "inside" | "start" | "end";
+
+export interface EntityEditPageDiffOverride {
+  operation: EntityEditPageDiffOverrideOperation;
+  name?: string;
+  target?: string;
+  targetName?: string;
+  position?: EntityEditPageDiffInsertPosition;
+  item?: EntityEditPageDiffItem;
+  items?: EntityEditPageDiffItem[];
+}
+
 export interface EntityEditPageAction {
   name?: string;
   label: EntityEditPageRenderValue<ReactNode>;
@@ -188,14 +243,29 @@ export interface EntityEditPageAction {
   variant?: "primary" | "secondary" | "danger";
 }
 
-export interface EntityEditPageProps {
+export interface EntityEditPageProps<TValues extends EntityValues = EntityValues> {
   template: EntityEditPageTemplate;
-  value?: EntityValues;
+  value?: EntityValues & Partial<TValues>;
   displayValues?: EntityDisplayValues;
+  recordId?: unknown;
+  loadRecord?: boolean;
+  clientName?: string;
   disabled?: boolean;
   className?: string;
+  top?: EntityEditPageRenderValue<ReactNode>;
+  bottom?: EntityEditPageRenderValue<ReactNode>;
+  backLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+  deleteLabel?: ReactNode;
   submitLabel?: ReactNode;
+  backDisabled?: boolean;
+  cancelDisabled?: boolean;
+  deleteDisabled?: boolean;
+  submitDisabled?: boolean;
   manualCommitDelayMs?: number;
-  onChange?: (values: EntityValues, context: EntityEditPageContext) => void;
-  onSubmit?: (values: EntityValues, context: EntityEditPageContext) => void | Promise<void>;
+  onChange?: (values: TValues, context: EntityEditPageContext) => void;
+  onBack?: (context: EntityEditPageContext) => void | Promise<void>;
+  onCancel?: (context: EntityEditPageContext) => void | Promise<void>;
+  onDelete?: (values: TValues, context: EntityEditPageContext) => void | Promise<void>;
+  onSubmit?: (values: TValues, context: EntityEditPageContext) => boolean | void | Promise<boolean | void>;
 }

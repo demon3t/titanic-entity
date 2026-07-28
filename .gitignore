@@ -12,6 +12,13 @@ out/
 coverage/
 *.tsbuildinfo
 
+# Tests stay local and are not committed.
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
+
 # Stray generated files from early local builds
 packages/entity-base/src/*.js
 packages/entity-base/src/*.d.ts

@@ -1,3 +1,28 @@
+import { Titanic, type TitanicCurrentUser } from "@titanic-entity/entity-base";
+import type {
+  EntityCurrentUserProvider,
+  EntityCurrentUserResult
+} from "../models/ApiClientOptions";
+
+export interface EntityAuthorization<TCurrentUser extends TitanicCurrentUser = TitanicCurrentUser> {
+  getCurrentUser: EntityCurrentUserProvider<TCurrentUser>;
+}
+
+/**
+ * Resolves current-user information through an authorization contract and stores it on Titanic.CurrentUser.
+ *
+ * @param authorization Current-user provider or authorization service.
+ */
+export async function resolveCurrentUser<TCurrentUser extends TitanicCurrentUser = TitanicCurrentUser>(
+  authorization: EntityAuthorization<TCurrentUser> | EntityCurrentUserProvider<TCurrentUser>
+): Promise<EntityCurrentUserResult<TCurrentUser>> {
+  const currentUser = typeof authorization === "function"
+    ? await authorization()
+    : await authorization.getCurrentUser();
+
+  return Titanic.setCurrentUser(currentUser);
+}
+
 /**
  * Creates a bearer authorization header map for the provided token.
  *

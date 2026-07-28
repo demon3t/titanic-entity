@@ -1,0 +1,19 @@
+.titanic-random-gif-loader {
+  display: inline-grid;
+  justify-items: center;
+  gap: 10px;
+  color: var(--titanic-ui-muted-text, #64748b);
+}
+
+.titanic-random-gif-loader__image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.titanic-random-gif-loader__label {
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+}

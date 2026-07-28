@@ -1,0 +1,9 @@
+.titanic-grid {
+  display: grid;
+  width: 100%;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(var(--titanic-grid-columns, 24), minmax(0, 1fr));
+  gap: var(--titanic-grid-gap, 12px);
+  align-content: start;
+  align-items: start;
+}

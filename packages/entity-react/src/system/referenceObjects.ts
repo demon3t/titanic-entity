@@ -6,8 +6,8 @@ import {
   type EntityApiEntity,
   type EntityApiStructureColumnResponse
 } from "@titanic-entity/entity-api";
-import { EntityFieldKind, type EntitySchema } from "@titanic-entity/entity-core";
-import type { EntityDataGridColumn } from "../grids";
+import { EntityColumnKind, type EntitySchema } from "@titanic-entity/entity-core";
+import type { EntityDataGridColumn } from "./types";
 
 export interface ReferenceObjectFieldConfig {
   path: string;
@@ -123,7 +123,7 @@ export function createReferenceRecordSchema(
     columns: fields.map((field) => ({
       path: field.path,
       label: fieldLabels?.[field.path] ?? field.path,
-      kind: field.multiline ? EntityFieldKind.Text : EntityFieldKind.String,
+      kind: field.multiline ? EntityColumnKind.Text : EntityColumnKind.String,
       required: field.required,
       readOnly: field.path === reference.primaryColumn,
       hidden: field.formHidden,
@@ -142,7 +142,7 @@ export function createReferenceRecordGridColumns(
     path: field.path,
     label: fieldLabels?.[field.path] ?? field.path,
     defaultVisible: !field.hidden,
-    required: field.path === reference.primaryColumn
+    required: field.path === reference.primaryColumn && !field.hidden
   }));
 }
 

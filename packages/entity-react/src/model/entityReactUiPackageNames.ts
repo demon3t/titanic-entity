@@ -1,49 +1,63 @@
 export const entityReactComponentNames = {
-  EntityEditPage: "EntityEditPage",
-  EntityDataGrid: "EntityDataGrid",
+  ActionBar: "ActionBar",
+  AlertModalPage: "AlertModalPage",
+  ApprovalModalPage: "ApprovalModalPage",
+  BasePage: "BasePage",
+  BaseModalPage: "BaseModalPage",
+  BaseSection: "BaseSection",
+  BaseEntitySection: "BaseSection",
+  Button: "Button",
+  CollapsiblePanel: "CollapsiblePanel",
+  EntityEditPage: "BasePage",
+  DataGrid: "DataGrid",
   EntityDataGridRowContextMenu: "EntityDataGridRowContextMenu",
+  Container: "Container",
+  EntityDragDropItem: "EntityDragDropItem",
+  Expander: "Expander",
+  EntityExpander: "Expander",
   EntityField: "EntityField",
   EntityForm: "EntityForm",
-  EntityGrid: "EntityGrid",
+  Grid: "Grid",
   EntityJsonEditor: "EntityJsonEditor",
-  EntityOrmList: "EntityOrmList",
-  EntityPageActionButton: "EntityPageActionButton",
-  EntityPageActions: "EntityPageActions",
+  Label: "Label",
+  LookupInput: "LookupInput",
+  NavigationTrail: "NavigationTrail",
   EntityRecordsPage: "EntityRecordsPage",
-  EntityRecordDetails: "EntityRecordDetails",
-  EntityRegistry: "EntityRegistry",
-  EntityTable: "EntityTable",
+  EntityRecordsSection: "BaseSection",
   DateInput: "DateInput",
+  DateTimeInput: "DateTimeInput",
   NumberInput: "NumberInput",
   PackageSiteShell: "PackageSiteShell",
   RandomGifLoader: "RandomGifLoader",
   ResourceSvgIcon: "ResourceSvgIcon",
-  LookupInput: "LookupInput",
-  SiteCollapsiblePanel: "SiteCollapsiblePanel",
   SiteIconButton: "SiteIconButton",
   SiteIconDropdown: "SiteIconDropdown",
   SiteLayout: "SiteLayout",
-  SitePanelToggleButton: "SitePanelToggleButton"
+  SitePanelToggleButton: "SitePanelToggleButton",
+  TimeInput: "TimeInput"
 } as const;
 
 export const entityReactTemplateNames = {
-  EntityEditPage: entityReactComponentNames.EntityEditPage
+  BasePage: entityReactComponentNames.BasePage,
+  BaseEntitySection: entityReactComponentNames.BaseSection,
+  BaseSection: entityReactComponentNames.BaseSection,
+  EntityEditPage: entityReactComponentNames.BasePage,
+  EntityRecordsSection: entityReactComponentNames.BaseSection
 } as const;
 
 export const entityReactFieldNames = {
   EntityField: entityReactComponentNames.EntityField,
   DateInput: entityReactComponentNames.DateInput,
+  DateTimeInput: entityReactComponentNames.DateTimeInput,
   EntityJsonEditor: entityReactComponentNames.EntityJsonEditor,
+  LookupInput: entityReactComponentNames.LookupInput,
   NumberInput: entityReactComponentNames.NumberInput,
-  LookupInput: entityReactComponentNames.LookupInput
+  TimeInput: entityReactComponentNames.TimeInput
 } as const;
 
 export const entityReactGridNames = {
-  EntityDataGrid: entityReactComponentNames.EntityDataGrid,
-  EntityGrid: entityReactComponentNames.EntityGrid,
-  EntityOrmList: entityReactComponentNames.EntityOrmList,
-  EntityRegistry: entityReactComponentNames.EntityRegistry,
-  EntityTable: entityReactComponentNames.EntityTable
+  DataGrid: entityReactComponentNames.DataGrid,
+  Grid: entityReactComponentNames.Grid
 } as const;
 
 export const entityReactEnumNames = {

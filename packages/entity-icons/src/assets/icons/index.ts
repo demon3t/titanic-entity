@@ -34,6 +34,9 @@ export type EntityCultureIconName = "en-US" | "ru-RU";
 export type EntityDataGridIconName =
   | "columns"
   | "totals"
+  | "sort"
+  | "sortAsc"
+  | "sortDesc"
   | "open"
   | "delete"
   | "copy";
@@ -89,6 +92,51 @@ export const dataGridTotalsIcon = {
     {
       kind: "path",
       d: "M5 5h14M5 19h14M7 8l5 4-5 4M13 16h5",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8,
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }
+  ]
+} satisfies ResourceSvgIconResource;
+
+export const dataGridSortIcon = {
+  viewBox: "0 0 24 24",
+  shapes: [
+    {
+      kind: "path",
+      d: "M4 7h10M4 12h7M4 17h4M17 6v12m0 0 3-3m-3 3-3-3",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8,
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }
+  ]
+} satisfies ResourceSvgIconResource;
+
+export const dataGridSortAscIcon = {
+  viewBox: "0 0 24 24",
+  shapes: [
+    {
+      kind: "path",
+      d: "M4 7h10M4 12h7M4 17h4M17 18V6m0 0-3 3m3-3 3 3",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8,
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }
+  ]
+} satisfies ResourceSvgIconResource;
+
+export const dataGridSortDescIcon = {
+  viewBox: "0 0 24 24",
+  shapes: [
+    {
+      kind: "path",
+      d: "M4 7h10M4 12h7M4 17h4M17 6v12m0 0 3-3m-3 3-3-3",
       fill: "none",
       stroke: "currentColor",
       strokeWidth: 1.8,
@@ -158,6 +206,9 @@ export const cultureIcons = {
 export const dataGridIcons = {
   columns: dataGridColumnsIcon,
   totals: dataGridTotalsIcon,
+  sort: dataGridSortIcon,
+  sortAsc: dataGridSortAscIcon,
+  sortDesc: dataGridSortDescIcon,
   open: dataGridOpenIcon,
   delete: dataGridDeleteIcon,
   copy: dataGridCopyIcon
@@ -204,8 +255,17 @@ export const titanicDateInputIcons = {
 
 export const titanicDataGridSettingsIcons = {
   titanicColumns: dataGridColumnsIcon,
-  titanicTotals: dataGridTotalsIcon
-} satisfies ResourceSvgIconMap<"titanicColumns" | "titanicTotals">;
+  titanicTotals: dataGridTotalsIcon,
+  titanicSort: dataGridSortIcon,
+  titanicSortAsc: dataGridSortAscIcon,
+  titanicSortDesc: dataGridSortDescIcon
+} satisfies ResourceSvgIconMap<
+  | "titanicColumns"
+  | "titanicTotals"
+  | "titanicSort"
+  | "titanicSortAsc"
+  | "titanicSortDesc"
+>;
 
 export const titanicDataGridRowActionIcons = {
   titanicOpen: dataGridOpenIcon,

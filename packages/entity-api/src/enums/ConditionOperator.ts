@@ -24,12 +24,27 @@ export enum ConditionOperator {
   /** Negative membership comparison. */
   NotIn = 7,
 
-  /** Case-insensitive contains comparison. */
-  Contains = 8,
+  /** SQL LIKE comparison. The value must include `%` wildcards when needed. */
+  Like = 8,
+
+  /** SQL NOT LIKE comparison. The value must include `%` wildcards when needed. */
+  NotLike = 9,
+
+  /** Case-insensitive SQL LIKE comparison. The value must include `%` wildcards when needed. */
+  ILike = 10,
 
   /** Null check. */
   IsNull = 11,
 
   /** Non-null check. */
-  IsNotNull = 12
+  IsNotNull = 12,
+
+  /** Case-insensitive contains comparison. The backend adds `%value%`. */
+  Contains = 13,
+
+  /** Case-insensitive starts-with comparison. The backend adds `value%`. */
+  StartsWith = 14,
+
+  /** Case-insensitive ends-with comparison. The backend adds `%value`. */
+  EndsWith = 15
 }

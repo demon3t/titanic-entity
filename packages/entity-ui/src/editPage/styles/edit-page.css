@@ -1,0 +1,97 @@
+.titanic-edit-page {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--titanic-ui-border, #cbd5e1);
+  border-radius: 22px;
+  padding: 20px;
+  color: var(--titanic-ui-text, #111827);
+  background: var(--titanic-ui-surface, #ffffff);
+  box-shadow: var(--titanic-ui-shadow, 0 8px 24px rgba(15, 23, 42, 0.07));
+}
+
+.titanic-edit-page__title {
+  margin: 0;
+  color: var(--titanic-ui-text, #111827);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.titanic-edit-page__top {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.titanic-edit-page__toolbar {
+  margin: -8px 0 0;
+}
+
+.titanic-edit-page__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.titanic-edit-page__grid,
+.titanic-edit-page__section,
+.titanic-edit-page__row {
+  min-width: 0;
+}
+
+.titanic-edit-page__section {
+  grid-column: span var(--titanic-grid-span, 24);
+}
+
+.titanic-edit-page__section .titanic-expander__label {
+  color: var(--titanic-ui-text, #111827);
+}
+
+.titanic-edit-page__section > .titanic-edit-page__section-content {
+  margin-top: 12px;
+}
+
+.titanic-edit-page__row {
+  grid-column: span var(--titanic-grid-span, 24);
+}
+
+.titanic-edit-page__text,
+.titanic-edit-page__custom {
+  grid-column: span var(--titanic-grid-span, 24);
+  color: var(--titanic-ui-muted-text, #64748b);
+}
+
+.titanic-edit-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  grid-column: span var(--titanic-grid-span, 24);
+}
+
+.titanic-edit-page__button_secondary {
+  border: 1px solid var(--titanic-ui-border, #cbd5e1);
+  background: var(--titanic-ui-surface, #ffffff);
+  color: var(--titanic-ui-text, #111827);
+}
+
+.titanic-edit-page__button_secondary:hover:not(:disabled) {
+  background: var(--titanic-ui-hover, #eef2f7);
+  color: var(--titanic-ui-text, #111827);
+}
+
+.titanic-edit-page__button_danger {
+  color: var(--titanic-ui-danger-text, #ffffff);
+  background: var(--titanic-ui-danger, #922f2f);
+}
+
+.titanic-edit-page__button_danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--titanic-ui-danger, #922f2f) 82%, var(--titanic-ui-text, #111827));
+}
+
+@media (max-width: 620px) {
+  .titanic-edit-page__toolbar {
+    margin: -8px 0 0;
+  }
+}

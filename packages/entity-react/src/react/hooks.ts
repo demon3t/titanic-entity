@@ -28,11 +28,24 @@ const EMPTY_LOOKUP_OPTIONS: LookupOption[] = [];
 export interface UseEntityLookupOptionsOptions {
   enabled?: boolean;
   dependencies?: unknown[];
+  rowCount?: number;
+  searchText?: string;
+}
+
+export interface EntityLookupOptionsLoadRequest {
+  append?: boolean;
+  rowCount?: number;
+  searchText?: string;
+  skip?: number;
+  value?: string | number | null;
 }
 
 export interface UseEntityLookupOptionsResult extends AsyncState<LookupOption[]> {
   options: LookupOption[];
-  reload: () => Promise<LookupOption[]>;
+  reload: (request?: EntityLookupOptionsLoadRequest) => Promise<LookupOption[]>;
+  loadMore: () => Promise<LookupOption[]>;
+  hasMore: boolean;
+  loadingMore: boolean;
   source: "api" | "static";
 }
 
@@ -87,33 +100,91 @@ export function useEntityLookupOptions(
   const staticOptions = column.options ?? EMPTY_LOOKUP_OPTIONS;
   const lookup = column.lookup;
   const lookupKey = JSON.stringify(lookup ?? null);
+  const rowCount = normalizeLookupRowCount(options.rowCount ?? lookup?.rowCount);
+  const searchText = options.searchText ?? "";
   const enabled = Boolean(client && lookup && lookup.enabled !== false && (options.enabled ?? true));
-  const dependencies = options.dependencies ?? [lookupKey];
+  const dependencies = options.dependencies ?? [lookupKey, rowCount, searchText];
   const [state, setState] = useState<AsyncState<LookupOption[]>>({
     data: null,
     loading: enabled,
     error: null
   });
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const dataRef = useRef<LookupOption[] | null>(null);
 
-  const reload = useCallback(async () => {
+  useEffect(() => {
+    dataRef.current = state.data;
+  }, [state.data]);
+
+  const reload = useCallback(async (request: EntityLookupOptionsLoadRequest = {}) => {
+    const requestRowCount = normalizeLookupRowCount(request.rowCount ?? rowCount);
+    const requestSearchText = request.searchText ?? searchText;
+    const requestSkip = normalizeLookupSkip(request.skip);
+    const requestValue = request.value;
+    const append = Boolean(request.append && requestSkip > 0);
+
     if (!client || !lookup || lookup.enabled === false) {
-      setState({ data: null, loading: false, error: null });
-      return staticOptions;
+      const page = readStaticLookupPage(staticOptions, requestSearchText, requestSkip, requestRowCount, requestValue);
+      const data = append ? mergeLookupOptions(dataRef.current ?? [], page.options) : page.options;
+
+      dataRef.current = data;
+      setState({ data, loading: false, error: null });
+      setHasMore(page.hasMore);
+
+      return data;
     }
 
-    setState((current) => ({ ...current, loading: true, error: null }));
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setState((current) => ({ ...current, loading: true, error: null }));
+    }
 
     try {
-      const rows = await client.select(createLookupQuery(lookup));
-      const data = mapLookupRows(rows, lookup);
+      const rows = await client.select(createLookupQuery(lookup, {
+        rowCount: requestRowCount,
+        searchText: requestSearchText,
+        skip: requestSkip,
+        value: requestValue
+      }));
+      const pageOptions = mapLookupRows(rows, lookup);
+      const data = append ? mergeLookupOptions(dataRef.current ?? [], pageOptions) : pageOptions;
+
+      dataRef.current = data;
       setState({ data, loading: false, error: null });
+      setHasMore(pageOptions.length >= requestRowCount);
+
       return data;
     } catch (error) {
       const normalized = error instanceof Error ? error : new Error(String(error));
-      setState({ data: null, loading: false, error: normalized });
-      return staticOptions;
+      const page = readStaticLookupPage(staticOptions, requestSearchText, requestSkip, requestRowCount, requestValue);
+      const data = append ? mergeLookupOptions(dataRef.current ?? [], page.options) : page.options;
+
+      dataRef.current = data;
+      setState({ data, loading: false, error: normalized });
+      setHasMore(page.hasMore);
+
+      return data;
+    } finally {
+      if (append) {
+        setLoadingMore(false);
+      }
     }
-  }, [client, lookupKey, staticOptions]);
+  }, [client, lookup, rowCount, searchText, staticOptions]);
+
+  const loadMore = useCallback(() => {
+    if (state.loading || loadingMore || !hasMore) {
+      return Promise.resolve(dataRef.current ?? []);
+    }
+
+    return reload({
+      append: true,
+      rowCount,
+      searchText,
+      skip: dataRef.current?.length ?? 0
+    });
+  }, [hasMore, loadingMore, reload, rowCount, searchText, state.loading]);
 
   useEffect(() => {
     if (!enabled) {
@@ -121,16 +192,89 @@ export function useEntityLookupOptions(
       return;
     }
 
-    void reload();
+    void reload({ rowCount, searchText, skip: 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, reload, ...dependencies]);
 
+  const fallbackPage = readStaticLookupPage(staticOptions, searchText, 0, rowCount);
+
   return {
     ...state,
-    options: state.data ?? staticOptions,
+    hasMore,
+    loadingMore,
+    options: state.data ?? fallbackPage.options,
+    loadMore,
     reload,
-    source: state.data ? "api" : "static"
+    source: client && lookup && lookup.enabled !== false && state.data ? "api" : "static"
   };
+}
+
+function readStaticLookupPage(
+  options: readonly LookupOption[],
+  searchText: string,
+  skip: number,
+  rowCount: number,
+  value?: string | number | null
+): { options: LookupOption[]; hasMore: boolean } {
+  const filteredOptions = filterStaticLookupOptions(options, searchText, value);
+
+  return {
+    options: filteredOptions.slice(skip, skip + rowCount),
+    hasMore: skip + rowCount < filteredOptions.length
+  };
+}
+
+function filterStaticLookupOptions(
+  options: readonly LookupOption[],
+  searchText: string,
+  value?: string | number | null
+): LookupOption[] {
+  const normalizedSearchText = searchText.trim().toLocaleLowerCase();
+  const normalizedValue = normalizeLookupValue(value);
+  const valueFilteredOptions = normalizedValue
+    ? options.filter((option) => normalizeLookupValue(option.value) === normalizedValue)
+    : options;
+
+  if (!normalizedSearchText) {
+    return [...valueFilteredOptions];
+  }
+
+  return valueFilteredOptions.filter((option) =>
+    String(option.displayValue).toLocaleLowerCase().includes(normalizedSearchText) ||
+    String(option.value).toLocaleLowerCase().includes(normalizedSearchText)
+  );
+}
+
+function normalizeLookupValue(value: string | number | null | undefined): string {
+  return value == null ? "" : String(value);
+}
+
+function mergeLookupOptions(current: readonly LookupOption[], next: readonly LookupOption[]): LookupOption[] {
+  const values = new Set<string>();
+  const result: LookupOption[] = [];
+
+  for (const option of [...current, ...next]) {
+    const key = String(option.value);
+
+    if (values.has(key)) {
+      continue;
+    }
+
+    values.add(key);
+    result.push(option);
+  }
+
+  return result;
+}
+
+function normalizeLookupRowCount(value: unknown): number {
+  const numericValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0 ? Math.floor(numericValue) : 15;
+}
+
+function normalizeLookupSkip(value: unknown): number {
+  const numericValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0 ? Math.floor(numericValue) : 0;
 }
 
 export function useEntitySave(tableName: string) {

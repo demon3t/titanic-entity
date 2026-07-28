@@ -1,8 +1,12 @@
+import { Titanic, type TitanicCurrentUser } from "@titanic-entity/entity-base";
 import { EntityApiOperationType } from "../enums/EntityApiOperationType";
 import { EntityApiError } from "../errors/EntityApiError";
 import type { ApiBatchRequest } from "../models/ApiBatchRequest";
 import type { ApiBatchResponse } from "../models/ApiBatchResponse";
-import type { ApiClientOptions } from "../models/ApiClientOptions";
+import type {
+  ApiClientOptions,
+  EntityCurrentUserResult
+} from "../models/ApiClientOptions";
 import type { ApiDeleteResult } from "../models/ApiDeleteResult";
 import type { ApiEntity } from "../models/ApiEntity";
 import type { ApiManagerStructureResponse } from "../models/ApiManagerStructureResponse";
@@ -18,6 +22,7 @@ export class EntityApiClient {
   protected readonly baseUrl: string;
   protected readonly apiPath: string;
   protected readonly getHeaders?: ApiClientOptions["getHeaders"];
+  protected readonly getCurrentUserProvider?: ApiClientOptions["getCurrentUser"];
   protected readonly fetchImpl: typeof fetch;
 
   /**
@@ -33,6 +38,7 @@ export class EntityApiClient {
     this.baseUrl = options.baseUrl?.replace(/\/$/, "") ?? "";
     this.apiPath = options.apiPath.startsWith("/") ? options.apiPath : `/${options.apiPath}`;
     this.getHeaders = options.getHeaders;
+    this.getCurrentUserProvider = options.getCurrentUser;
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
@@ -72,6 +78,18 @@ export class EntityApiClient {
     }
 
     return payload as ApiManagerStructureResponse;
+  }
+
+  /**
+   * Resolves current-user information and stores it on Titanic.CurrentUser.
+   */
+  async getCurrentUser<TCurrentUser extends TitanicCurrentUser = TitanicCurrentUser>(): Promise<EntityCurrentUserResult<TCurrentUser>> {
+    if (!this.getCurrentUserProvider) {
+      return Titanic.CurrentUser as EntityCurrentUserResult<TCurrentUser>;
+    }
+
+    const currentUser = await this.getCurrentUserProvider() as EntityCurrentUserResult<TCurrentUser>;
+    return Titanic.setCurrentUser(currentUser);
   }
 
   /**

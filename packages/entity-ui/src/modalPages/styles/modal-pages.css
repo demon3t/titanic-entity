@@ -1,0 +1,17 @@
+.titanic-modal-page__card {
+  width: min(460px, 100%);
+}
+
+.titanic-modal-page__message {
+  color: var(--titanic-ui-muted-text, #64748b);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.titanic-modal-page_warning .titanic-base-modal-page__card {
+  border-color: var(--titanic-ui-warning-border, #f0b36a);
+}
+
+.titanic-modal-page_danger .titanic-base-modal-page__card {
+  border-color: var(--titanic-ui-danger-border, #d6a5a5);
+}

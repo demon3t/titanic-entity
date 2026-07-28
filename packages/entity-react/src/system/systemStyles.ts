@@ -6,9 +6,8 @@ import {
   type EntityApiClient,
   type EntityApiEntity
 } from "@titanic-entity/entity-api";
-import type { EntityDataGridColumn } from "../grids";
-import type { EntityRecordPageConfig } from "../components/records/EntityRecordsPage";
-import { EntityFieldKind, type EntityJsonRequiredField, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
+import { EntityColumnKind, type EntityJsonRequiredField, type EntitySchema, type EntityValues } from "@titanic-entity/entity-core";
+import type { EntityDataGridColumn, EntityRecordPageConfig } from "./types";
 
 export const systemStyleTableName = "sys_style";
 export const systemStyleOrderColumn = "SortOrder";
@@ -102,13 +101,13 @@ export function createSystemStyleSchema(labels: SystemStyleFieldLabels, title: s
       {
         path: "Description",
         label: labels.Description,
-        kind: EntityFieldKind.Text,
+        kind: EntityColumnKind.Text,
         gridSpan: 24
       },
       {
         path: "ValuesJson",
         label: labels.ValuesJson,
-        kind: EntityFieldKind.Json,
+        kind: EntityColumnKind.Json,
         required: true,
         gridSpan: 24,
         defaultValue: "{}",
@@ -120,7 +119,7 @@ export function createSystemStyleSchema(labels: SystemStyleFieldLabels, title: s
       {
         path: "IsSystem",
         label: labels.IsSystem,
-        kind: EntityFieldKind.Boolean,
+        kind: EntityColumnKind.Boolean,
         readOnly: true,
         gridSpan: 12,
         defaultValue: false
@@ -128,14 +127,14 @@ export function createSystemStyleSchema(labels: SystemStyleFieldLabels, title: s
       {
         path: "IsDefault",
         label: labels.IsDefault,
-        kind: EntityFieldKind.Boolean,
+        kind: EntityColumnKind.Boolean,
         gridSpan: 12,
         defaultValue: false
       },
       {
         path: "SortOrder",
         label: labels.SortOrder,
-        kind: EntityFieldKind.Number,
+        kind: EntityColumnKind.Number,
         gridSpan: 12,
         defaultValue: 100
       }

@@ -1,0 +1,1173 @@
+@import "../grid/styles/grid.css";
+@import "../container/styles/container.css";
+@import "../label/styles/label.css";
+@import "../expander/styles/expander.css";
+@import "../dragDrop/styles/drag-drop.css";
+@import "../packageSiteShell/styles/package-site-shell.css";
+@import "../form/styles/form.css";
+@import "../field/styles/field.css";
+@import "../inputFieldFrame/styles/input-field-frame.css";
+@import "../lookupInput/styles/lookup-input.css";
+@import "../button/styles/button.css";
+@import "../collapsiblePanel/styles/collapsible-panel.css";
+@import "../actionBar/styles/action-bar.css";
+@import "../baseModalPage/styles/base-modal-page.css";
+@import "../modalPages/styles/modal-pages.css";
+@import "../editPage/styles/edit-page.css";
+@import "../randomGifLoader/styles/random-gif-loader.css";
+@import "../dataGrid/styles/data-grid.css";
+@import "../dataGridRowContextMenu/styles/data-grid-row-context-menu.css";
+@import "../dataGridSettingsModalPage/styles/data-grid-settings-modal-page.css";
+@import "../siteIconDropdown/styles/site-icon-dropdown.css";
+@import "../recordsPage/styles/records-page.css";
+@import "../jsonEditor/styles/json-editor.css";
+@import "../dateInput/styles/date-input.css";
+@import "../timeInput/styles/time-input.css";
+@import "../dateTimeInput/styles/date-time-input.css";
+@import "../navigationTrail/styles/navigation-trail.css";
+
+.titanic-grid,
+.titanic-grid *,
+.titanic-container,
+.titanic-container *,
+.titanic-expander,
+.titanic-expander *,
+.titanic-drag-drop-item,
+.titanic-drag-drop-item *,
+.titanic-edit-page,
+.titanic-edit-page * {
+  box-sizing: border-box;
+}
+
+.titanic-datetime {
+  position: relative;
+  width: 100%;
+}
+
+.titanic-datetime__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.titanic-datetime__button:disabled {
+  cursor: not-allowed;
+}
+
+.titanic-datetime__value,
+.titanic-datetime__placeholder {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titanic-datetime__placeholder {
+  color: #667085;
+}
+
+.titanic-datetime__icon {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: #edf6ff;
+  color: #1f6feb;
+  font-size: 13px;
+}
+
+.titanic-datetime__popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  display: grid;
+  gap: 12px;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid #c6d7ea;
+  border-radius: 18px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at top left, rgba(31, 111, 235, 0.10), transparent 36%),
+    #ffffff;
+  box-shadow: 0 24px 70px rgba(18, 38, 63, 0.18);
+}
+
+.titanic-datetime__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.titanic-datetime__header strong {
+  color: #16324f;
+  font-size: 14px;
+}
+
+.titanic-datetime__header button,
+.titanic-datetime__actions button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: #edf6ff;
+  color: #16324f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titanic-datetime__header button:hover,
+.titanic-datetime__actions button:hover {
+  background: #dcecff;
+}
+
+.titanic-datetime__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 0.72fr);
+  gap: 10px;
+}
+
+.titanic-datetime__grid label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.titanic-datetime__grid span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-datetime__input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #bfd0e3;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  outline: none;
+}
+
+.titanic-datetime__input:focus {
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.14);
+}
+
+.titanic-datetime__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.titanic-table-wrap {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid #d9e2ef;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 38, 63, 0.07);
+}
+
+.titanic-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.titanic-table th,
+.titanic-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+}
+
+.titanic-table th {
+  background: #f3f7fb;
+  color: #31445b;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-table__row_clickable {
+  cursor: pointer;
+}
+
+.titanic-table__row_clickable:hover {
+  background: #f8fbff;
+}
+
+.titanic-entity-list {
+  position: relative;
+  display: grid;
+  gap: 10px;
+}
+
+.titanic-entity-list h2 {
+  margin: 0;
+}
+
+.titanic-entity-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.titanic-entity-list__settings-button {
+  min-height: 34px;
+  border: 1px solid #d9e2ef;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: #ffffff;
+  color: #16324f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titanic-entity-list__settings-button:hover {
+  background: #f8fbff;
+}
+
+.titanic-entity-list__settings {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #d9e2ef;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 38, 63, 0.10);
+}
+
+.titanic-entity-list__settings strong {
+  color: #16324f;
+}
+
+.titanic-entity-list__settings label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #31445b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.titanic-entity-list__settings input {
+  width: 16px;
+  height: 16px;
+  accent-color: #1f6feb;
+}
+
+.titanic-entity-list__item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #ffffff;
+  color: #172033;
+  text-align: left;
+  cursor: pointer;
+}
+
+.titanic-entity-list__item:hover {
+  background: #f8fbff;
+}
+
+.titanic-entity-list__fields {
+  display: grid;
+  gap: 8px;
+}
+
+.titanic-entity-list__field {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.titanic-entity-list__field small {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-entity-list__field span {
+  min-width: 0;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titanic-entity-list__muted {
+  margin: 0;
+  color: #667085;
+}
+
+.titanic-entity-list__error {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff1f2;
+  color: #be123c;
+  font-weight: 500;
+}
+
+.titanic-entity-registry {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.titanic-entity-registry__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.titanic-entity-registry__header h2 {
+  margin: 0;
+  color: #16324f;
+}
+
+.titanic-entity-registry__eyebrow {
+  margin: 0 0 4px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.titanic-entity-registry__settings-button,
+.titanic-entity-registry__page button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #16324f;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titanic-entity-registry__settings {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d9e2ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.titanic-entity-registry__settings > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.titanic-entity-registry__settings label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #f3f7fb;
+  color: #31445b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.titanic-entity-registry__settings input {
+  width: 16px;
+  height: 16px;
+  accent-color: #1f6feb;
+}
+
+.titanic-entity-registry__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(6px);
+}
+
+.titanic-entity-registry__modal {
+  display: grid;
+  gap: 16px;
+  width: min(880px, 100%);
+  max-height: min(760px, calc(100vh - 56px));
+  overflow: hidden;
+  border: 1px solid #d9e2ef;
+  border-radius: 24px;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(18, 38, 63, 0.25);
+}
+
+.titanic-entity-registry__modal header,
+.titanic-entity-registry__modal footer,
+.titanic-entity-registry__field-add,
+.titanic-entity-registry__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titanic-entity-registry__modal header,
+.titanic-entity-registry__modal footer {
+  justify-content: space-between;
+}
+
+.titanic-entity-registry__modal h3 {
+  margin: 0;
+  color: #16324f;
+  font-size: 24px;
+}
+
+.titanic-entity-registry__field-add {
+  padding: 12px;
+  border: 1px solid #d9e2ef;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.titanic-entity-registry__field-add select {
+  flex: 1;
+  min-width: 180px;
+  min-height: 38px;
+  border: 1px solid #bfd0e3;
+  border-radius: 12px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+}
+
+.titanic-entity-registry__settings-grid-wrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #d9e2ef;
+  border-radius: 18px;
+}
+
+.titanic-entity-registry__settings-grid {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.titanic-entity-registry__settings-grid th,
+.titanic-entity-registry__settings-grid td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+}
+
+.titanic-entity-registry__settings-grid th {
+  background: #f3f7fb;
+  color: #31445b;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-entity-registry__settings-grid td {
+  color: #172033;
+}
+
+.titanic-entity-registry__modal button,
+.titanic-entity-registry__field-add button,
+.titanic-entity-registry__row-actions button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #16324f;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titanic-entity-registry__modal button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.titanic-entity-registry__ghost-button {
+  border: 1px solid #d9e2ef !important;
+  background: #ffffff !important;
+  color: #16324f !important;
+}
+
+.titanic-entity-registry__danger-button {
+  background: #b42318 !important;
+}
+
+.titanic-entity-registry__table-wrap {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid #d9e2ef;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 38, 63, 0.07);
+}
+
+.titanic-entity-registry__table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.titanic-entity-registry__table th,
+.titanic-entity-registry__table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+  vertical-align: top;
+}
+
+.titanic-entity-registry__table th {
+  background: #f3f7fb;
+  color: #31445b;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-entity-registry__table tbody tr {
+  cursor: pointer;
+}
+
+.titanic-entity-registry__table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.titanic-entity-registry__table tbody tr.active {
+  background: #eaf2ff;
+}
+
+.titanic-entity-registry__page {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #d9e2ef;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 38, 63, 0.07);
+}
+
+.titanic-entity-registry__page header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.titanic-entity-registry__page h3 {
+  margin: 0;
+  color: #16324f;
+}
+
+.titanic-entity-registry__page dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.titanic-entity-registry__page dl div {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.titanic-entity-registry__page dt {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-entity-registry__page dd {
+  margin: 4px 0 0;
+  color: #172033;
+  overflow-wrap: anywhere;
+}
+
+.titanic-entity-registry__muted {
+  margin: 0;
+  color: #667085;
+}
+
+.titanic-entity-registry__error {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff1f2;
+  color: #be123c;
+  font-weight: 500;
+}
+
+.titanic-entity-details {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #d9e2ef;
+  border-radius: 18px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 38, 63, 0.07);
+}
+
+.titanic-entity-details__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.titanic-entity-details__header h2 {
+  margin: 0;
+  color: #16324f;
+}
+
+.titanic-entity-details__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.titanic-entity-details__empty {
+  margin: 0;
+  color: #667085;
+}
+
+.titanic-entity-details__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.titanic-entity-details__field {
+  min-width: 0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f8fbff;
+}
+
+.titanic-entity-details__field dt {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titanic-entity-details__field dd {
+  margin: 4px 0 0;
+  color: #172033;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .titanic-datetime__popover {
+    right: auto;
+    left: 0;
+  }
+
+  .titanic-entity-details__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .titanic-entity-details__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Строгая визуальная база для переиспользуемых Entity UI-контролов. */
+.titanic-form,
+.titanic-edit-page,
+.titanic-table-wrap,
+.titanic-entity-registry__modal,
+.titanic-entity-registry__table-wrap,
+.titanic-entity-registry__page,
+.titanic-entity-details {
+  border-color: #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.titanic-edit-page__section,
+.titanic-entity-registry__settings,
+.titanic-entity-registry__field-add,
+.titanic-entity-registry__settings-grid-wrap,
+.titanic-entity-details__field,
+.titanic-entity-registry__page dl div {
+  border-color: #d8dee8;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.titanic-field__control,
+.titanic-datetime__input,
+.titanic-entity-registry__field-add select {
+  border-color: #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.titanic-field__control:focus,
+.titanic-lookup_framed:focus-within,
+.titanic-datetime__input:focus {
+  border-color: #334155;
+  box-shadow: 0 0 0 2px rgba(51, 65, 85, 0.14);
+}
+
+.titanic-button,
+.titanic-action-button,
+.titanic-entity-list__settings-button,
+.titanic-entity-registry__settings-button,
+.titanic-entity-registry__page button,
+.titanic-entity-registry__modal button,
+.titanic-entity-registry__field-add button,
+.titanic-entity-registry__row-actions button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.titanic-action-button_primary,
+.titanic-button_primary,
+.titanic-entity-registry__settings-button,
+.titanic-entity-registry__page button {
+  border-color: #1f2937;
+  background: #1f2937;
+}
+
+.titanic-action-button_secondary,
+.titanic-action-button_ghost,
+.titanic-edit-page__button_secondary {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+.titanic-datetime__icon {
+  border-radius: 6px;
+  background: #eef2f7;
+  color: #334155;
+}
+
+.titanic-lookup__popover,
+.titanic-lookup__modal,
+.titanic-lookup__modal-list,
+.titanic-datetime__popover,
+.titanic-entity-list__settings {
+  border-color: #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+}
+
+.titanic-table th,
+.titanic-entity-registry__table th,
+.titanic-entity-registry__settings-grid th {
+  background: #eef2f7;
+  color: #334155;
+}
+
+/* Общие UI-токены приходят из sys_style.ValuesJson.tokens через --titanic-style-*. */
+:root {
+  --titanic-ui-background: var(--titanic-style-background, #f1f3f6);
+  --titanic-ui-surface: var(--titanic-style-surface, #ffffff);
+  --titanic-ui-surface-muted: var(--titanic-style-surface-muted, #f8fafc);
+  --titanic-ui-text: var(--titanic-style-text, #111827);
+  --titanic-ui-muted-text: var(--titanic-style-muted-text, #64748b);
+  --titanic-ui-accent: var(--titanic-style-accent, #1f2937);
+  --titanic-ui-accent-hover: var(--titanic-style-accent-hover, #111827);
+  --titanic-ui-accent-text: var(--titanic-style-accent-text, #ffffff);
+  --titanic-ui-selected: var(--titanic-style-selected, var(--titanic-ui-accent));
+  --titanic-ui-selected-text: var(--titanic-style-selected-text, var(--titanic-ui-accent-text));
+  --titanic-ui-border: var(--titanic-style-border, #cbd5e1);
+  --titanic-ui-border-muted: var(--titanic-style-border-muted, #d8dee8);
+  --titanic-ui-row-alt: var(--titanic-style-row-alt, color-mix(in srgb, var(--titanic-ui-surface-muted) 58%, var(--titanic-ui-surface)));
+  --titanic-ui-hover: var(--titanic-style-hover, #eef2f7);
+  --titanic-ui-scrollbar-track: var(--titanic-style-scrollbar-track, transparent);
+  --titanic-ui-scrollbar-thumb: var(--titanic-style-scrollbar-thumb, color-mix(in srgb, var(--titanic-ui-muted-text) 38%, transparent));
+  --titanic-ui-scrollbar-thumb-hover: var(--titanic-style-scrollbar-thumb-hover, color-mix(in srgb, var(--titanic-ui-accent) 58%, var(--titanic-ui-muted-text)));
+  --titanic-ui-focus-ring: var(--titanic-style-focus-ring, rgba(51, 65, 85, 0.14));
+  --titanic-ui-danger: var(--titanic-style-danger, #922f2f);
+  --titanic-ui-danger-text: var(--titanic-style-danger-text, var(--titanic-ui-surface));
+  --titanic-ui-danger-border: var(--titanic-style-danger-border, #d6a5a5);
+  --titanic-ui-danger-surface: var(--titanic-style-danger-surface, #fff3f2);
+  --titanic-ui-warning: var(--titanic-style-warning, #92400e);
+  --titanic-ui-warning-border: var(--titanic-style-warning-border, #f0b36a);
+  --titanic-ui-warning-surface: var(--titanic-style-warning-surface, #fff7ed);
+  --titanic-ui-overlay: var(--titanic-style-overlay, rgba(15, 23, 42, 0.52));
+  --titanic-ui-shadow: var(--titanic-style-shadow, 0 8px 24px rgba(15, 23, 42, 0.07));
+  --titanic-ui-shadow-elevated: var(--titanic-style-shadow-elevated, 0 24px 70px rgba(15, 23, 42, 0.2));
+  --titanic-ui-glass-surface: var(
+    --titanic-style-glass-surface,
+    rgba(255, 255, 255, 0.2)
+  );
+  --titanic-ui-glass-border: var(
+    --titanic-style-glass-border,
+    rgba(255, 255, 255, 0.3)
+  );
+  --titanic-ui-glass-shadow: var(
+    --titanic-style-glass-shadow,
+    0 8px 32px rgba(0, 0, 0, 0.1)
+  );
+  --titanic-ui-glass-filter: var(
+    --titanic-style-glass-filter,
+    blur(8px)
+  );
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-background);
+}
+
+.titanic-form,
+.titanic-edit-page,
+.titanic-table-wrap,
+.titanic-entity-registry__modal,
+.titanic-entity-registry__table-wrap,
+.titanic-entity-registry__page,
+.titanic-entity-details,
+.titanic-data-grid,
+.titanic-data-grid__settings,
+.titanic-lookup__popover,
+.titanic-lookup__modal,
+.titanic-lookup__modal-list,
+.titanic-datetime__popover,
+.titanic-entity-list__settings {
+  border-color: var(--titanic-ui-border);
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface);
+  box-shadow: var(--titanic-ui-shadow);
+}
+
+.titanic-edit-page__section,
+.titanic-entity-registry__settings,
+.titanic-entity-registry__field-add,
+.titanic-entity-registry__settings-grid-wrap,
+.titanic-entity-details__field,
+.titanic-entity-registry__page dl div,
+.titanic-lookup__status {
+  border-color: var(--titanic-ui-border-muted);
+  color: var(--titanic-ui-muted-text);
+  background: var(--titanic-ui-surface-muted);
+}
+
+.titanic-form__title,
+.titanic-data-grid__header h2,
+.titanic-data-grid__settings strong,
+.titanic-entity-details__header h2,
+.titanic-entity-registry__page h2,
+.titanic-entity-registry__modal h2,
+.titanic-lookup__modal-title,
+.titanic-edit-page__title {
+  color: var(--titanic-ui-text);
+}
+
+.titanic-field__label,
+.titanic-data-grid__settings-list label,
+.titanic-random-gif-loader,
+.titanic-lookup__option_clear,
+.titanic-datetime__placeholder,
+.titanic-lookup__placeholder {
+  color: var(--titanic-ui-muted-text);
+}
+
+.titanic-table td,
+.titanic-data-grid__cell,
+.titanic-entity-registry__table td,
+.titanic-entity-registry__settings-grid td {
+  color: var(--titanic-ui-text);
+}
+
+.titanic-field__control,
+.titanic-datetime__input,
+.titanic-entity-registry__field-add select,
+.titanic-data-grid__settings-button,
+.titanic-action-button_secondary,
+.titanic-action-button_ghost,
+.titanic-edit-page__button_secondary,
+.titanic-lookup__modal-search,
+.titanic-lookup__option {
+  border-color: var(--titanic-ui-border);
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-surface);
+}
+
+.titanic-field__control:focus,
+.titanic-lookup_framed:focus-within,
+.titanic-datetime__input:focus,
+.titanic-lookup__modal-search:focus {
+  border-color: var(--titanic-ui-accent);
+  box-shadow: 0 0 0 2px var(--titanic-ui-focus-ring);
+}
+
+.titanic-field__control:disabled,
+.titanic-lookup_disabled.titanic-field__control {
+  color: var(--titanic-ui-muted-text);
+  background: var(--titanic-ui-surface-muted);
+}
+
+.titanic-button_primary,
+.titanic-action-button_primary,
+.titanic-entity-registry__settings-button,
+.titanic-entity-registry__page button {
+  border-color: var(--titanic-ui-accent);
+  color: var(--titanic-ui-accent-text);
+  background: var(--titanic-ui-accent);
+}
+
+.titanic-button_primary:hover:not(:disabled),
+.titanic-button_primary[aria-expanded="true"],
+.titanic-action-button_primary:hover:not(:disabled),
+.titanic-entity-registry__settings-button:hover:not(:disabled),
+.titanic-entity-registry__page button:hover:not(:disabled) {
+  border-color: var(--titanic-ui-accent-hover);
+  background: var(--titanic-ui-accent-hover);
+}
+
+.titanic-action-button_secondary:hover:not(:disabled),
+.titanic-action-button_ghost:hover:not(:disabled),
+.titanic-edit-page__button_secondary:hover:not(:disabled),
+.titanic-data-grid__settings-button:hover,
+.titanic-lookup__modal-close:hover,
+.titanic-lookup__option:hover,
+.titanic-lookup__option_active,
+.titanic-data-grid__row_clickable:not(.titanic-data-grid__row_active):not(.titanic-data-grid__row_selected):hover {
+  border-color: var(--titanic-ui-accent);
+  color: var(--titanic-ui-text);
+  background: var(--titanic-ui-hover);
+}
+
+.titanic-table__row_clickable:hover {
+  background: var(--titanic-ui-hover);
+  box-shadow: inset 3px 0 0 var(--titanic-ui-accent);
+}
+
+.titanic-datetime__icon,
+.titanic-table th,
+.titanic-entity-registry__table th,
+.titanic-entity-registry__settings-grid th {
+  color: var(--titanic-ui-muted-text);
+  background: var(--titanic-ui-hover);
+}
+
+.titanic-table th,
+.titanic-table td,
+.titanic-data-grid__header,
+.titanic-data-grid__cell,
+.titanic-entity-registry__table th,
+.titanic-entity-registry__table td,
+.titanic-entity-registry__settings-grid th,
+.titanic-entity-registry__settings-grid td {
+  border-color: var(--titanic-ui-border-muted);
+}
+
+.titanic-data-grid__error,
+.titanic-lookup__error {
+  border-color: var(--titanic-ui-danger-border);
+  color: var(--titanic-ui-danger);
+  background: var(--titanic-ui-danger-surface);
+}
+
+@media (max-width: 860px) {
+  .titanic-record-modal {
+    padding: 12px;
+  }
+
+  .titanic-record-modal__card {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .titanic-record-modal__header,
+  .titanic-record-modal__footer,
+  .titanic-record-form-designer__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .titanic-record-form-designer__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .titanic-data-grid-column-modal {
+    padding: 12px;
+  }
+
+  .titanic-data-grid-column-modal__card {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .titanic-data-grid-column-modal__header,
+  .titanic-data-grid-column-modal__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .titanic-data-grid-column-modal__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.titanic-grid,
+.titanic-form,
+.titanic-edit-page,
+.titanic-table,
+.titanic-entity-list,
+.titanic-entity-registry,
+.titanic-entity-details,
+.titanic-data-grid,
+.titanic-record-modal,
+.titanic-record-form-designer,
+.titanic-json-editor,
+.titanic-icon-dropdown {
+  font-weight: 400;
+}
+
+.titanic-button,
+.titanic-action-button,
+.titanic-records-page__button,
+.titanic-entity-list__settings-button,
+.titanic-entity-registry__settings-button,
+.titanic-entity-registry__page button,
+.titanic-record-form-designer__field button,
+.titanic-record-form-designer__available button,
+.titanic-json-editor__mode,
+.titanic-json-editor__remove-button,
+.titanic-json-editor__add-button,
+.titanic-icon-dropdown__trigger,
+.titanic-icon-dropdown__option,
+.titanic-date__period-button,
+.titanic-date__period-option,
+.titanic-datetime__header button,
+.titanic-datetime__actions button {
+  font-weight: 500;
+}
+
+.titanic-form__title,
+.titanic-edit-page__title,
+.titanic-edit-page__section h3,
+.titanic-entity-list h2,
+.titanic-entity-registry__header h2,
+.titanic-entity-registry__page h3,
+.titanic-entity-details__header h2,
+.titanic-record-modal__header strong,
+.titanic-record-form-designer__heading strong,
+.titanic-record-form-designer__panel h3,
+.titanic-data-grid__header h2,
+.titanic-json-editor strong,
+.titanic-table th,
+.titanic-data-grid__cell_header,
+.titanic-entity-registry__table th,
+.titanic-entity-registry__settings-grid th {
+  font-weight: 600;
+}
+
+.titanic-field__label,
+.titanic-datetime__grid span,
+.titanic-entity-list__settings label,
+.titanic-entity-list__field small,
+.titanic-entity-registry__eyebrow,
+.titanic-entity-registry__settings label,
+.titanic-entity-registry__page dt,
+.titanic-entity-details__field dt,
+.titanic-record-modal__header span,
+.titanic-record-form-designer__heading span,
+.titanic-record-form-designer__field label,
+.titanic-json-editor__name-label,
+.titanic-json-editor__type-label,
+.titanic-json-editor__value-label,
+.titanic-json-editor__required-pill,
+.titanic-icon-dropdown__label,
+.titanic-icon-dropdown__tooltip,
+.titanic-icon-dropdown__error {
+  font-weight: 500;
+}
+
+@media (max-width: 620px) {
+  .titanic-data-grid,
+  .titanic-data-grid__table-wrap,
+  .titanic-data-grid__row,
+  .titanic-data-grid__tile-row-content,
+  .titanic-data-grid__cell {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .titanic-data-grid {
+    overflow-x: clip;
+  }
+
+  .titanic-data-grid__toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .titanic-data-grid__toolbar-section {
+    grid-column: 1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .titanic-data-grid__toolbar-section_center {
+    justify-content: flex-start;
+  }
+
+  .titanic-data-grid__toolbar-section_right {
+    justify-content: flex-end;
+    justify-self: stretch;
+  }
+
+  .titanic-data-grid-column-modal,
+  .titanic-record-modal {
+    padding: 8px;
+  }
+
+  .titanic-data-grid-column-modal__card {
+    width: min(96vw, calc(100vw - 16px));
+    height: min(94dvh, calc(100dvh - 16px));
+  }
+
+  .titanic-record-modal__card {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .titanic-data-grid-column-modal__layout,
+  .titanic-record-form-designer__layout {
+    min-width: 0;
+  }
+}

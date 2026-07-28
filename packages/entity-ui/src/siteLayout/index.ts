@@ -1,3 +1,1 @@
-export * from "./SiteLayout";
-export * from "./icons";
-export * from "./resources";
+export * from "./site-layout";

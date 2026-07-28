@@ -1,3 +1,5 @@
-export * from "./SiteIconButton";
-export * from "./icons";
-export * from "./resources";
+export {
+  IconButton as SiteIconButton,
+  siteIconButtonComponentSchema
+} from "../button";
+export type { IconButtonProps as SiteIconButtonProps } from "../button";
