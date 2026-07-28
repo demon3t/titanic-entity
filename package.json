@@ -1,7 +1,7 @@
 {
   "name": "titanic-entity-react-workspace",
   "private": true,
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "Workspace for Titanic.Entity React framework packages.",
   "type": "module",
   "license": "MIT",
@@ -13,8 +13,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @titanic-entity/entity-base && npm run build -w @titanic-entity/entity-api && npm run build -w @titanic-entity/entity-core && npm run build -w @titanic-entity/entity-resources && npm run build -w @titanic-entity/entity-react && npm run build -w @titanic-entity/entity-ui",
-    "typecheck": "npm run typecheck -w @titanic-entity/entity-base && npm run typecheck -w @titanic-entity/entity-api && npm run typecheck -w @titanic-entity/entity-core && npm run typecheck -w @titanic-entity/entity-resources && npm run typecheck -w @titanic-entity/entity-react && npm run typecheck -w @titanic-entity/entity-ui",
+    "build": "npm run build -w @titanic-entity/entity-base && npm run build -w @titanic-entity/entity-core && npm run build -w @titanic-entity/entity-api && npm run build -w @titanic-entity/entity-resources && npm run build -w @titanic-entity/entity-icons && npm run build -w @titanic-entity/entity-react && npm run build -w @titanic-entity/entity-ui",
+    "typecheck": "npm run typecheck -w @titanic-entity/entity-base && npm run typecheck -w @titanic-entity/entity-core && npm run typecheck -w @titanic-entity/entity-api && npm run typecheck -w @titanic-entity/entity-resources && npm run typecheck -w @titanic-entity/entity-icons && npm run typecheck -w @titanic-entity/entity-react && npm run typecheck -w @titanic-entity/entity-ui",
     "prepare:publish": "node scripts/prepare-publish.mjs",
     "publish:workspaces": "node scripts/publish-workspaces.mjs"
   },

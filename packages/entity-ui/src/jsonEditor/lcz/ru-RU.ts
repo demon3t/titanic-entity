@@ -1,0 +1,21 @@
+import { Titanic } from "@titanic-entity/entity-resources";
+
+Titanic.Localization.define("Titanic.UI.EntityJsonEditor", "ru-RU", {
+  addField: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u043e\u043b\u0435",
+  addItem: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u044d\u043b\u0435\u043c\u0435\u043d\u0442",
+  arrayType: "\u041c\u0430\u0441\u0441\u0438\u0432",
+  booleanType: "\u041b\u043e\u0433\u0438\u0447\u0435\u0441\u043a\u0438\u0439",
+  emptyObject: "\u041d\u0435\u0442 \u043f\u043e\u043b\u0435\u0439",
+  fieldName: "\u0418\u043c\u044f",
+  fieldType: "\u0422\u0438\u043f",
+  fieldsMode: "\u041f\u043e\u043b\u044f",
+  invalidJson: "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0439 JSON",
+  nullType: "Null",
+  numberType: "\u0427\u0438\u0441\u043b\u043e",
+  objectType: "\u041e\u0431\u044a\u0435\u043a\u0442",
+  removeField: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c",
+  requiredField: "\u041e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e\u0435",
+  stringType: "\u0421\u0442\u0440\u043e\u043a\u0430",
+  textMode: "\u0422\u0435\u043a\u0441\u0442",
+  value: "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435"
+}, { defaultLocale: "en-US" });

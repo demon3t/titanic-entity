@@ -3,63 +3,51 @@ import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
 import { titanicEntityCorePackage } from "@titanic-entity/entity-core";
 import { titanicEntityReactUiPackage } from "@titanic-entity/entity-react";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
-import { entityUiComponentSchemas } from "./components";
-import { entityUiFieldSchemas } from "./fields";
-import { entityUiGridSchemas } from "./grids";
-import { entityUiTemplateSchemas } from "./templates";
+import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
+import { entityUiSchemas } from "./schemas";
 
-export { entityReactComponentSchemas, entityUiComponentSchemas } from "./components";
-export { entityReactFieldSchemas, entityUiFieldSchemas } from "./fields";
-export {
-  createEntityDataGridColumnSettingsPackage,
-  defaultEntityDataGridSettings,
-  entityReactGridSchemas,
-  entityUiGridSchemas
-} from "./grids";
-export type {
-  EntityDataGridColumn,
-  EntityDataGridColumnPickerLabels,
-  EntityDataGridColumnSetting,
-  EntityDataGridColumnSettingsDialogContext,
-  EntityDataGridColumnSettingsDialogRenderer,
-  EntityDataGridColumnSettingsMode,
-  EntityDataGridCulture,
-  EntityDataGridEntityDescriptor,
-  EntityDataGridLabels,
-  EntityDataGridModeColumnSettings,
-  EntityDataGridModeSettingsMap,
-  EntityDataGridPackage,
-  EntityDataGridPackageExtension,
-  EntityDataGridProps,
-  EntityDataGridQueryContext,
-  EntityDataGridQueryFactory,
-  EntityDataGridQueryInput,
-  EntityDataGridRowAction,
-  EntityDataGridRowActionContext,
-  EntityDataGridSettings,
-  EntityDataGridUserSettings
-} from "./grids";
-export { entityReactTemplateSchemas, entityUiTemplateSchemas } from "./templates";
+export * from "./dataGrid";
+export * from "./actionBar";
+export * from "./baseModalPage";
+export * from "./container";
+export * from "./dataGridSettingsModalPage";
+export * from "./dataGridRowContextMenu";
+export * from "./dateInput";
+export * from "./dateTimeInput";
+export * from "./dragDrop";
+export * from "./baseSection";
+export * from "./button";
+export * from "./collapsiblePanel";
+export * from "./editPage";
+export * from "./expander";
+export * from "./field";
+export * from "./form";
+export * from "./grid";
+export * from "./inputFieldFrame";
+export * from "./jsonEditor";
+export * from "./label";
+export * from "./lookupInput";
+export * from "./modalPages";
+export * from "./navigationTrail";
+export * from "./numberInput";
+export * from "./packageSiteShell";
+export * from "./randomGifLoader";
+export * from "./resourceSvgIcon";
+export * from "./siteLayout";
+export * from "./timeInput";
+export { entityReactUiSchemas, entityUiSchemas } from "./schemas";
 
-export const entityUiSchemas = [
-  ...entityUiTemplateSchemas,
-  ...entityUiFieldSchemas,
-  ...entityUiGridSchemas,
-  ...entityUiComponentSchemas
-] as const;
-
-export const entityReactUiSchemas = entityUiSchemas;
-
-export const titanicEntityUiPackage = definePackage({
-  name: "Titanic.EntityUi",
+export const titanicUIPackage = definePackage({
+  name: "Titanic.UI",
   version: "0.1.0",
   dependsOn: [
     titanicEntityCorePackage.name,
     titanicEntityApiPackage.name,
     titanicEntityResourcesPackage.name,
+    titanicEntityIconsPackage.name,
     titanicEntityReactUiPackage.name
   ],
   schemas: entityUiSchemas
 });
 
-export default titanicEntityUiPackage;
+export default titanicUIPackage;

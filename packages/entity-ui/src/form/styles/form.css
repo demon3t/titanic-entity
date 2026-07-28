@@ -1,0 +1,27 @@
+.titanic-form {
+  border: 1px solid var(--titanic-ui-border, #cbd5e1);
+  border-radius: 18px;
+  padding: 20px;
+  color: var(--titanic-ui-text, #111827);
+  background: var(--titanic-ui-surface, #ffffff);
+  box-shadow: var(--titanic-ui-shadow, 0 8px 24px rgba(15, 23, 42, 0.07));
+}
+
+.titanic-form__title {
+  margin: 0 0 18px;
+  color: var(--titanic-ui-text, #111827);
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.titanic-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+@media (max-width: 720px) {
+  .titanic-form {
+    padding: 14px;
+  }
+}

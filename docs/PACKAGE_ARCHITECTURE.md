@@ -20,7 +20,7 @@
 export const packageDescriptor = definePackage({
   name: "Titanic.Main",
   version: "0.1.0",
-  dependsOn: ["Titanic.EntityUi"],
+  dependsOn: ["Titanic.UI"],
   schemas: []
 });
 ```
@@ -100,6 +100,36 @@ Titanic.Icons.overrideDefault(appUnknownIcon);
 
 Основной сценарий темизации иконок - CSS-класс темы и `currentColor`. Если конкретной иконке нужен другой vector resource для темы, она может объявить `themes`, а потребитель может получить вариант через `Titanic.Icons.get("path.to.icon", { theme })` или `ResourceSvgIcon` с prop `theme`. `ResourceSvgIcon` принимает как ресурс, так и строковый путь; для `undefined` или отсутствующего пути будет отрисована default-иконка.
 
+## Границы `entity-icons`
+
+`@titanic-entity/entity-icons` содержит расширяемые коллекции иконок. Пакет может переиспользовать descriptors из `entity-resources`, но не владеет системными SVG-файлами: базовые UI icon resources остаются в `entity-resources`, а новые прикладные наборы публикуются как отдельные icon packages.
+
+Стабильные entrypoints:
+
+| entrypoint | Назначение |
+| --- | --- |
+| `@titanic-entity/entity-icons` | Root-фасад, descriptor `titanicEntityIconsPackage`, коллекции и схемы |
+| `@titanic-entity/entity-icons/icons` | Плоский typed icon map `entityIcons` и direct icon exports |
+| `@titanic-entity/entity-icons/assets` | Общий facade assets |
+| `@titanic-entity/entity-icons/assets/icons` | Icon collection assets |
+| `@titanic-entity/entity-icons/schemas` | Package schemas коллекции иконок |
+| `@titanic-entity/entity-icons/model` | Имена package и icon module |
+
+Коллекция описывается через `defineIconResources`, поэтому она совместима с глобальным registry:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-base";
+import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
+
+Titanic.registerPackage(titanicEntityIconsPackage);
+
+const shortPath = Titanic.Icons.get("calendar");
+const packagePath = Titanic.Icons.get("Titanic.EntityIcons.calendar");
+const modulePath = Titanic.Icons.get("Titanic.EntityIcons.Icons.calendar");
+```
+
+Для новых прикладных или продуктовых наборов используйте такую же форму: typed flat icon map, schema через `defineIconResources`, package descriptor через `definePackage` или `defineIconPackage`, отдельные стабильные entrypoints для runtime imports.
+
 ## Границы `entity-react`
 
 `@titanic-entity/entity-react` отвечает только за React-слой поверх `entity-base`, `entity-core`, `entity-api` и `entity-resources`.
@@ -119,7 +149,7 @@ Titanic.Icons.overrideDefault(appUnknownIcon);
 | `@titanic-entity/entity-react/system` | Системные helper-модели для React UI |
 | `@titanic-entity/entity-react/schemas` и `/model` | Package schemas и registry names |
 
-Внутренними считаются прямые импорты в файлы реализации, например `components/grid/EntityDataGrid`, `components/fields/EntityField`, `grids/column-settings/model/*` и `templates/entity-edit/models/*`. Их можно менять при внутреннем рефакторинге без отдельной гарантии совместимости. Для публичных методов и hooks TSDoc-комментарии пишутся на английском.
+Внутренними считаются прямые импорты в файлы реализации, например `grids/EntityDataGrid`, `fields/EntityField`, `grids/column-settings/model/*` и `templates/entity-edit/models/*`. Их можно менять при внутреннем рефакторинге без отдельной гарантии совместимости. Для публичных методов и hooks TSDoc-комментарии пишутся на английском.
 
 Headless-слой содержит логику состояния, которую можно переиспользовать без готового visual component:
 
@@ -175,33 +205,81 @@ defineSectionSchema({
 entityName: "app_user"
 ```
 
+## Entity API и EntityQuery
+
+`@titanic-entity/entity-core` содержит EntityQuery-модели, query enum-ы и fluent builder `entityQuery(...)` для сборки запросов без ручного JSON.
+
+Публичные query-модели доступны под едиными именами: `EntityQuery`, `EntityQueryColumn`, `EntityQueryFilter`, `EntityQueryFilterCollection`, `EntityQueryOrder`.
+
+`@titanic-entity/entity-core` расширяет статический `Titanic` factory-методами для фильтров: `Titanic.createIsEqualFilter(...)`, `Titanic.createIsNullFilter(...)`, `Titanic.createAndFilter(...)`, `Titanic.createFilterCollection(...)` и другими методами по `ConditionOperator`.
+
+Query builder поддерживает постепенное добавление колонок, сортировки, фильтры, группы фильтров и агрегаты:
+
+```ts
+const query = entityQuery("invoice")
+  .column("CustomerId")
+  .sum("Amount", "totalAmount")
+  .count("Id", "invoiceCount")
+  .groupBy("CustomerId");
+```
+
 ## Базовый UI-пакет
 
-`packages/entity-ui/src/index.ts` экспортирует `titanicEntityUiPackage`. Он регистрирует набор UI-элементов библиотеки и зависит от пакетов `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` и `Titanic.EntityReact`.
+`packages/entity-ui/src/index.ts` экспортирует `titanicUIPackage`. Он регистрирует набор UI-элементов библиотеки и зависит от пакетов `Titanic.Entity`, `Titanic.EntityApi`, `Titanic.EntityResources` и `Titanic.EntityReact`.
 
-Файлы внутри `packages/entity-ui/src` организованы по типам элементов: `components`, `fields`, `grids`, `templates`. Runtime может жить в соседнем пакете, например в `packages/entity-react/src/grids`, а `packages/entity-ui/src/grids` регистрирует его в пакетных schema-дескрипторах.
+Файлы UI-объектов внутри `packages/entity-ui/src` лежат сразу на верхнем уровне: `form`, `field`, `dataGrid`, `editPage` и так далее. Runtime может жить в соседнем пакете, например в `packages/entity-react/src/grids`, а `packages/entity-ui/src/dataGrid` регистрирует его в пакетных schema-дескрипторах.
+
+Каждый UI-объект лежит в отдельной папке:
+
+```text
+dataGrid/
+  icons/
+    index.ts
+  resources/
+    index.ts
+  index.ts
+  DataGrid.ts
+```
+
+Вложенные UI-объекты, например row context menu для `dataGrid`, выносятся в собственную папку с такой же структурой. Групповые файлы вроде `components.ts`, `fields.ts`, `grids.ts`, `templates.ts` и `schemas.ts` остаются агрегаторами и импортируют схемы из папок конкретных UI-объектов.
+
+Стабильные entrypoints для schema-пакета:
+
+| entrypoint | Назначение |
+| --- | --- |
+| `@titanic-entity/entity-ui` | Root-фасад, descriptor `titanicUIPackage` и совместимые re-export'ы |
+| `@titanic-entity/entity-ui/components` | Агрегированный набор component schemas |
+| `@titanic-entity/entity-ui/fields` | Агрегированный набор field schemas |
+| `@titanic-entity/entity-ui/grids` | Агрегированный набор grid schemas, настройки и публичные grid-типы |
+| `@titanic-entity/entity-ui/templates` | Агрегированный набор template schemas |
+| `@titanic-entity/entity-ui/<uiObject>` | Схемы конкретного UI-объекта, например `form`, `dataGrid`, `editPage` |
+| `@titanic-entity/entity-ui/<uiObject>/icons` | Иконки конкретного UI-объекта |
+| `@titanic-entity/entity-ui/<uiObject>/resources` | Resources конкретного UI-объекта |
+| `@titanic-entity/entity-ui/schemas` | Агрегированный набор схем `entityUiSchemas` |
+| `@titanic-entity/entity-ui/styles.css` | Совместимый style entrypoint, который пробрасывает базовые стили из `entity-react` |
+
+`entity-ui` не владеет runtime CSS для компонентов. Базовые стили живут в `packages/entity-react/src/styles`, а `entity-ui/styles.css` остается тонким публичным входом для совместимого подключения.
 
 ### Template
 
-- `EntityEditPage`
+- `editPage`
 
 ### Field
 
-- `EntityField`
-- `NumberInput`
-- `SelectEntity`
+- `dateInput`
+- `field`
+- `jsonEditor`
+- `lookupInput`
+- `numberInput`
 
 ### Grid
 
-- `EntityDataGrid`
-- `EntityGrid`
-- `EntityOrmList`
-- `EntityRegistry`
-- `EntityTable`
+- `dataGrid`
+- `grid`
 
 ### Enum
 
-Enum регистрируются в профильных пакетах: `EntityFieldKind` в `Titanic.Entity`, API enum в `Titanic.EntityApi`.
+Enum регистрируются в профильных пакетах: `EntityColumnKind` в `Titanic.Entity`, API enum в `Titanic.EntityApi`.
 
 ### Component
 
@@ -213,7 +291,7 @@ Enum регистрируются в профильных пакетах: `Entit
 const Field = useUiField("EntityField", EntityField);
 const Grid = useUiGrid("EntityDataGrid", EntityDataGrid);
 const Template = useUiTemplate("EntityEditPage", EntityEditPage);
-const fieldKinds = useUiEnum("EntityFieldKind", EntityFieldKind);
+const columnKinds = useUiEnum("EntityColumnKind", EntityColumnKind);
 ```
 
 Если компонент обязателен и fallback не нужен, можно использовать registry напрямую:
@@ -234,7 +312,7 @@ import type { EntityFieldProps } from "@titanic-entity/entity-react/fields";
 export const strictFieldSchema = defineFieldSchema<EntityFieldProps>({
   kind: "field",
   name: "EntityField",
-  replaces: "Titanic.EntityUi.EntityField",
+  replaces: "Titanic.UI.EntityField",
   extension: ({ baseComponent: BaseField }) => function StrictField(props) {
     return (
       <div className="strict-field">
@@ -252,18 +330,18 @@ export const strictFieldSchema = defineFieldSchema<EntityFieldProps>({
 Enum можно заменить или дополнить через `extension`.
 
 ```ts
-const customFieldKindSchema = defineEnumSchema({
+const customColumnKindSchema = defineEnumSchema({
   kind: "enum",
-  name: "EntityFieldKind",
-  replaces: "Titanic.Entity.EntityFieldKind",
+  name: "EntityColumnKind",
+  replaces: "Titanic.Entity.EntityColumnKind",
   extension: ({ baseValues }) => ({
     ...(baseValues ?? {}),
-    File: "file"
+    File: 10
   })
 });
 ```
 
-В registry enum сохраняется под коротким именем и полным именем пакета. Например, `EntityFieldKind` и `Titanic.Entity.EntityFieldKind`.
+В registry enum сохраняется под коротким именем и полным именем пакета. Например, `EntityColumnKind` и `Titanic.Entity.EntityColumnKind`.
 
 ## Descriptor JSON
 
@@ -273,7 +351,7 @@ const customFieldKindSchema = defineEnumSchema({
 {
   "name": "Titanic.Main",
   "version": "0.1.0",
-  "dependsOn": ["Titanic.EntityUi"],
+  "dependsOn": ["Titanic.UI"],
   "schemas": [
     {
       "kind": "page",
@@ -328,6 +406,8 @@ Resources/
 - `ResourceSvgIconResource`
 - `ResourceSvgIconMap`
 - `GifCollectionResource`
+
+Расширяемые и прикладные коллекции иконок вынесены в отдельные ресурсные пакеты, чтобы не перегружать базовый `@titanic-entity/entity-resources` и подключать коллекции выборочно. Общая UI-коллекция живет в `@titanic-entity/entity-icons`: пакет зависит от `@titanic-entity/entity-base` и `@titanic-entity/entity-resources`, экспортирует typed icon maps через стабильные entrypoints и регистрирует `defineIconResources` descriptor обычной регистрацией пакетов. После регистрации lookup работает через `Titanic.Icons.get(...)` и совместимый alias `Titanic.icons.get(...)` по коротким путям вроде `dataGrid.columns`, а также по package-qualified путям вроде `Titanic.EntityIcons.dataGrid.columns` и `Titanic.EntityIcons.Icons.dataGrid.columns`. Базовый `entity-resources` остается местом для системных UI-иконок, fallback-ресурсов, флагов культур и GIF/media primitives.
 
 ## EntityDataGrid как общий грид
 

@@ -1,3 +1,8 @@
 export const entityCoreEnumNames = {
-  EntityFieldKind: "EntityFieldKind"
+  ConditionOperator: "ConditionOperator",
+  EntityColumnKind: "EntityColumnKind",
+  EntityFieldKind: "EntityFieldKind",
+  EntityAggregationType: "EntityAggregationType",
+  EntityLogicalOperation: "EntityLogicalOperation",
+  EntityOrderDirection: "EntityOrderDirection"
 } as const;

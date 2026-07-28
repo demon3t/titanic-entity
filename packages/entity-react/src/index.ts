@@ -1,32 +1,78 @@
 import { definePackage } from "@titanic-entity/entity-base";
 import {
-  entityReactEntitySchemas,
-  entityReactEnumSchemas,
-  titanicEntityCorePackage
+  createEntityRecordQuery,
+  EntityOrderDirection,
+  entityQuery,
+  titanicEntityCorePackage,
+  toEntityQueryJson,
+  toEntityDisplayValues,
+  toEntityValues
 } from "@titanic-entity/entity-core";
-import { titanicEntityApiPackage } from "@titanic-entity/entity-api";
+import {
+  getEntityValue,
+  titanicEntityApiPackage
+} from "@titanic-entity/entity-api";
 import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
-import { entityReactSchemas } from "./schemas";
+import { titanicEntityIconsPackage } from "@titanic-entity/entity-icons";
+import { useEntityEditPageController } from "./headless/entityEditPageState";
+import { useOptionalEntityApiClient } from "./react/EntityApiProvider";
+import { entityReactEntitySchemas, entityReactEnumSchemas, entityReactSchemas } from "./schemas";
+import { Titanic } from "./templates/entityTemplateDsl";
 
 export * from "@titanic-entity/entity-base";
 export * from "@titanic-entity/entity-api";
 export * from "@titanic-entity/entity-core";
 export * from "@titanic-entity/entity-resources";
+export * from "@titanic-entity/entity-icons";
+export type { EntityApiColumnValueResponse, EntityApiEntity } from "@titanic-entity/entity-api";
+export { Titanic };
 export {
   entityReactEntitySchemas,
   entityReactEnumSchemas
 };
 
+Object.assign(Titanic, {
+  EntityCore: {
+    ...((Titanic as any).EntityCore ?? {}),
+    createEntityRecordQuery,
+    toEntityDisplayValues,
+    toEntityValues
+  },
+  EntityApi: {
+    ...((Titanic as any).EntityApi ?? {}),
+    EntityOrderDirection,
+    entityQuery,
+    getEntityValue,
+    toEntityQueryJson
+  },
+  EntityReact: {
+    ...((Titanic as any).EntityReact ?? {}),
+    useEntityEditPageController,
+    useOptionalEntityApiClient
+  }
+});
+
+// React API
+export * from "./react/EntityApiProvider";
+export * from "./react/hooks";
+export * from "./react/models/AsyncState";
+export * from "./react/models/EntityApiProviderProps";
+export * from "./react/models/UseEntityQueryOptions";
+
+// Headless
 export * from "./headless";
-export * from "./components";
-export * from "./fields";
-export * from "./grids";
-export * from "./layout";
+
+// Templates
 export * from "./templates";
-export * from "./resources";
+
+// Schemas
 export * from "./schemas";
+
+// System
 export * from "./system";
-export { entityReactEnumNames } from "./model";
+
+// Package
+export * from "./model";
 
 export const titanicEntityReactUiPackage = definePackage({
   name: "Titanic.EntityReact",
@@ -34,7 +80,8 @@ export const titanicEntityReactUiPackage = definePackage({
   dependsOn: [
     titanicEntityCorePackage.name,
     titanicEntityApiPackage.name,
-    titanicEntityResourcesPackage.name
+    titanicEntityResourcesPackage.name,
+    titanicEntityIconsPackage.name
   ],
   schemas: entityReactSchemas
 });

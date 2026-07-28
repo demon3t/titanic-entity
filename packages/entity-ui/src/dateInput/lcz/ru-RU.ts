@@ -1,0 +1,13 @@
+import { Titanic } from "@titanic-entity/entity-resources";
+
+Titanic.Localization.define("Titanic.UI.DateInput", "ru-RU", {
+  clear: "\u041e\u0447\u0438\u0441\u0442\u0438\u0442\u044c",
+  days: "\u0414\u043d\u0438",
+  month: "\u041c\u0435\u0441\u044f\u0446",
+  nextMonth: "\u0421\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0439 \u043c\u0435\u0441\u044f\u0446",
+  placeholder: "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0434\u0430\u0442\u0443",
+  previousMonth: "\u041f\u0440\u0435\u0434\u044b\u0434\u0443\u0449\u0438\u0439 \u043c\u0435\u0441\u044f\u0446",
+  selectedDate: "\u0412\u044b\u0431\u0440\u0430\u043d\u043d\u0430\u044f \u0434\u0430\u0442\u0430",
+  today: "\u0421\u0435\u0433\u043e\u0434\u043d\u044f",
+  year: "\u0413\u043e\u0434"
+}, { defaultLocale: "en-US" });

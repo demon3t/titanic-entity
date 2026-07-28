@@ -1,6 +1,6 @@
 {
   "name": "@titanic-entity/entity-react",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "React TypeScript client and UI primitives for Titanic.Entity HTTP API.",
   "type": "module",
   "license": "MIT",
@@ -24,29 +24,9 @@
       "types": "./dist/headless/index.d.ts",
       "import": "./dist/headless/index.js"
     },
-    "./components": {
-      "types": "./dist/components/index.d.ts",
-      "import": "./dist/components/index.js"
-    },
-    "./fields": {
-      "types": "./dist/fields/index.d.ts",
-      "import": "./dist/fields/index.js"
-    },
-    "./grids": {
-      "types": "./dist/grids/index.d.ts",
-      "import": "./dist/grids/index.js"
-    },
-    "./layout": {
-      "types": "./dist/layout/index.d.ts",
-      "import": "./dist/layout/index.js"
-    },
     "./templates": {
       "types": "./dist/templates/index.d.ts",
       "import": "./dist/templates/index.js"
-    },
-    "./resources": {
-      "types": "./dist/resources/index.d.ts",
-      "import": "./dist/resources/index.js"
     },
     "./system": {
       "types": "./dist/system/index.d.ts",
@@ -59,15 +39,10 @@
     "./model": {
       "types": "./dist/model/index.d.ts",
       "import": "./dist/model/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js"
-    },
-    "./styles.css": "./dist/styles.css"
+    }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node ../../scripts/copy-css.mjs ./src/styles ./dist/styles && node ../../scripts/copy-css.mjs ./src/styles.css ./dist/styles.css",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepack": "npm run build"
   },
@@ -75,6 +50,7 @@
     "@titanic-entity/entity-api": "file:../entity-api",
     "@titanic-entity/entity-base": "file:../entity-base",
     "@titanic-entity/entity-core": "file:../entity-core",
+    "@titanic-entity/entity-icons": "file:../entity-icons",
     "@titanic-entity/entity-resources": "file:../entity-resources"
   },
   "peerDependencies": {

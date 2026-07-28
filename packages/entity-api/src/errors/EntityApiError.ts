@@ -1,15 +1,17 @@
-/**
- * Ошибка HTTP-вызова Entity API.
- */
+/** Error thrown when an Entity API HTTP request fails. */
 export class EntityApiError extends Error {
-  /** HTTP status code ответа. */
+  /** HTTP status code returned by the backend. */
   readonly status: number;
 
-  /** Сырая payload-модель ошибки backend. */
+  /** Raw error payload returned by the backend. */
   readonly payload: unknown;
 
   /**
-   * Создать ошибку Entity API.
+   * Creates a new Entity API error instance.
+   *
+   * @param message Human-readable error message.
+   * @param status HTTP status code.
+   * @param payload Raw backend payload.
    */
   constructor(message: string, status: number, payload: unknown) {
     super(message);

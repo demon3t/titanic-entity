@@ -1,6 +1,4 @@
-import type { EntityApiColumnValueResponse } from "./EntityApiColumnValueResponse";
+import type { ApiEntity } from "./ApiEntity";
 
-/**
- * Сущность, полученная из Entity API: alias/column name -> значение колонки.
- */
-export type EntityApiEntity = Record<string, EntityApiColumnValueResponse>;
+/** Legacy alias for {@link ApiEntity}. */
+export type EntityApiEntity = ApiEntity;

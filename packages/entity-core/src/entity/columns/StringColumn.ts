@@ -1,14 +1,14 @@
-import { EntityColumn } from "./EntityColumn";
+import { EntityColumn, type EntityColumnOptions } from "./EntityColumn";
 
 /**
- * Runtime-колонка строкового значения.
+ * Активная колонка строкового значения.
  */
 export class StringColumn extends EntityColumn<string> {
   /**
    * Создать строковую колонку.
    */
-  constructor(name: string, value = "") {
-    super(name, value);
+  constructor(name: string, value = "", options: EntityColumnOptions<string> = {}) {
+    super(name, value, options);
   }
 
   /** @inheritdoc */

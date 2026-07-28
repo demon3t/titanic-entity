@@ -74,8 +74,8 @@ body:
       label: Acceptance criteria
       description: Observable conditions that make the task complete.
       value: |
-        - [ ] 
-        - [ ] 
+        - [ ]
+        - [ ]
         - [ ]
     validations:
       required: true

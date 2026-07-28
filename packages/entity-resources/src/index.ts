@@ -5,12 +5,14 @@ import { entityResourceSchemas } from "./schemas";
 export * from "./assets";
 export * from "./icons";
 export * from "./media";
+export * from "./localization";
 
 // Schemas
 export * from "./schemas";
 
 // Package
 export * from "./model";
+export * from "./resource-context";
 
 export const titanicEntityResourcesPackage = definePackage({
   name: "Titanic.EntityResources",

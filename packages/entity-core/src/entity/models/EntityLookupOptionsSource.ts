@@ -1,4 +1,8 @@
-import type { ESQFilterCollectionJsonModel, ESQFilterJsonModel, ESQOrderJsonModel } from "@titanic-entity/entity-api";
+import type { EntityQueryFilter } from "./EntityQueryFilter";
+import type { EntityQueryFilterCollection } from "./EntityQueryFilterCollection";
+import type { EntityQueryOrder } from "./EntityQueryOrder";
+
+export type EntityLookupInputMode = "enum" | "lookup";
 
 /**
  * Источник Entity ORM API для lookup-опций. Backend локализует возвращаемые
@@ -24,13 +28,21 @@ export interface EntityLookupOptionsSource {
   displayAlias?: string;
 
   /** Необязательные фильтры справочника. */
-  filters?: ESQFilterCollectionJsonModel | ESQFilterJsonModel[];
+  filters?: EntityQueryFilterCollection | EntityQueryFilter[];
 
   /** Необязательная сортировка справочника. По умолчанию displayColumn ASC. */
-  orders?: ESQOrderJsonModel[];
+  orders?: EntityQueryOrder[];
 
   /** Максимальное количество запрашиваемых опций. */
   rowCount?: number;
+
+  mode?: EntityLookupInputMode;
+
+  /** Задержка поиска после ввода текста, мс. По умолчанию 1500. */
+  searchDelayMs?: number;
+
+  /** Минимальное количество символов для поиска. По умолчанию 3. */
+  minSearchLength?: number;
 
   /** Отключить загрузку через API без удаления метаданных источника. */
   enabled?: boolean;

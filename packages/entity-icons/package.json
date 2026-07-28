@@ -1,0 +1,56 @@
+{
+  "name": "@titanic-entity/entity-icons",
+  "version": "0.1.0-beta.1",
+  "description": "Reusable icon collections for Titanic.Entity UI packages.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demon3t/titanic-entity",
+    "directory": "packages/entity-icons"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./assets": {
+      "types": "./dist/assets/index.d.ts",
+      "import": "./dist/assets/index.js"
+    },
+    "./assets/icons": {
+      "types": "./dist/assets/icons.d.ts",
+      "import": "./dist/assets/icons.js"
+    },
+    "./icons": {
+      "types": "./dist/icons.d.ts",
+      "import": "./dist/icons.js"
+    },
+    "./model": {
+      "types": "./dist/model/index.d.ts",
+      "import": "./dist/model/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@titanic-entity/entity-base": "file:../entity-base",
+    "@titanic-entity/entity-resources": "file:../entity-resources"
+  }
+}

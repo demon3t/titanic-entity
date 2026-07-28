@@ -1,43 +1,34 @@
-export interface EntityGridColumnSetting {
-  id?: string;
-  key: string;
-  path?: string;
-  visible: boolean;
-  span?: number;
-  width?: number;
-  order?: number;
-  label?: string;
-}
+import type {
+  GridColumnSetting,
+  GridColumnSettingsDto,
+  GridColumnSettingsMode,
+  GridColumnSettingsSaveRequest,
+  GridSortDirection,
+  GridSortSetting,
+  GridModeColumnSettings,
+  GridModeSettingsMap
+} from "./GridColumnSettings";
 
-export type EntityGridColumnSettingsMode = "list" | "tile";
+/** Legacy alias for {@link GridColumnSettingsMode}. */
+export type EntityGridColumnSettingsMode = GridColumnSettingsMode;
 
-export interface EntityGridModeColumnSettings {
-  columns: EntityGridColumnSetting[];
-}
+/** Legacy alias for {@link GridColumnSetting}. */
+export type EntityGridColumnSetting = GridColumnSetting;
 
-export type EntityGridModeSettingsMap = Partial<Record<EntityGridColumnSettingsMode, EntityGridModeColumnSettings>>;
+/** Legacy alias for {@link GridModeColumnSettings}. */
+export type EntityGridModeColumnSettings = GridModeColumnSettings;
 
-// DTO пользовательской настройки колонок грида, которая хранится в системной таблице Entity ORM.
-export interface EntityGridColumnSettingsDto {
-  id: string;
-  userId: string;
-  gridId: string;
-  name: string;
-  columns: EntityGridColumnSetting[];
-  displayMode?: EntityGridColumnSettingsMode;
-  columnSettingsMode?: EntityGridColumnSettingsMode;
-  modeSettings?: EntityGridModeSettingsMap;
-  isDefault: boolean;
-  updatedAt: string;
-}
+/** Legacy alias for {@link GridModeSettingsMap}. */
+export type EntityGridModeSettingsMap = GridModeSettingsMap;
 
-export interface EntityGridColumnSettingsSaveRequest {
-  userId: string;
-  gridId: string;
-  name?: string;
-  columns: readonly EntityGridColumnSetting[];
-  displayMode?: EntityGridColumnSettingsMode;
-  columnSettingsMode?: EntityGridColumnSettingsMode;
-  modeSettings?: EntityGridModeSettingsMap;
-  isDefault?: boolean;
-}
+/** Legacy alias for {@link GridSortDirection}. */
+export type EntityGridSortDirection = GridSortDirection;
+
+/** Legacy alias for {@link GridSortSetting}. */
+export type EntityGridSortSetting = GridSortSetting;
+
+/** Legacy alias for {@link GridColumnSettingsDto}. */
+export type EntityGridColumnSettingsDto = GridColumnSettingsDto;
+
+/** Legacy alias for {@link GridColumnSettingsSaveRequest}. */
+export type EntityGridColumnSettingsSaveRequest = GridColumnSettingsSaveRequest;

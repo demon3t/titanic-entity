@@ -1,6 +1,7 @@
-import type { EntityFieldKind } from "../enums/EntityFieldKind";
+import type { EntityColumn } from "../columns/EntityColumn";
+import type { EntityColumnKind, EntityColumnKindInput } from "../enums/EntityColumnKind";
 import type { EntityJsonEditorOptions } from "./EntityJsonEditorOptions";
-import type { EntityLookupOptionsSource } from "./EntityLookupOptionsSource";
+import type { EntityLookupInputMode, EntityLookupOptionsSource } from "./EntityLookupOptionsSource";
 import type { LookupOption } from "./LookupOption";
 
 /**
@@ -17,7 +18,7 @@ export interface EntityColumnSchema<TValue = unknown> {
   label?: string;
 
   /** Тип UI-компонента поля. */
-  kind?: EntityFieldKind;
+  kind?: EntityColumnKindInput;
 
   /** Признак обязательного поля. */
   required?: boolean;
@@ -46,8 +47,18 @@ export interface EntityColumnSchema<TValue = unknown> {
   /** Источник Entity ORM API для lookup/select-опций. */
   lookup?: EntityLookupOptionsSource;
 
+  lookupMode?: EntityLookupInputMode;
+
   jsonEditor?: EntityJsonEditorOptions;
 
   /** Значение по умолчанию для новой сущности. */
   defaultValue?: TValue;
 }
+
+export type ResolvedEntityColumnSchema<TValue = unknown> = Omit<EntityColumnSchema<TValue>, "kind"> & {
+  kind?: EntityColumnKind;
+};
+
+export type EntityColumnDefinition<TValue = unknown> =
+  | EntityColumnSchema<TValue>
+  | EntityColumn<TValue>;

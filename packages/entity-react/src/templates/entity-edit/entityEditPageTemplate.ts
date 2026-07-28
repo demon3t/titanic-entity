@@ -1,41 +1,65 @@
 // Шаблон страницы редактирования сущности для пакетного переиспользования.
-import { getColumnKey, type EntityColumnSchema, type LookupOption } from "@titanic-entity/entity-core";
+import {
+  getColumnKey,
+  normalizeEntityColumn,
+  type EntityColumnDefinition,
+  type EntityColumnSchema,
+  type LookupOption
+} from "@titanic-entity/entity-core";
 import type {
   EntityEditPageAction,
   EntityEditPageAttribute,
   EntityEditPageAttributeLocalization,
   EntityEditPageAttributes,
   EntityEditPageDiffItem,
+  EntityEditPageDiffOverride,
   EntityEditPageEntityLocalization,
   EntityEditPageFieldDiffItem,
   EntityEditPageLocalization,
+  EntityEditPageMethod,
+  EntityEditPageMethodChains,
   EntityEditPageMethods,
+  EntityEditPageMixin,
+  EntityEditPageRowDiffItem,
+  EntityEditPageSectionDiffItem,
   EntityEditPageTemplate,
   NormalizedEntityEditPageTemplate
 } from "./models/EntityEditPageTemplate";
 
+export const basePageTemplate: EntityEditPageTemplate = {
+  attributes: {},
+  methods: {},
+  diff: []
+};
+
 export function createEntityEditPageTemplate(template: EntityEditPageTemplate): NormalizedEntityEditPageTemplate {
   const resolvedTemplate = resolveEntityEditPageTemplate(template);
+  const schema = mergeSchema(resolvedTemplate.entity?.schema, resolvedTemplate.schema);
   const localization = resolvedTemplate.localization;
   const attributes = localizeAttributes(mergeAttributes(resolvedTemplate), localization);
-  const methods = mergeMethods(resolvedTemplate);
-  const inputDiff = localizeDiff(resolvedTemplate.diff ?? [], localization);
+  const methodChains = buildMethodChains(template);
+  const methods = getLastMethods(methodChains);
+  const inputDiff = localizeDiff(buildEntityEditPageDiff(resolvedTemplate), localization);
   const fieldItems = getFieldDiffItems(inputDiff);
-  const tableName = resolvedTemplate.schema?.tableName ?? resolvedTemplate.tableName ?? resolvedTemplate.entitySchemaName;
+  const tableName = getFirstNonEmpty(resolvedTemplate.tableName, resolvedTemplate.entitySchemaName, schema?.tableName);
 
   if (!tableName?.trim()) {
-    throw new Error("Entity edit page template requires tableName, entitySchemaName, or schema.tableName.");
+    throw new Error("Entity edit page template requires entity, tableName, entitySchemaName, or schema.tableName.");
   }
 
   const columns: EntityColumnSchema[] = [];
   const columnsByAttribute: Record<string, EntityColumnSchema> = {};
 
-  for (const column of resolvedTemplate.schema?.columns ?? []) {
-    upsertColumn(columns, columnsByAttribute, getColumnKey(column), localizeColumn(column, getColumnKey(column), localization));
+  for (const rawColumn of schema?.columns ?? []) {
+    const column = normalizeEntityColumn(rawColumn);
+    const columnKey = getColumnKey(column);
+    upsertColumn(columns, columnsByAttribute, columnKey, localizeColumn(column, columnKey, localization));
   }
 
-  for (const column of resolvedTemplate.columns ?? []) {
-    upsertColumn(columns, columnsByAttribute, getColumnKey(column), localizeColumn(column, getColumnKey(column), localization));
+  for (const rawColumn of resolvedTemplate.columns ?? []) {
+    const column = normalizeEntityColumn(rawColumn);
+    const columnKey = getColumnKey(column);
+    upsertColumn(columns, columnsByAttribute, columnKey, localizeColumn(column, columnKey, localization));
   }
 
   for (const [attributeName, attribute] of Object.entries(attributes)) {
@@ -76,15 +100,16 @@ export function createEntityEditPageTemplate(template: EntityEditPageTemplate): 
   return {
     attributes,
     methods,
+    methodChains,
     diff,
-    title: getFirstDefined(localization?.title, resolvedTemplate.title, resolvedTemplate.schema?.title),
+    title: getFirstDefined(localization?.title, resolvedTemplate.title, schema?.title),
     submitLabel: getFirstDefined(localization?.submitLabel, resolvedTemplate.submitLabel),
     localization,
     schema: {
       tableName,
-      primaryColumn: resolvedTemplate.primaryColumn ?? resolvedTemplate.schema?.primaryColumn,
-      displayColumn: resolvedTemplate.displayColumn ?? resolvedTemplate.schema?.displayColumn,
-      title: getFirstDefined(localization?.title, resolvedTemplate.title, resolvedTemplate.schema?.title),
+      primaryColumn: resolvedTemplate.primaryColumn ?? schema?.primaryColumn,
+      displayColumn: resolvedTemplate.displayColumn ?? schema?.displayColumn,
+      title: getFirstDefined(localization?.title, resolvedTemplate.title, schema?.title),
       columns
     },
     columnsByAttribute
@@ -101,6 +126,7 @@ export function extendEntityEditPageTemplate(
     : override;
 
   return {
+    entity: resolvedOverride.entity ?? resolvedBase.entity,
     schema: mergeSchema(resolvedBase.schema, resolvedOverride.schema),
     tableName: resolvedOverride.tableName ?? resolvedBase.tableName,
     entitySchemaName: resolvedOverride.entitySchemaName ?? resolvedBase.entitySchemaName,
@@ -119,7 +145,8 @@ export function extendEntityEditPageTemplate(
       ...resolvedOverride.methods
     },
     mixins: [...(resolvedBase.mixins ?? []), ...(resolvedOverride.mixins ?? [])],
-    diff: resolvedOverride.diff ?? resolvedBase.diff
+    diff: getTemplateDiffSource(resolvedOverride) ?? getTemplateDiffSource(resolvedBase),
+    diffOverrides: [...(resolvedBase.diffOverrides ?? []), ...(resolvedOverride.diffOverrides ?? [])]
   };
 }
 
@@ -228,7 +255,7 @@ function localizeAttribute(
   return {
     ...localizeColumnShape(attribute, attributeLocalization, entityLocalization),
     column: attribute.column
-      ? localizeColumnShape(attribute.column, attributeLocalization, entityLocalization)
+      ? localizeColumnShape(normalizeEntityColumn(attribute.column), attributeLocalization, entityLocalization)
       : attribute.column
   };
 }
@@ -311,15 +338,248 @@ function localizeOptionsByValue(
   }));
 }
 
-function mergeMethods(template: EntityEditPageTemplate): EntityEditPageMethods {
-  const result: EntityEditPageMethods = {};
+function buildMethodChains(template: EntityEditPageTemplate): EntityEditPageMethodChains {
+  const result: EntityEditPageMethodChains = {};
+  appendTemplateMethods(result, template);
+  return result;
+}
 
-  for (const mixin of template.mixins ?? []) {
-    Object.assign(result, mixin.methods);
+function appendTemplateMethods(result: EntityEditPageMethodChains, template: EntityEditPageTemplate): void {
+  if (template.base) {
+    appendTemplateMethods(result, template.base);
   }
 
-  Object.assign(result, template.methods);
+  for (const mixin of template.mixins ?? []) {
+    appendMethods(result, mixin.methods);
+  }
+
+  appendMethods(result, template.methods);
+}
+
+function appendMethods(
+  result: EntityEditPageMethodChains,
+  methods: EntityEditPageMethods | undefined
+): void {
+  for (const [name, method] of Object.entries(methods ?? {})) {
+    result[name] ??= [];
+    result[name].push(method);
+  }
+}
+
+function getLastMethods(methodChains: EntityEditPageMethodChains): EntityEditPageMethods {
+  const result: Record<string, EntityEditPageMethod> = {};
+
+  for (const [name, chain] of Object.entries(methodChains)) {
+    const method = chain[chain.length - 1];
+    if (method) {
+      result[name] = method;
+    }
+  }
+
+  return result as EntityEditPageMethods;
+}
+
+export function buildEntityEditPageDiff(template: EntityEditPageTemplate): EntityEditPageDiffItem[] {
+  const result: EntityEditPageDiffItem[] = [];
+  const overrides: EntityEditPageDiffOverride[] = [];
+
+  for (const mixin of template.mixins ?? []) {
+    result.push(...cloneDiffItems(getMixinDiffSource(mixin) ?? []));
+    overrides.push(...(mixin.diffOverrides ?? []));
+  }
+
+  result.push(...cloneDiffItems(getTemplateDiffSource(template) ?? []));
+  overrides.push(...(template.diffOverrides ?? []));
+
+  return applyEntityEditPageDiffOverrides(result, overrides);
+}
+
+export function applyEntityEditPageDiffOverrides(
+  items: EntityEditPageDiffItem[],
+  overrides: EntityEditPageDiffOverride[] = []
+): EntityEditPageDiffItem[] {
+  let result = cloneDiffItems(items);
+
+  for (const override of overrides) {
+    const targetName = getOverrideTargetName(override);
+
+    if (override.operation === "remove") {
+      result = targetName ? removeDiffItem(result, targetName) : result;
+      continue;
+    }
+
+    if (override.operation === "merge") {
+      const patchItem = override.item ?? override.items?.[0];
+      const patchTargetName = targetName ?? patchItem?.name;
+      result = patchTargetName && patchItem
+        ? mergeDiffItemByName(result, patchTargetName, patchItem)
+        : result;
+      continue;
+    }
+
+    const nextItems = cloneDiffItems(override.items ?? (override.item ? [override.item] : []));
+    if (nextItems.length === 0) {
+      continue;
+    }
+
+    if (!targetName) {
+      result = override.position === "start" ? [...nextItems, ...result] : [...result, ...nextItems];
+      continue;
+    }
+
+    const inserted = insertDiffItems(result, targetName, nextItems, override.position ?? "after");
+    result = inserted.handled ? inserted.items : result;
+  }
+
   return result;
+}
+
+function getTemplateDiffSource(template: EntityEditPageTemplate): EntityEditPageDiffItem[] | undefined {
+  return template.diff;
+}
+
+function getMixinDiffSource(mixin: EntityEditPageMixin): EntityEditPageDiffItem[] | undefined {
+  return mixin.diff;
+}
+
+function getOverrideTargetName(override: EntityEditPageDiffOverride): string | undefined {
+  return override.targetName ?? override.target ?? override.name;
+}
+
+function cloneDiffItems(items: EntityEditPageDiffItem[]): EntityEditPageDiffItem[] {
+  return items.map((item) => cloneDiffItem(item));
+}
+
+function cloneDiffItem(item: EntityEditPageDiffItem): EntityEditPageDiffItem {
+  if (!hasNestedDiffItems(item)) {
+    return { ...item };
+  }
+
+  return {
+    ...item,
+    items: item.items ? cloneDiffItems(item.items) : item.items
+  };
+}
+
+function removeDiffItem(items: EntityEditPageDiffItem[], targetName: string): EntityEditPageDiffItem[] {
+  const result: EntityEditPageDiffItem[] = [];
+
+  for (const item of items) {
+    if (item.name === targetName) {
+      continue;
+    }
+
+    result.push(hasNestedDiffItems(item)
+      ? { ...item, items: removeDiffItem(item.items ?? [], targetName) }
+      : item);
+  }
+
+  return result;
+}
+
+function insertDiffItems(
+  items: EntityEditPageDiffItem[],
+  targetName: string,
+  nextItems: EntityEditPageDiffItem[],
+  position: EntityEditPageDiffOverride["position"]
+): { items: EntityEditPageDiffItem[]; handled: boolean } {
+  const result: EntityEditPageDiffItem[] = [];
+  let handled = false;
+
+  for (const item of items) {
+    if (item.name === targetName) {
+      if (position === "before") {
+        result.push(...nextItems);
+      }
+
+      if ((position === "inside" || position === "start" || position === "end") && hasNestedDiffItems(item)) {
+        const currentItems = item.items ?? [];
+        const childItems = position === "start"
+          ? [...nextItems, ...currentItems]
+          : [...currentItems, ...nextItems];
+        result.push({ ...item, items: childItems });
+        handled = true;
+        continue;
+      }
+
+      result.push(item);
+
+      if (position === "after" || position === undefined) {
+        result.push(...nextItems);
+      }
+
+      handled = true;
+      continue;
+    }
+
+    if (hasNestedDiffItems(item) && !handled) {
+      const inserted = insertDiffItems(item.items ?? [], targetName, nextItems, position);
+      result.push(inserted.handled ? { ...item, items: inserted.items } : item);
+      handled = handled || inserted.handled;
+      continue;
+    }
+
+    result.push(item);
+  }
+
+  return { items: result, handled };
+}
+
+function mergeDiffItemByName(
+  items: EntityEditPageDiffItem[],
+  targetName: string,
+  patchItem: EntityEditPageDiffItem
+): EntityEditPageDiffItem[] {
+  return items.map((item) => {
+    if (item.name === targetName) {
+      return mergeDiffItem(item, patchItem);
+    }
+
+    if (!hasNestedDiffItems(item)) {
+      return item;
+    }
+
+    return {
+      ...item,
+      items: mergeDiffItemByName(item.items ?? [], targetName, patchItem)
+    };
+  });
+}
+
+function mergeDiffItem(baseItem: EntityEditPageDiffItem, patchItem: EntityEditPageDiffItem): EntityEditPageDiffItem {
+  if (!hasNestedDiffItems(baseItem) || !hasNestedDiffItems(patchItem)) {
+    return { ...baseItem, ...patchItem };
+  }
+
+  return {
+    ...baseItem,
+    ...patchItem,
+    items: mergeDiffItemCollections(baseItem.items ?? [], patchItem.items ?? [])
+  };
+}
+
+function mergeDiffItemCollections(
+  baseItems: EntityEditPageDiffItem[],
+  patchItems: EntityEditPageDiffItem[]
+): EntityEditPageDiffItem[] {
+  const result = cloneDiffItems(baseItems);
+
+  for (const patchItem of patchItems) {
+    const itemName = patchItem.name;
+    const index = itemName ? result.findIndex((item) => item.name === itemName) : -1;
+
+    if (index >= 0) {
+      result[index] = mergeDiffItem(result[index], patchItem);
+    } else {
+      result.push(cloneDiffItem(patchItem));
+    }
+  }
+
+  return result;
+}
+
+function hasNestedDiffItems(item: EntityEditPageDiffItem): item is EntityEditPageSectionDiffItem | EntityEditPageRowDiffItem {
+  return item.type === "section" || item.type === "row";
 }
 
 function localizeDiff(
@@ -337,7 +597,9 @@ function localizeDiffItem(
   item: EntityEditPageDiffItem,
   localization: EntityEditPageLocalization
 ): EntityEditPageDiffItem {
-  const itemLocalization = item.name ? localization.diff?.[item.name] : undefined;
+  const itemLocalization = item.name
+    ? localization.diff?.[item.name]
+    : undefined;
 
   switch (item.type) {
     case "section":
@@ -407,10 +669,11 @@ function createColumnFromAttribute(
   existingColumn?: EntityColumnSchema
 ): EntityColumnSchema {
   const attributeColumn = getAttributeColumnShape(attribute);
+  const explicitAttributeColumn = attribute?.column ? normalizeEntityColumn(attribute.column) : undefined;
   const column = {
     ...existingColumn,
     ...attributeColumn,
-    ...attribute?.column,
+    ...explicitAttributeColumn,
     ...override
   };
 
@@ -420,7 +683,7 @@ function createColumnFromAttribute(
     alias: column.alias ?? attributeName,
     defaultValue: getFirstDefined(
       override?.defaultValue,
-      attribute?.column?.defaultValue,
+      explicitAttributeColumn?.defaultValue,
       attribute?.defaultValue,
       attribute?.value,
       existingColumn?.defaultValue
@@ -463,4 +726,8 @@ function upsertColumn(
 
 function getFirstDefined<TValue>(...values: Array<TValue | undefined>): TValue | undefined {
   return values.find((value) => value !== undefined);
+}
+
+function getFirstNonEmpty(...values: Array<string | undefined>): string | undefined {
+  return values.find((value) => value !== undefined && value.trim().length > 0);
 }

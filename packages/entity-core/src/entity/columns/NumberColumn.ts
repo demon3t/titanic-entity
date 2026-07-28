@@ -1,14 +1,15 @@
-import { EntityColumn } from "./EntityColumn";
+import { EntityColumnKind } from "../enums/EntityColumnKind";
+import { EntityColumn, type EntityColumnOptions } from "./EntityColumn";
 
 /**
- * Runtime-колонка числового значения.
+ * Активная колонка числового значения.
  */
 export class NumberColumn extends EntityColumn<number> {
   /**
    * Создать числовую колонку.
    */
-  constructor(name: string, value = 0) {
-    super(name, value);
+  constructor(name: string, value = 0, options: EntityColumnOptions<number> = {}) {
+    super(name, value, { kind: EntityColumnKind.Number, ...options });
   }
 
   /** @inheritdoc */

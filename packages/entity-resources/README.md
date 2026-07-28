@@ -12,7 +12,10 @@ import {
   type ResourceSvgIconResource
 } from "@titanic-entity/entity-resources/icons";
 
-import { titanicEntityResourcesPackage } from "@titanic-entity/entity-resources";
+import {
+  EntityResourceContext,
+  titanicEntityResourcesPackage
+} from "@titanic-entity/entity-resources";
 ```
 
 Stable entrypoints:
@@ -24,7 +27,9 @@ Stable entrypoints:
 - `@titanic-entity/entity-resources/schemas` - resource package schemas.
 - `@titanic-entity/entity-resources/model` - package model constants.
 
-This package intentionally has no localization entrypoint and does not ship localized strings.
+This package does not ship localized strings. It exposes static user-context hooks for resolving the current localization and theme when an application wants resource choices to depend on the current user.
+
+Feature-level icon collections that are shared by UI packages live in `@titanic-entity/entity-icons`. Keep `entity-resources` focused on system icons, fallback assets, flags, media resources, and shared primitive resource types.
 
 ## Icon Folders
 
@@ -140,6 +145,25 @@ const themedIcon = Titanic.Icons.get("themeLight", { theme: "dark" });
 
 React renderers can also pass the optional `theme` prop to `ResourceSvgIcon`.
 
+## User Context
+
+Applications can provide current-user dependent localization and theme hooks through static properties:
+
+```ts
+import { Titanic } from "@titanic-entity/entity-base";
+import { EntityResourceContext } from "@titanic-entity/entity-resources";
+
+EntityResourceContext.configure({
+  getLocalization: () => String(Titanic.CurrentUser?.locale ?? "en-US"),
+  getTheme: () => String(Titanic.CurrentUser?.theme ?? "light")
+});
+
+const localization = await EntityResourceContext.resolveLocalization();
+const theme = await EntityResourceContext.resolveTheme();
+```
+
+The hooks are optional. When localization is not configured, `resolveLocalization()` falls back to `Titanic.Localization.getCurrentLocale()`.
+
 ## Localization Boundary
 
 Localization APIs belong to `@titanic-entity/entity-base`; localized strings are registered by consuming packages or applications.
@@ -157,7 +181,7 @@ Titanic.Localization.registerGroup("app", {
 const saveLabel = Titanic.Localization.t("app.save");
 ```
 
-`entity-resources` only provides shared assets and resource schemas, so it does not include default UI text, culture dictionaries, or localization entrypoints.
+`entity-resources` only provides shared assets, resource schemas, and user-context hooks, so it does not include default UI text or culture dictionaries. The actual localized strings stay in `@titanic-entity/entity-base`.
 
 ## Resource Schemas
 

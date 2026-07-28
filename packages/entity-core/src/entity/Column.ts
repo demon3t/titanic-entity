@@ -5,4 +5,6 @@ export * from "./columns/EntityColumn";
 export * from "./columns/LookupColumn";
 export * from "./columns/NumberColumn";
 export * from "./columns/StringColumn";
+export * from "./enums/EntityColumnKind";
+export * from "./enums/EntityFieldKind";
 export * from "./models/ReferenceValue";

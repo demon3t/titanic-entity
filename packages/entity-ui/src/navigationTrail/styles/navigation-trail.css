@@ -1,0 +1,80 @@
+.titanic-navigation-trail {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0 2px;
+  overflow: hidden;
+  background: transparent;
+  color: var(--titanic-navigation-trail-color, var(--titanic-ui-muted-text, inherit));
+  font-family: inherit;
+}
+
+.titanic-navigation-trail__list {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--titanic-navigation-trail-gap, 7px);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.titanic-navigation-trail__step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--titanic-navigation-trail-step-gap, 6px);
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.titanic-navigation-trail__separator {
+  color: var(--titanic-navigation-trail-separator-color, currentColor);
+  font-size: var(--titanic-navigation-trail-separator-font-size, 0.78rem);
+  font-weight: var(--titanic-navigation-trail-separator-font-weight, 700);
+}
+
+.titanic-navigation-trail__item {
+  min-width: 0;
+  max-width: var(--titanic-navigation-trail-item-max-width, 220px);
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--titanic-navigation-trail-item-color, var(--titanic-ui-accent, currentColor));
+  background: transparent;
+  font: inherit;
+  font-size: var(--titanic-navigation-trail-item-font-size, 0.8rem);
+  font-weight: var(--titanic-navigation-trail-item-font-weight, 600);
+  line-height: var(--titanic-navigation-trail-item-line-height, 1.35);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.titanic-navigation-trail__item_active {
+  color: var(--titanic-navigation-trail-active-color, var(--titanic-ui-text, currentColor));
+  background: transparent;
+  font-weight: var(--titanic-navigation-trail-active-font-weight, 900);
+}
+
+.titanic-navigation-trail__item:focus {
+  outline: none;
+}
+
+.titanic-navigation-trail__item:hover,
+.titanic-navigation-trail__item:focus-visible {
+  border: 0;
+  color: var(--titanic-navigation-trail-item-hover-color, var(--titanic-ui-accent-hover, currentColor));
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.titanic-navigation-trail__item:focus-visible {
+  outline: 2px solid var(--titanic-navigation-trail-focus-ring, var(--titanic-ui-focus-ring, currentColor));
+  outline-offset: 2px;
+}

@@ -1,0 +1,111 @@
+.titanic-base-modal-page,
+.titanic-base-modal-page * {
+  box-sizing: border-box;
+}
+
+.titanic-base-modal-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.titanic-base-modal-page__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--titanic-ui-overlay, rgba(15, 23, 42, 0.52));
+  backdrop-filter: blur(4px);
+}
+
+.titanic-base-modal-page__card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  border: 1px solid var(--titanic-ui-border, #cbd5e1);
+  border-radius: 18px;
+  padding: 20px;
+  background: var(--titanic-ui-surface, #ffffff);
+  color: var(--titanic-ui-text, #111827);
+  box-shadow: var(--titanic-ui-shadow-elevated, 0 24px 70px rgba(15, 23, 42, 0.2));
+}
+
+.titanic-base-modal-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.titanic-base-modal-page__title {
+  min-width: 0;
+  font-size: 1.1rem;
+  line-height: 1.35;
+}
+
+.titanic-base-modal-page__close {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  padding: 0;
+  background: var(--titanic-ui-surface-muted, #f8fafc);
+  color: var(--titanic-ui-muted-text, #64748b);
+  cursor: pointer;
+}
+
+.titanic-base-modal-page__close:hover {
+  background: var(--titanic-ui-hover, #eef2f7);
+  color: var(--titanic-ui-text, #111827);
+}
+
+.titanic-base-modal-page__close-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.titanic-base-modal-page__error,
+.titanic-base-modal-page__warning {
+  margin: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.titanic-base-modal-page__error {
+  color: var(--titanic-ui-danger, #922f2f);
+  background: var(--titanic-ui-danger-surface, #fff3f2);
+}
+
+.titanic-base-modal-page__warning {
+  color: var(--titanic-ui-warning, #92400e);
+  background: var(--titanic-ui-warning-surface, #fff7ed);
+}
+
+.titanic-base-modal-page__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 620px) {
+  .titanic-base-modal-page {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .titanic-base-modal-page__card {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+    padding: 16px;
+  }
+}

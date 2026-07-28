@@ -1,7 +1,7 @@
-import type { EntityColumnSchema } from "./EntityColumnSchema";
+import type { EntityColumnDefinition } from "./EntityColumnSchema";
 
 /**
- * UI-описание Entity-сущности для форм, таблиц и ESQ-запросов.
+ * UI-описание Entity-сущности для форм, таблиц и EntityQuery-запросов.
  */
 export interface EntitySchema {
   /** Имя таблицы Entity ORM. */
@@ -17,5 +17,5 @@ export interface EntitySchema {
   title?: string;
 
   /** Колонки сущности. */
-  columns: EntityColumnSchema[];
+  columns: EntityColumnDefinition[];
 }

@@ -1,25 +1,40 @@
+import { Titanic, type TitanicCurrentUser } from "@titanic-entity/entity-base";
 import { EntityApiOperationType } from "../enums/EntityApiOperationType";
 import { EntityApiError } from "../errors/EntityApiError";
-import type { EntityApiBatchRequest } from "../models/EntityApiBatchRequest";
-import type { EntityApiBatchResponse } from "../models/EntityApiBatchResponse";
-import type { EntityApiClientOptions } from "../models/EntityApiClientOptions";
-import type { EntityApiDeleteResult } from "../models/EntityApiDeleteResult";
-import type { EntityApiEntity } from "../models/EntityApiEntity";
-import type { EntityApiManagerStructureResponse } from "../models/EntityApiManagerStructureResponse";
-import type { EntityApiRequest } from "../models/EntityApiRequest";
-import type { EntitySelectRequest } from "../models/EntitySelectRequest";
-import type { ESQFilterCollectionJsonModel } from "../models/ESQFilterCollectionJsonModel";
-import type { ESQFilterJsonModel } from "../models/ESQFilterJsonModel";
-import type { ESQOrderJsonModel } from "../models/ESQOrderJsonModel";
-import { entityQuery, toEntityQueryJson, type EntityQueryInput } from "../query";
+import type { ApiBatchRequest } from "../models/ApiBatchRequest";
+import type { ApiBatchResponse } from "../models/ApiBatchResponse";
+import type {
+  ApiClientOptions,
+  EntityCurrentUserResult
+} from "../models/ApiClientOptions";
+import type { ApiDeleteResult } from "../models/ApiDeleteResult";
+import type { ApiEntity } from "../models/ApiEntity";
+import type { ApiManagerStructureResponse } from "../models/ApiManagerStructureResponse";
+import type { ApiRequest } from "../models/ApiRequest";
+import type { EntityQueryRequest } from "../models/EntityQueryRequest";
+import {
+  entityQuery,
+  toEntityQueryJson,
+  type EntityQueryInput,
+  type EntityQueryFilter,
+  type EntityQueryFilterCollection,
+  type EntityQueryOrder
+} from "@titanic-entity/entity-core";
 
+/** HTTP client for interacting with the Entity API manager endpoint. */
 export class EntityApiClient {
   protected readonly baseUrl: string;
   protected readonly apiPath: string;
-  protected readonly getHeaders?: EntityApiClientOptions["getHeaders"];
+  protected readonly getHeaders?: ApiClientOptions["getHeaders"];
+  protected readonly getCurrentUserProvider?: ApiClientOptions["getCurrentUser"];
   protected readonly fetchImpl: typeof fetch;
 
-  constructor(options: EntityApiClientOptions) {
+  /**
+   * Creates a new Entity API client.
+   *
+   * @param options Client configuration options.
+   */
+  constructor(options: ApiClientOptions) {
     if (!options.apiPath?.trim()) {
       throw new Error("EntityApiClient requires apiPath.");
     }
@@ -27,18 +42,30 @@ export class EntityApiClient {
     this.baseUrl = options.baseUrl?.replace(/\/$/, "") ?? "";
     this.apiPath = options.apiPath.startsWith("/") ? options.apiPath : `/${options.apiPath}`;
     this.getHeaders = options.getHeaders;
+    this.getCurrentUserProvider = options.getCurrentUser;
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
-  async execute<T = unknown>(request: EntityApiRequest): Promise<T> {
+  /**
+   * Executes a raw manager request payload.
+   *
+   * @param request Request payload sent to the manager endpoint.
+   */
+  async execute<T = unknown>(request: ApiRequest): Promise<T> {
     return this.request<T>("", request);
   }
 
-  async batch(request: EntityApiBatchRequest): Promise<EntityApiBatchResponse> {
-    return this.request<EntityApiBatchResponse>("/batch", request);
+  /**
+   * Executes a batch of manager requests.
+   *
+   * @param request Batch request payload.
+   */
+  async batch(request: ApiBatchRequest): Promise<ApiBatchResponse> {
+    return this.request<ApiBatchResponse>("/batch", request);
   }
 
-  async getStructure(): Promise<EntityApiManagerStructureResponse> {
+  /** Loads entity metadata exposed by the backend manager. */
+  async getStructure(): Promise<ApiManagerStructureResponse> {
     const headers = await this.resolveHeaders();
     const response = await this.fetchImpl(this.createUrl("/structure"), {
       method: "GET",
@@ -54,17 +81,47 @@ export class EntityApiClient {
       throw new EntityApiError(message, response.status, payload);
     }
 
-    return payload as EntityApiManagerStructureResponse;
+    return payload as ApiManagerStructureResponse;
   }
 
-  async select(query: EntityQueryInput): Promise<EntityApiEntity[]> {
-    return this.execute<EntityApiEntity[]>({
+  /**
+   * Resolves current-user information and stores it on Titanic.CurrentUser.
+   */
+  async getCurrentUser<TCurrentUser extends TitanicCurrentUser = TitanicCurrentUser>(): Promise<EntityCurrentUserResult<TCurrentUser>> {
+    if (!this.getCurrentUserProvider) {
+      return Titanic.CurrentUser as EntityCurrentUserResult<TCurrentUser>;
+    }
+
+    const currentUser = await this.getCurrentUserProvider() as EntityCurrentUserResult<TCurrentUser>;
+    return Titanic.setCurrentUser(currentUser);
+  }
+
+  /**
+   * Executes a select query and returns Entity API rows.
+   *
+   * @param query EntityQuery payload or fluent builder.
+   */
+  async select(query: EntityQueryInput): Promise<ApiEntity[]> {
+    return this.execute<ApiEntity[]>({
       operation: EntityApiOperationType.Select,
       query: toEntityQueryJson(query)
     });
   }
 
-  async selectEntityRows({ tableName, columns, filters = [], orders, rowCount, allColumns, query }: EntitySelectRequest): Promise<EntityApiEntity[]> {
+  /**
+   * Builds and executes an entity query request from a high-level model.
+   *
+   * @param request Shorthand entity query request.
+   */
+  async queryEntityRows({
+    tableName,
+    columns,
+    filters = [],
+    orders,
+    rowCount,
+    allColumns,
+    query
+  }: EntityQueryRequest): Promise<ApiEntity[]> {
     return this.select(query ?? entityQuery(tableName)
       .allColumns(allColumns ?? !columns?.length)
       .columns(...(columns ?? []))
@@ -73,27 +130,48 @@ export class EntityApiClient {
       .orders(...(orders ?? [])));
   }
 
+  /**
+   * Selects rows by table name with lightweight filter and order arguments.
+   *
+   * @param tableName Root table name.
+   * @param filters Flat list of filters.
+   * @param orders Sort expressions.
+   * @param rowCount Maximum number of rows to return.
+   * @param columns Explicit list of selected columns.
+   */
   async selectRows(
     tableName: string,
-    filters: ESQFilterJsonModel[] = [],
-    orders?: ESQOrderJsonModel[],
+    filters: EntityQueryFilter[] = [],
+    orders?: EntityQueryOrder[],
     rowCount?: number,
     columns?: string[]
-  ): Promise<EntityApiEntity[]> {
-    return this.selectEntityRows({ tableName, filters, orders, rowCount, columns });
+  ): Promise<ApiEntity[]> {
+    return this.queryEntityRows({ tableName, filters, orders, rowCount, columns });
   }
 
-  async save(tableName: string, values: Record<string, unknown>): Promise<EntityApiEntity> {
-    return this.execute<EntityApiEntity>({
+  /**
+   * Creates or updates an entity row.
+   *
+   * @param tableName Target table name.
+   * @param values Column values to persist.
+   */
+  async save(tableName: string, values: Record<string, unknown>): Promise<ApiEntity> {
+    return this.execute<ApiEntity>({
       operation: EntityApiOperationType.Save,
       tableName,
       values
     });
   }
 
-  async delete(tableName: string, filter: Record<string, unknown> | ESQFilterCollectionJsonModel): Promise<EntityApiDeleteResult> {
-    const isFilterCollection = isESQFilterCollection(filter);
-    return this.execute<EntityApiDeleteResult>({
+  /**
+   * Deletes entities by equality payload or explicit EntityQuery filter collection.
+   *
+   * @param tableName Target table name.
+   * @param filter Equality payload or filter collection.
+   */
+  async delete(tableName: string, filter: Record<string, unknown> | EntityQueryFilterCollection): Promise<ApiDeleteResult> {
+    const isFilterCollection = isEntityQueryFilterCollection(filter);
+    return this.execute<ApiDeleteResult>({
       operation: EntityApiOperationType.Delete,
       tableName,
       values: isFilterCollection ? undefined : filter,
@@ -106,11 +184,26 @@ export class EntityApiClient {
     });
   }
 
-  async deleteById(tableName: string, id: unknown, primaryColumn = "Id"): Promise<EntityApiDeleteResult> {
+  /**
+   * Deletes a single entity by its identifier.
+   *
+   * @param tableName Target table name.
+   * @param id Entity identifier.
+   * @param primaryColumn Primary key column name.
+   */
+  async deleteById(tableName: string, id: unknown, primaryColumn = "Id"): Promise<ApiDeleteResult> {
     return this.delete(tableName, { [primaryColumn]: id });
   }
 
-  async loadById(tableName: string, id: unknown, columns: string[] = ["*"], primaryColumn = "Id"): Promise<EntityApiEntity | null> {
+  /**
+   * Loads a single entity row by its identifier.
+   *
+   * @param tableName Target table name.
+   * @param id Entity identifier.
+   * @param columns Explicit list of selected columns.
+   * @param primaryColumn Primary key column name.
+   */
+  async loadById(tableName: string, id: unknown, columns: string[] = ["*"], primaryColumn = "Id"): Promise<ApiEntity | null> {
     const rows = await this.select(entityQuery(tableName)
       .columns(...columns)
       .where(primaryColumn, id)
@@ -119,6 +212,12 @@ export class EntityApiClient {
     return rows[0] ?? null;
   }
 
+  /**
+   * Executes a POST request against the manager endpoint.
+   *
+   * @param path Relative endpoint path.
+   * @param body Request payload.
+   */
   protected async request<T>(path: string, body: unknown): Promise<T> {
     const headers = await this.resolveHeaders();
     const response = await this.fetchImpl(this.createUrl(path), {
@@ -140,6 +239,11 @@ export class EntityApiClient {
     return payload as T;
   }
 
+  /**
+   * Resolves an absolute URL for an Entity API endpoint path.
+   *
+   * @param path Relative endpoint path.
+   */
   protected createUrl(path: string): string {
     return `${this.baseUrl}${this.apiPath}${path}`;
   }
@@ -157,6 +261,6 @@ export class EntityApiClient {
   }
 }
 
-function isESQFilterCollection(filter: Record<string, unknown> | ESQFilterCollectionJsonModel): filter is ESQFilterCollectionJsonModel {
+function isEntityQueryFilterCollection(filter: Record<string, unknown> | EntityQueryFilterCollection): filter is EntityQueryFilterCollection {
   return "items" in filter || "logicalOperation" in filter || "isEnabled" in filter;
 }

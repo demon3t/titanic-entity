@@ -1,0 +1,89 @@
+.site-shell__sections {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--titanic-site-sections-gap, 18px);
+}
+
+.site-shell__workspace,
+.site-shell__main-window {
+  min-width: 0;
+  min-height: 0;
+}
+
+.site-shell__workspace {
+  overflow: hidden;
+}
+
+.site-shell__main-window {
+  height: 100%;
+  overflow: hidden;
+}
+
+.site-shell__main-window .titanic-base-page.titanic-edit-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.site-shell__main-window .titanic-edit-page > .titanic-edit-page__toolbar {
+  --titanic-action-bar-top: var(--titanic-action-bar-outer-top, 10px);
+
+  flex: 0 0 auto;
+  margin: var(--titanic-action-bar-outer-top, 10px)
+    var(--titanic-action-bar-outer-inline, 10px) 0;
+}
+
+.site-shell__main-window .titanic-edit-page > .titanic-edit-page__top,
+.site-shell__main-window .titanic-edit-page > .titanic-edit-page__bottom {
+  flex: 0 0 auto;
+}
+
+.site-shell__main-window .titanic-edit-page > .titanic-edit-page__grid {
+  flex: 0 0 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+:where(.site-shell, .site-shell *, [class^="titanic-"], [class*=" titanic-"]) {
+  scrollbar-color: var(--titanic-ui-scrollbar-thumb) var(--titanic-ui-scrollbar-track);
+  scrollbar-width: thin;
+}
+
+:where(.site-shell, .site-shell *, [class^="titanic-"], [class*=" titanic-"])::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+:where(.site-shell, .site-shell *, [class^="titanic-"], [class*=" titanic-"])::-webkit-scrollbar-track {
+  background: var(--titanic-ui-scrollbar-track);
+}
+
+:where(.site-shell, .site-shell *, [class^="titanic-"], [class*=" titanic-"])::-webkit-scrollbar-thumb {
+  min-width: 40px;
+  min-height: 40px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-color: var(--titanic-ui-scrollbar-thumb);
+  background-clip: padding-box;
+}
+
+:where(.site-shell, .site-shell *, [class^="titanic-"], [class*=" titanic-"])::-webkit-scrollbar-thumb:hover {
+  background-color: var(--titanic-ui-scrollbar-thumb-hover);
+}
+
+:where(.site-shell, .site-shell *, [class^="titanic-"], [class*=" titanic-"])::-webkit-scrollbar-corner {
+  background: transparent;
+}

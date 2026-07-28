@@ -1,8 +1,1 @@
-export const entityApiEnumNames = {
-  ConditionOperator: "ConditionOperator",
-  EntityAggregationType: "EntityAggregationType",
-  EntityApiBatchExecutionMode: "EntityApiBatchExecutionMode",
-  EntityApiOperationType: "EntityApiOperationType",
-  EntityLogicalOperation: "EntityLogicalOperation",
-  EntityOrderDirection: "EntityOrderDirection"
-} as const;
+export { entityApiEnumNames } from "./EntityApiSchemaNames";
