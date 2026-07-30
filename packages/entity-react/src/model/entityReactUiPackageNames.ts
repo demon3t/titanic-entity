@@ -9,6 +9,7 @@ export const entityReactComponentNames = {
   Button: "Button",
   CollapsiblePanel: "CollapsiblePanel",
   EntityEditPage: "BasePage",
+  EntityQueryFilterBuilder: "EntityQueryFilterBuilder",
   DataGrid: "DataGrid",
   EntityDataGridRowContextMenu: "EntityDataGridRowContextMenu",
   Container: "Container",

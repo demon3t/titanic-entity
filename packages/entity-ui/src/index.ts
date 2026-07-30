@@ -19,6 +19,7 @@ export * from "./baseSection";
 export * from "./button";
 export * from "./collapsiblePanel";
 export * from "./editPage";
+export * from "./entityQueryFilterBuilder";
 export * from "./expander";
 export * from "./field";
 export * from "./form";

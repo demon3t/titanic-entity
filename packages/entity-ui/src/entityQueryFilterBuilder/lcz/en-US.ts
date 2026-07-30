@@ -1,0 +1,42 @@
+import { ConditionOperator } from "@titanic-entity/entity-core";
+import { Titanic } from "@titanic-entity/entity-resources";
+
+Titanic.Localization.define("Titanic.UI.EntityQueryFilterBuilder", "en-US", {
+  addCondition: "Add condition",
+  addGroup: "Add group",
+  and: "AND",
+  booleanFalse: "No",
+  booleanTrue: "Yes",
+  clear: "Clear",
+  disabled: "Disabled",
+  enabled: "Enabled",
+  empty: "No filters configured",
+  field: "Field",
+  group: "Group",
+  noFields: "No filterable fields",
+  not: "NOT",
+  operator: "Operator",
+  or: "OR",
+  remove: "Remove",
+  value: "Value",
+  valueListPlaceholder: "value 1, value 2",
+  valuePlaceholder: "Value",
+  operators: {
+    [ConditionOperator.Equal]: "Equals",
+    [ConditionOperator.NotEqual]: "Not equal",
+    [ConditionOperator.GreaterThan]: "Greater than",
+    [ConditionOperator.GreaterThanOrEqual]: "Greater or equal",
+    [ConditionOperator.LessThan]: "Less than",
+    [ConditionOperator.LessThanOrEqual]: "Less or equal",
+    [ConditionOperator.In]: "In list",
+    [ConditionOperator.NotIn]: "Not in list",
+    [ConditionOperator.Like]: "Like",
+    [ConditionOperator.NotLike]: "Not like",
+    [ConditionOperator.ILike]: "ILike",
+    [ConditionOperator.IsNull]: "Is null",
+    [ConditionOperator.IsNotNull]: "Is not null",
+    [ConditionOperator.Contains]: "Contains",
+    [ConditionOperator.StartsWith]: "Starts with",
+    [ConditionOperator.EndsWith]: "Ends with"
+  }
+}, { defaultLocale: "ru-RU" });

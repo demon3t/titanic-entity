@@ -15,6 +15,7 @@
 @import "../baseSection/styles/base-section.css";
 @import "../modalPages/styles/modal-pages.css";
 @import "../editPage/styles/edit-page.css";
+@import "../entityQueryFilterBuilder/styles/entity-query-filter-builder.css";
 @import "../randomGifLoader/styles/random-gif-loader.css";
 @import "../dataGrid/styles/data-grid.css";
 @import "../dataGridRowContextMenu/styles/data-grid-row-context-menu.css";
