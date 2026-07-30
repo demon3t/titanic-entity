@@ -733,11 +733,17 @@ function createSettingField<TRow>(
   const columnField = getColumnField(column);
   const settingField = getSettingField(setting);
   const alias = normalizePath(settingField?.alias) ?? normalizePath(columnField?.alias) ?? normalizePath(column?.alias);
+  const sortPath =
+    normalizePath(setting?.sortPath) ??
+    normalizePath(settingField?.sortPath) ??
+    normalizePath(column?.sortPath) ??
+    normalizePath(columnField?.sortPath);
   const nextField: EntityDataGridColumnField = {
     ...(columnField ?? {}),
     ...(settingField ?? {}),
     ...(key ? { key } : {}),
     ...(path ? { path } : {}),
+    ...(sortPath ? { sortPath } : {}),
     ...(alias ? { alias } : {}),
     ...(caption ? { caption } : {})
   };
@@ -764,6 +770,7 @@ function createColumnFromSetting<TRow>(
     key,
     label,
     path,
+    ...(setting.sortPath ? { sortPath: setting.sortPath } : {}),
     field: createSettingField(undefined, setting, key, path, label),
     defaultVisible: false,
     width: setting.width

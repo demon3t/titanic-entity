@@ -244,11 +244,13 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         || this.methods.normalizeColumnSettingText(column.name)
         || key;
       const normalizedColumn = { ...column, key, path };
+      const sortPath = this.methods.getColumnSortPath(undefined, normalizedColumn);
+      const normalizedColumnWithSortPath = sortPath ? { ...normalizedColumn, sortPath } : normalizedColumn;
 
       return {
-        ...normalizedColumn,
+        ...normalizedColumnWithSortPath,
         defaultVisible: column.defaultVisible ?? true,
-        field: this.methods.createColumnField(normalizedColumn),
+        field: this.methods.createColumnField(normalizedColumnWithSortPath),
         key,
         label: this.methods.getColumnLabel(normalizedColumn),
         path,
@@ -429,6 +431,81 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         || this.methods.normalizeColumnSettingText(this.methods.getColumnKey(column));
     },
 
+    getColumnSortPath(this: any, setting?: any, column?: any): string {
+      const settingField = this.methods.getColumnField(setting);
+      const columnField = this.methods.getColumnField(column);
+      const explicitSortPath = this.methods.normalizeColumnSettingText(setting?.sortPath)
+        || this.methods.normalizeColumnSettingText(settingField?.sortPath)
+        || this.methods.normalizeColumnSettingText(column?.sortPath)
+        || this.methods.normalizeColumnSettingText(columnField?.sortPath);
+
+      if (explicitSortPath) {
+        return explicitSortPath;
+      }
+
+      const valuePath = this.methods.getColumnSettingPath(setting ?? {}, column);
+      const displaySortPath = this.methods.resolveReferenceDisplaySortPath(valuePath);
+
+      return displaySortPath || "";
+    },
+
+    resolveReferenceDisplaySortPath(this: any, valuePath: string): string | undefined {
+      const structure = this.attributes.structure;
+      const rootTableName = this.methods.normalizeColumnSettingText(this.attributes.resolvedEntity?.tableName);
+
+      if (!structure || !Array.isArray(structure.entities) || !rootTableName || !valuePath) {
+        return undefined;
+      }
+
+      const entityByTableName = new Map<string, any>();
+
+      for (const entity of structure.entities) {
+        const tableName = this.methods.normalizeColumnSettingText(entity?.tableName);
+
+        if (tableName) {
+          entityByTableName.set(tableName.toLocaleLowerCase(), entity);
+        }
+      }
+
+      let entity = entityByTableName.get(rootTableName.toLocaleLowerCase());
+      let referenceEntity: any | undefined;
+      const segments = valuePath.split(".").map((segment: string) => segment.trim()).filter(Boolean);
+
+      for (const segment of segments) {
+        if (!entity || !Array.isArray(entity.columns)) {
+          return undefined;
+        }
+
+        const column = entity.columns.find((candidate: any) =>
+          this.methods.normalizeColumnSettingText(candidate?.propertyName).toLocaleLowerCase() === segment.toLocaleLowerCase()
+        );
+
+        if (!column?.isReference || !column.referenceTableName) {
+          referenceEntity = undefined;
+          entity = undefined;
+          continue;
+        }
+
+        referenceEntity = entityByTableName.get(String(column.referenceTableName).toLocaleLowerCase());
+        entity = referenceEntity;
+      }
+
+      if (!referenceEntity || !Array.isArray(referenceEntity.columns)) {
+        return undefined;
+      }
+
+      const displayColumn =
+        referenceEntity.columns.find((column: any) => column?.isDisplay) ??
+        referenceEntity.columns.find((column: any) =>
+          ["name", "displayname", "title"].includes(
+            this.methods.normalizeColumnSettingText(column?.propertyName).toLocaleLowerCase()
+          )
+        );
+      const displayColumnName = this.methods.normalizeColumnSettingText(displayColumn?.propertyName);
+
+      return displayColumnName ? `${valuePath}.${displayColumnName}` : undefined;
+    },
+
     getColumnSettingCaption(this: any, setting: any): string {
       const field = this.methods.getColumnField(setting);
 
@@ -444,6 +521,10 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         || this.methods.getColumnSettingKey(setting);
       const path = this.methods.getColumnSettingPath(setting ?? {}, column)
         || this.methods.normalizeColumnSettingText(column?.path ?? column?.key);
+      const sortPath = this.methods.normalizeColumnSettingText(setting?.sortPath)
+        || this.methods.normalizeColumnSettingText(settingField?.sortPath)
+        || this.methods.normalizeColumnSettingText(column?.sortPath)
+        || this.methods.normalizeColumnSettingText(columnField?.sortPath);
       const alias = this.methods.normalizeColumnSettingText(settingField?.alias)
         || this.methods.normalizeColumnSettingText(columnField?.alias)
         || this.methods.normalizeColumnSettingText(column?.alias);
@@ -456,6 +537,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         ...(settingField ?? {}),
         ...(key ? { key } : {}),
         ...(path ? { path } : {}),
+        ...(sortPath ? { sortPath } : {}),
         ...(alias ? { alias } : {}),
         ...(caption ? { caption } : {})
       };
@@ -732,7 +814,9 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
 
     createColumnSortSetting(this: any, column: any, direction: "asc" | "desc"): { key: string; path?: string; direction: "asc" | "desc" } | null {
       const key = this.methods.getColumnKey(column);
-      const path = this.methods.getColumnSettingPath({}, column);
+      const sortPath = this.methods.getColumnSortPath({}, column);
+      const valuePath = this.methods.getColumnSettingPath({}, column);
+      const path = sortPath || valuePath;
       const fallbackKey = path || key;
 
       if (!fallbackKey) {
@@ -755,8 +839,13 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
 
       const key = this.methods.getColumnKey(column);
       const path = this.methods.getColumnSettingPath({}, column);
+      const sortPath = this.methods.getColumnSortPath({}, column);
 
-      if ((path && sortSetting.path === path) || (key && sortSetting.key === key)) {
+      if (
+        (sortPath && sortSetting.path === sortPath) ||
+        (path && sortSetting.path === path) ||
+        (key && sortSetting.key === key)
+      ) {
         return sortSetting.direction;
       }
 

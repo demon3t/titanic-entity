@@ -76,6 +76,7 @@ export type EntityDataGridCulture = "en-US" | "ru-RU";
 export interface EntityDataGridColumnField {
   key?: string;
   path?: string;
+  sortPath?: string;
   alias?: string;
   caption?: string;
   [key: string]: unknown;
@@ -84,6 +85,7 @@ export interface EntityDataGridColumnField {
 export interface EntityDataGridColumn<TRow = unknown> {
   key: string;
   path?: string;
+  sortPath?: string;
   alias?: string;
   field?: EntityDataGridColumnField;
   label?: string;
@@ -112,6 +114,7 @@ export interface EntityDataGridCellEditorContext<TRow = unknown> {
 export interface EntityDataGridColumnSetting extends EntityGridColumnSetting {
   key?: string;
   path?: string;
+  sortPath?: string;
   caption?: string;
   field?: EntityDataGridColumnField;
   label?: string;

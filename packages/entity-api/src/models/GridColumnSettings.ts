@@ -6,6 +6,9 @@ export interface GridColumnField {
   /** Entity path used to resolve the field in row data. */
   path?: string;
 
+  /** Optional Entity path used to sort this field. */
+  sortPath?: string;
+
   /** Optional query alias used by EntityQuery responses. */
   alias?: string;
 
@@ -29,6 +32,9 @@ export interface GridColumnSetting {
 
   /** Entity path used to build the EntityQuery request. */
   path?: string;
+
+  /** Optional Entity path used to build the EntityQuery order. */
+  sortPath?: string;
 
   /** Indicates whether the column is visible in the selected mode. */
   visible: boolean;
