@@ -6,15 +6,23 @@ import {
 import { Titanic } from "@titanic-entity/entity-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Button } from "../button";
+import { getEntityDataGridLabels } from "../dataGrid/data-grid-lcz";
+import { ColumnSettingsFieldPickerSchema, type ColumnSettingsFieldPickerItem } from "../dataGridSettingsModalPage/schemas";
 import { getEntityQueryFilterBuilderLabels } from "./entity-query-filter-builder-lcz";
 import type { EntityQueryFilterBuilderLabelsInput, EntityQueryFilterBuilderProps } from "./index";
 import {
+  applyEntityQueryFilterBuilderColumnToCondition,
   createEntityQueryFilterBuilderColumnOptions,
+  createEntityQueryFilterBuilderColumnFromPickerItem,
   createEntityQueryFilterBuilderState,
+  createEntityQueryFilterBuilderStructureColumnOptions,
   createEntityQueryFilterCollection,
   createEntityQueryFilterCondition,
+  createEntityQueryFilterFieldPickerPathOptions,
+  createEntityQueryFilterFieldPickerState,
   createEntityQueryFilterGroup,
   createEntityQueryFilters,
+  createEntityQueryUnsupportedFilters,
   formatEntityQueryFilterBuilderInputValue,
   getEntityQueryFilterOperatorValueMode,
   getEntityQueryFilterOperatorsForColumn,
@@ -34,6 +42,10 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
     columns,
     value,
     defaultValue,
+    structure,
+    rootTableName,
+    columnPickerLabels,
+    maxRelationDepth = 5,
     labels,
     locale,
     disabled = false,
@@ -41,9 +53,17 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
     onChange
   }: EntityQueryFilterBuilderProps) {
     const columnOptions = useMemo(
-      () => createEntityQueryFilterBuilderColumnOptions(columns ?? schema ?? null),
-      [columns, schema]
+      () => structure && rootTableName
+        ? createEntityQueryFilterBuilderStructureColumnOptions(
+            structure,
+            rootTableName,
+            columnPickerLabels,
+            maxRelationDepth
+          )
+        : createEntityQueryFilterBuilderColumnOptions(columns ?? schema ?? null),
+      [columnPickerLabels, columns, maxRelationDepth, rootTableName, schema, structure]
     );
+    const dataGridLabels = useMemo(() => getEntityDataGridLabels(locale), [locale]);
     const resolvedLabels = useMemo(
       () => resolveLabels(getEntityQueryFilterBuilderLabels(locale), labels),
       [labels, locale]
@@ -70,7 +90,8 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
       onChange?.({
         collection,
         filters: collection.items ?? [],
-        state: nextState
+        state: nextState,
+        unsupportedFilters: createEntityQueryUnsupportedFilters(nextState)
       });
     };
 
@@ -129,10 +150,15 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
             {state.items.map((item) => (
               <FilterBuilderItem
                 columns={columnOptions}
+                columnPickerLabels={columnPickerLabels}
+                dataGridLabels={dataGridLabels}
                 disabled={disabled}
                 item={item}
                 key={item.id}
                 labels={resolvedLabels}
+                maxRelationDepth={maxRelationDepth}
+                rootTableName={rootTableName}
+                structure={structure}
                 onAddCondition={(groupId) => commitState({
                   ...state,
                   items: addItemToGroup(state.items, groupId, createEntityQueryFilterCondition(columnOptions))
@@ -160,9 +186,14 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
 
 interface FilterBuilderItemProps {
   columns: readonly EntityQueryFilterBuilderColumnOption[];
+  columnPickerLabels?: EntityQueryFilterBuilderProps["columnPickerLabels"];
+  dataGridLabels: ReturnType<typeof getEntityDataGridLabels>;
   disabled: boolean;
   item: EntityQueryFilterBuilderItem;
   labels: EntityQueryFilterBuilderLabels;
+  maxRelationDepth: number;
+  rootTableName?: string | null;
+  structure?: EntityQueryFilterBuilderProps["structure"];
   onAddCondition: (groupId: string) => void;
   onAddGroup: (groupId: string) => void;
   onChange: (item: EntityQueryFilterBuilderItem) => void;
@@ -179,9 +210,14 @@ function FilterBuilderItem(props: FilterBuilderItemProps) {
 
 function FilterBuilderGroup({
   columns,
+  columnPickerLabels,
+  dataGridLabels,
   disabled,
   item,
   labels,
+  maxRelationDepth,
+  rootTableName,
+  structure,
   onAddCondition,
   onAddGroup,
   onChange,
@@ -220,10 +256,15 @@ function FilterBuilderGroup({
         {item.items.map((child) => (
           <FilterBuilderItem
             columns={columns}
+            columnPickerLabels={columnPickerLabels}
+            dataGridLabels={dataGridLabels}
             disabled={disabled}
             item={child}
             key={child.id}
             labels={labels}
+            maxRelationDepth={maxRelationDepth}
+            rootTableName={rootTableName}
+            structure={structure}
             onAddCondition={onAddCondition}
             onAddGroup={onAddGroup}
             onChange={(nextItem) => onChange({ ...item, items: updateItem(item.items, nextItem) })}
@@ -245,12 +286,20 @@ function FilterBuilderGroup({
 
 function FilterBuilderCondition({
   columns,
+  columnPickerLabels,
+  dataGridLabels,
   disabled,
   item,
   labels,
+  maxRelationDepth,
+  rootTableName,
+  structure,
   onChange,
   onRemove
 }: FilterBuilderItemProps & { item: EntityQueryFilterBuilderCondition }) {
+  const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
+  const [fieldPickerTrail, setFieldPickerTrail] = useState<ColumnSettingsFieldPickerItem[]>([]);
+  const [fieldPickerSearch, setFieldPickerSearch] = useState("");
   const selectedColumn = columns.find((column) => column.path === item.path) ?? columns[0] ?? null;
   const operators = getEntityQueryFilterOperatorsForColumn(selectedColumn?.column, labels);
   const selectedOperator = operators.some((operator) => operator.value === item.comparisonType)
@@ -262,31 +311,57 @@ function FilterBuilderCondition({
       "titanic-query-filter-builder__condition",
       item.isEnabled === false && "titanic-query-filter-builder__condition_disabled"
     )}>
-      <label className="titanic-query-filter-builder__field">
+      <div className="titanic-query-filter-builder__field">
         <span>{labels.field}</span>
-        <select
-          disabled={disabled}
-          value={selectedColumn?.path ?? ""}
-          onChange={(event) => {
-            const nextColumn = columns.find((column) => column.path === event.target.value) ?? columns[0];
-            const nextOperators = getEntityQueryFilterOperatorsForColumn(nextColumn?.column, labels);
-            const nextOperator = nextOperators.some((operator) => operator.value === item.comparisonType)
-              ? item.comparisonType
-              : nextOperators[0]?.value ?? ConditionOperator.Equal;
-
-            onChange({
-              ...item,
-              path: nextColumn?.path ?? "",
-              comparisonType: nextOperator,
-              value: undefined
-            });
-          }}
-        >
-          {columns.map((column) => (
-            <option key={`${column.key}:${column.path}`} value={column.path}>{column.label}</option>
-          ))}
-        </select>
-      </label>
+        {structure && rootTableName ? (
+          <>
+            <Button
+              className="titanic-query-filter-builder__field-button"
+              disabled={disabled || !columns.length}
+              type="button"
+              variant="secondary"
+              onClick={() => setFieldPickerOpen((current) => !current)}
+            >
+              {selectedColumn?.label ?? labels.openFieldPicker}
+            </Button>
+            {fieldPickerOpen ? (
+              <FieldPickerPopover
+                columnPickerLabels={columnPickerLabels}
+                dataGridLabels={dataGridLabels}
+                item={item}
+                labels={labels}
+                maxRelationDepth={maxRelationDepth}
+                rootTableName={rootTableName}
+                search={fieldPickerSearch}
+                structure={structure}
+                trail={fieldPickerTrail}
+                onClose={() => setFieldPickerOpen(false)}
+                onSearchChange={setFieldPickerSearch}
+                onSelect={(column) => {
+                  onChange(applyEntityQueryFilterBuilderColumnToCondition(item, column, labels));
+                  setFieldPickerOpen(false);
+                  setFieldPickerTrail([]);
+                  setFieldPickerSearch("");
+                }}
+                onTrailChange={setFieldPickerTrail}
+              />
+            ) : null}
+          </>
+        ) : (
+          <select
+            disabled={disabled}
+            value={selectedColumn?.path ?? ""}
+            onChange={(event) => {
+              const nextColumn = columns.find((column) => column.path === event.target.value) ?? columns[0];
+              onChange(applyEntityQueryFilterBuilderColumnToCondition(item, nextColumn, labels));
+            }}
+          >
+            {columns.map((column) => (
+              <option key={`${column.key}:${column.path}`} value={column.path}>{column.label}</option>
+            ))}
+          </select>
+        )}
+      </div>
       <label className="titanic-query-filter-builder__operator">
         <span>{labels.operator}</span>
         <select
@@ -326,6 +401,117 @@ function FilterBuilderCondition({
       <Button disabled={disabled} type="button" variant="ghost" onClick={() => onRemove(item.id)}>
         {labels.remove}
       </Button>
+    </div>
+  );
+}
+
+interface FieldPickerPopoverProps {
+  columnPickerLabels?: EntityQueryFilterBuilderProps["columnPickerLabels"];
+  dataGridLabels: ReturnType<typeof getEntityDataGridLabels>;
+  item: EntityQueryFilterBuilderCondition;
+  labels: EntityQueryFilterBuilderLabels;
+  maxRelationDepth: number;
+  rootTableName: string;
+  search: string;
+  structure: NonNullable<EntityQueryFilterBuilderProps["structure"]>;
+  trail: readonly ColumnSettingsFieldPickerItem[];
+  onClose: () => void;
+  onSearchChange: (value: string) => void;
+  onSelect: (column: EntityQueryFilterBuilderColumnOption) => void;
+  onTrailChange: (trail: ColumnSettingsFieldPickerItem[]) => void;
+}
+
+function FieldPickerPopover({
+  columnPickerLabels,
+  dataGridLabels,
+  labels,
+  maxRelationDepth,
+  rootTableName,
+  search,
+  structure,
+  trail,
+  onClose,
+  onSearchChange,
+  onSelect,
+  onTrailChange
+}: FieldPickerPopoverProps) {
+  const pickerState = createEntityQueryFilterFieldPickerState(
+    structure,
+    rootTableName,
+    trail as any,
+    search,
+    columnPickerLabels
+  );
+  const pathOptions = createEntityQueryFilterFieldPickerPathOptions(
+    structure,
+    rootTableName,
+    columnPickerLabels,
+    maxRelationDepth
+  );
+  const pathItems = [
+    { label: pickerState?.rootLabel ?? rootTableName, path: "" },
+    ...trail.map((trailItem) => ({
+      label: trailItem.label,
+      path: trailItem.path
+    }))
+  ];
+  const openReference = (field: ColumnSettingsFieldPickerItem) => {
+    const relationItem = field as ColumnSettingsFieldPickerItem & {
+      joinDirection?: string;
+      tableName?: string;
+    };
+    const nextTableName = relationItem.tableName ?? field.referenceTableName;
+
+    if (!nextTableName) {
+      return;
+    }
+
+    onTrailChange([
+      ...trail,
+      {
+        ...field,
+        tableName: nextTableName
+      } as ColumnSettingsFieldPickerItem
+    ]);
+    onSearchChange("");
+  };
+
+  return (
+    <div className="titanic-query-filter-builder__field-picker">
+      <div className="titanic-query-filter-builder__field-picker-head">
+        <strong>{labels.openFieldPicker}</strong>
+        <Button type="button" variant="ghost" onClick={onClose}>
+          {labels.remove}
+        </Button>
+      </div>
+      <ColumnSettingsFieldPickerSchema
+        availableColumns={[]}
+        emptyText={dataGridLabels.noAvailableColumns}
+        isFieldVisible={() => false}
+        items={pickerState?.items ?? []}
+        labels={dataGridLabels}
+        pathItems={pathItems}
+        pathOptions={pathOptions}
+        searchValue={search}
+        selectedPath={trail[trail.length - 1]?.path ?? ""}
+        onAddAvailableColumn={() => undefined}
+        onAddField={(field) => {
+          onSelect(createEntityQueryFilterBuilderColumnFromPickerItem(
+            structure,
+            rootTableName,
+            trail as any,
+            field,
+            columnPickerLabels
+          ));
+        }}
+        onOpenReference={openReference}
+        onPathChange={() => undefined}
+        onPathItemClick={(index) => {
+          onTrailChange(index <= 0 ? [] : trail.slice(0, index));
+          onSearchChange("");
+        }}
+        onSearchChange={onSearchChange}
+      />
     </div>
   );
 }
@@ -388,17 +574,20 @@ function LogicalOperationSelect({
   value: EntityLogicalOperation;
   onChange: (value: EntityLogicalOperation) => void;
 }) {
+  const nextValue = value === EntityLogicalOperation.And
+    ? EntityLogicalOperation.Or
+    : EntityLogicalOperation.And;
+
   return (
-    <label className="titanic-query-filter-builder__logical">
-      <select
-        disabled={disabled}
-        value={String(value)}
-        onChange={(event) => onChange(Number(event.target.value) as EntityLogicalOperation)}
-      >
-        <option value={String(EntityLogicalOperation.And)}>{labels.and}</option>
-        <option value={String(EntityLogicalOperation.Or)}>{labels.or}</option>
-      </select>
-    </label>
+    <button
+      className="titanic-query-filter-builder__logical"
+      disabled={disabled}
+      title={labels.toggleLogicalOperation}
+      type="button"
+      onClick={() => onChange(nextValue)}
+    >
+      {value === EntityLogicalOperation.And ? labels.and : labels.or}
+    </button>
   );
 }
 

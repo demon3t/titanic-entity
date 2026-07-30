@@ -1,6 +1,7 @@
 import {
   coerceEntityColumnKind,
   ConditionOperator,
+  EntityAggregationType,
   EntityColumnKind,
   EntityLogicalOperation,
   getColumnKey,
@@ -11,6 +12,18 @@ import {
   type EntitySchema,
   type ResolvedEntityColumnSchema
 } from "@titanic-entity/entity-core";
+import type {
+  EntityApiManagerStructureResponse,
+  EntityApiStructureColumnResponse,
+  EntityApiStructureEntityResponse
+} from "@titanic-entity/entity-api";
+import type { EntityDataGridColumnPickerLabels } from "../dataGrid";
+import type {
+  ColumnSettingsFieldPickerItem,
+  ColumnSettingsFieldPickerPathOption,
+  ColumnSettingsFieldPickerState,
+  ColumnSettingsFieldPickerTrailItem
+} from "../dataGridSettingsModalPage/model/columnSettingsFieldPickerModel";
 
 export type EntityQueryFilterBuilderItemKind = "condition" | "group";
 export type EntityQueryFilterBuilderValueMode = "none" | "single" | "multiple";
@@ -21,6 +34,28 @@ export interface EntityQueryFilterBuilderColumnOption {
   label: string;
   kind?: EntityColumnKind;
   column: ResolvedEntityColumnSchema;
+  aggregationType?: EntityAggregationType;
+  filterPath?: string;
+  joinDirection?: EntityQueryFilterBuilderJoinDirection;
+  relationLabel?: string;
+  relationPath?: string;
+  rootTableName?: string;
+  tableName?: string;
+  virtual?: boolean;
+}
+
+export type EntityQueryFilterBuilderJoinDirection = "root" | "left" | "right";
+
+export interface EntityQueryFilterBuilderRelationTrailItem extends ColumnSettingsFieldPickerTrailItem {
+  dbCode: string;
+  isReference: boolean;
+  propertyName: string;
+  referenceEntityLabel?: string;
+  referenceTableName?: string;
+  joinDirection?: EntityQueryFilterBuilderJoinDirection;
+  relationColumnName?: string;
+  relationPropertyName?: string;
+  sourceTableName?: string;
 }
 
 export interface EntityQueryFilterOperatorOption {
@@ -33,6 +68,13 @@ export interface EntityQueryFilterBuilderCondition {
   id: string;
   kind: "condition";
   path: string;
+  filterPath?: string;
+  joinDirection?: EntityQueryFilterBuilderJoinDirection;
+  relationLabel?: string;
+  relationPath?: string;
+  rootTableName?: string;
+  tableName?: string;
+  virtual?: boolean;
   comparisonType: ConditionOperator;
   value?: unknown;
   secondValue?: unknown;
@@ -75,10 +117,16 @@ export interface EntityQueryFilterBuilderLabels {
   not: string;
   operator: string;
   or: string;
+  openFieldPicker: string;
   remove: string;
+  rightJoin: string;
+  rootObject: string;
+  selectedObject: string;
+  toggleLogicalOperation: string;
   value: string;
   valueListPlaceholder: string;
   valuePlaceholder: string;
+  virtualCount: string;
   operators: Record<ConditionOperator, string>;
 }
 
@@ -130,6 +178,23 @@ export function createEntityQueryFilters(
     .filter((filter): filter is EntityQueryFilter => Boolean(filter));
 }
 
+export function createEntityQueryUnsupportedFilters(
+  state: EntityQueryFilterBuilderState | EntityQueryFilterBuilderGroup
+): EntityQueryFilterBuilderItem[] {
+  return state.items.flatMap((item): EntityQueryFilterBuilderItem[] => {
+    if (item.kind === "group") {
+      const unsupportedItems = createEntityQueryUnsupportedFilters(item);
+
+      return unsupportedItems.length > 0
+        ? [{ ...item, items: unsupportedItems }]
+        : [];
+    }
+
+    const filterPath = item.filterPath ?? item.path;
+    return !filterPath || item.virtual ? [item] : [];
+  });
+}
+
 export function createEntityQueryFilterBuilderColumnOptions(
   input?: EntitySchema | readonly EntityColumnDefinition[] | null
 ): EntityQueryFilterBuilderColumnOption[] {
@@ -147,9 +212,28 @@ export function createEntityQueryFilterBuilderColumnOptions(
         path: column.path,
         label: column.label ?? key,
         kind: coerceEntityColumnKind(column.kind),
-        column
+        column,
+        filterPath: column.path,
+        joinDirection: "root"
       };
     });
+}
+
+export function createEntityQueryFilterBuilderStructureColumnOptions(
+  structure: EntityApiManagerStructureResponse | null | undefined,
+  rootTableName: string | null | undefined,
+  labels?: EntityDataGridColumnPickerLabels,
+  maxDepth = 5
+): EntityQueryFilterBuilderColumnOption[] {
+  if (!structure || !rootTableName) {
+    return [];
+  }
+
+  const options: EntityQueryFilterBuilderColumnOption[] = [];
+  const visited = new Set<string>();
+
+  visitStructureContext(structure, rootTableName, [], labels, maxDepth, visited, options);
+  return options;
 }
 
 export function createEntityQueryFilterCondition(
@@ -162,8 +246,177 @@ export function createEntityQueryFilterCondition(
     id: createEntityQueryFilterBuilderId("condition"),
     kind: "condition",
     path: column?.path ?? "",
+    filterPath: column?.filterPath,
+    joinDirection: column?.joinDirection,
+    relationLabel: column?.relationLabel,
+    relationPath: column?.relationPath,
+    rootTableName: column?.rootTableName,
+    tableName: column?.tableName,
+    virtual: column?.virtual,
     comparisonType: operators[0]?.value ?? ConditionOperator.Equal,
     isEnabled: true
+  };
+}
+
+export function applyEntityQueryFilterBuilderColumnToCondition(
+  condition: EntityQueryFilterBuilderCondition,
+  column: EntityQueryFilterBuilderColumnOption | null | undefined,
+  labels?: Pick<EntityQueryFilterBuilderLabels, "operators">
+): EntityQueryFilterBuilderCondition {
+  const operators = getEntityQueryFilterOperatorsForColumn(column?.column, labels);
+  const comparisonType = operators.some((operator) => operator.value === condition.comparisonType)
+    ? condition.comparisonType
+    : operators[0]?.value ?? ConditionOperator.Equal;
+
+  return {
+    ...condition,
+    path: column?.path ?? "",
+    filterPath: column?.filterPath,
+    joinDirection: column?.joinDirection,
+    relationLabel: column?.relationLabel,
+    relationPath: column?.relationPath,
+    rootTableName: column?.rootTableName,
+    tableName: column?.tableName,
+    virtual: column?.virtual,
+    comparisonType,
+    value: undefined,
+    secondValue: undefined
+  };
+}
+
+export function createEntityQueryFilterFieldPickerPathOptions(
+  structure: EntityApiManagerStructureResponse | null | undefined,
+  rootTableName: string | null | undefined,
+  labels?: EntityDataGridColumnPickerLabels,
+  maxDepth = 5
+): ColumnSettingsFieldPickerPathOption[] {
+  const rootEntity = getStructureEntity(structure, rootTableName);
+
+  if (!structure || !rootTableName || !rootEntity) {
+    return [];
+  }
+
+  const rootLabel = getStructureEntityLabel(rootEntity, rootTableName, labels);
+  const options: ColumnSettingsFieldPickerPathOption[] = [{
+    label: rootLabel,
+    path: "",
+    tableName: rootTableName,
+    trail: []
+  }];
+  const visited = new Set([""]);
+
+  const visit = (tableName: string, trail: readonly EntityQueryFilterBuilderRelationTrailItem[], depth: number) => {
+    if (depth >= maxDepth) {
+      return;
+    }
+
+    for (const relation of createRelationItems(structure, tableName, trail, labels)) {
+      if (visited.has(relation.path)) {
+        continue;
+      }
+
+      const nextTrail = [...trail, relation];
+      visited.add(relation.path);
+      options.push({
+        label: [rootLabel, ...nextTrail.map((item) => item.label)].join(" / "),
+        path: relation.path,
+        tableName: relation.tableName,
+        trail: nextTrail
+      });
+      visit(relation.tableName, nextTrail, depth + 1);
+    }
+  };
+
+  visit(rootTableName, [], 0);
+  return options;
+}
+
+export function createEntityQueryFilterFieldPickerState(
+  structure: EntityApiManagerStructureResponse | null | undefined,
+  rootTableName: string | null | undefined,
+  trail: readonly ColumnSettingsFieldPickerTrailItem[],
+  searchQuery: string,
+  labels?: EntityDataGridColumnPickerLabels
+): ColumnSettingsFieldPickerState | null {
+  const currentTrail = trail as readonly EntityQueryFilterBuilderRelationTrailItem[];
+  const currentTableName = currentTrail.length > 0 ? currentTrail[currentTrail.length - 1].tableName : rootTableName;
+  const currentEntity = getStructureEntity(structure, currentTableName);
+  const rootEntity = getStructureEntity(structure, rootTableName);
+
+  if (!structure || !rootTableName || !currentTableName || !currentEntity || !rootEntity) {
+    return null;
+  }
+
+  const normalizedSearch = normalizeSearchText(searchQuery);
+  const prefixPath = currentTrail.length > 0 ? currentTrail[currentTrail.length - 1].path : "";
+  const items: ColumnSettingsFieldPickerItem[] = [
+    ...createVirtualCountPickerItems(currentTrail, labels),
+    ...currentEntity.columns.map((column) => {
+      const path = prefixPath ? `${prefixPath}.${column.propertyName}` : column.propertyName;
+      const referenceEntity = column.referenceTableName ? getStructureEntity(structure, column.referenceTableName) : undefined;
+      const referenceDisplayColumn = column.isReference
+        ? getStructureDisplayColumn(referenceEntity)
+        : undefined;
+      const sortPath = referenceDisplayColumn ? `${path}.${referenceDisplayColumn.propertyName}` : undefined;
+
+      return {
+        dbCode: column.columnName || column.propertyName,
+        isReference: Boolean(column.isReference && column.referenceTableName),
+        label: getStructureColumnLabel(column, currentEntity.tableName, labels),
+        path,
+        propertyName: column.propertyName,
+        ...(referenceEntity || column.referenceTableName
+          ? { referenceEntityLabel: getStructureEntityLabel(referenceEntity, column.referenceTableName, labels) }
+          : {}),
+        ...(column.referenceTableName ? { referenceTableName: column.referenceTableName } : {}),
+        ...(sortPath ? { sortPath } : {})
+      } satisfies ColumnSettingsFieldPickerItem;
+    }),
+    ...createRelationItems(structure, currentTableName, currentTrail, labels)
+  ].filter((item) => matchesFieldPickerSearch(item, normalizedSearch));
+
+  return {
+    items,
+    rootLabel: getStructureEntityLabel(rootEntity, rootTableName, labels)
+  };
+}
+
+export function createEntityQueryFilterBuilderColumnFromPickerItem(
+  structure: EntityApiManagerStructureResponse | null | undefined,
+  rootTableName: string | null | undefined,
+  trail: readonly ColumnSettingsFieldPickerTrailItem[],
+  item: ColumnSettingsFieldPickerItem,
+  labels?: EntityDataGridColumnPickerLabels
+): EntityQueryFilterBuilderColumnOption {
+  const relationTrail = trail as readonly EntityQueryFilterBuilderRelationTrailItem[];
+  const currentTableName = relationTrail.length > 0 ? relationTrail[relationTrail.length - 1].tableName : rootTableName ?? "";
+  const relationLabel = relationTrail.map((trailItem) => trailItem.label).join(" / ");
+  const joinDirection = relationTrail.some((trailItem) => trailItem.joinDirection === "right")
+    ? "right"
+    : relationTrail.length > 0 ? "left" : "root";
+  const isVirtualCount = item.propertyName === "__count";
+  const label = relationLabel ? `${relationLabel} / ${item.label}` : item.label;
+  const kind = isVirtualCount
+    ? EntityColumnKind.Number
+    : coerceEntityColumnKind(getStructureColumnKind(item, structure, currentTableName));
+
+  return {
+    key: item.path,
+    path: item.path,
+    label,
+    kind,
+    column: {
+      path: item.path,
+      label,
+      kind
+    },
+    ...(isVirtualCount ? { aggregationType: EntityAggregationType.Count, virtual: true } : {}),
+    filterPath: isVirtualCount ? undefined : item.path,
+    joinDirection,
+    relationLabel,
+    relationPath: relationTrail.length > 0 ? relationTrail[relationTrail.length - 1].path : "",
+    rootTableName: rootTableName ?? undefined,
+    tableName: currentTableName
   };
 }
 
@@ -249,7 +502,9 @@ function createEntityQueryFilter(item: EntityQueryFilterBuilderItem): EntityQuer
     };
   }
 
-  if (!item.path) {
+  const filterPath = item.filterPath ?? item.path;
+
+  if (!filterPath || item.virtual) {
     return null;
   }
 
@@ -261,7 +516,7 @@ function createEntityQueryFilter(item: EntityQueryFilterBuilderItem): EntityQuer
   }
 
   return {
-    path: item.path,
+    path: filterPath,
     comparisonType: item.comparisonType,
     isEnabled: item.isEnabled ?? true,
     ...(item.isNot ? { isNot: true } : {}),
@@ -290,6 +545,8 @@ function createBuilderItemFromQueryFilter(filter: EntityQueryFilter): EntityQuer
     id: createEntityQueryFilterBuilderId("condition"),
     kind: "condition",
     path: filter.path,
+    filterPath: filter.path,
+    joinDirection: "root",
     comparisonType: filter.comparisonType ?? ConditionOperator.Equal,
     value: filter.value,
     secondValue: filter.secondValue,
@@ -451,6 +708,312 @@ function normalizeColumnLike(
   }
 
   return column;
+}
+
+function visitStructureContext(
+  structure: EntityApiManagerStructureResponse,
+  tableName: string,
+  trail: readonly EntityQueryFilterBuilderRelationTrailItem[],
+  labels: EntityDataGridColumnPickerLabels | undefined,
+  maxDepth: number,
+  visited: Set<string>,
+  options: EntityQueryFilterBuilderColumnOption[]
+): void {
+  const entity = getStructureEntity(structure, tableName);
+
+  if (!entity) {
+    return;
+  }
+
+  const relationLabel = trail.map((trailItem) => trailItem.label).join(" / ");
+  const joinDirection = trail.some((trailItem) => trailItem.joinDirection === "right")
+    ? "right"
+    : trail.length > 0 ? "left" : "root";
+
+  if (joinDirection === "right") {
+    const countPath = `${trail[trail.length - 1]?.path ?? tableName}.__count`;
+    if (!visited.has(countPath)) {
+      visited.add(countPath);
+      options.push({
+        key: countPath,
+        path: countPath,
+        label: relationLabel ? `${relationLabel} / ${getVirtualCountLabel(labels)}` : getVirtualCountLabel(labels),
+        kind: EntityColumnKind.Number,
+        column: {
+          path: countPath,
+          label: getVirtualCountLabel(labels),
+          kind: EntityColumnKind.Number
+        },
+        aggregationType: EntityAggregationType.Count,
+        joinDirection,
+        relationLabel,
+        relationPath: trail[trail.length - 1]?.path,
+        rootTableName: trail[0]?.sourceTableName ?? tableName,
+        tableName,
+        virtual: true
+      });
+    }
+  }
+
+  for (const column of entity.columns) {
+    const prefixPath = trail.length > 0 ? trail[trail.length - 1].path : "";
+    const path = prefixPath ? `${prefixPath}.${column.propertyName}` : column.propertyName;
+    const label = relationLabel
+      ? `${relationLabel} / ${getStructureColumnLabel(column, entity.tableName, labels)}`
+      : getStructureColumnLabel(column, entity.tableName, labels);
+    const kind = coerceEntityColumnKind(getStructureColumnKindByValue(column.dataValueType));
+
+    if (!visited.has(path)) {
+      visited.add(path);
+      options.push({
+        key: path,
+        path,
+        label,
+        kind,
+        column: {
+          path,
+          label,
+          kind
+        },
+        filterPath: path,
+        joinDirection,
+        relationLabel,
+        relationPath: trail[trail.length - 1]?.path,
+        rootTableName: trail[0]?.sourceTableName ?? tableName,
+        tableName
+      });
+    }
+  }
+
+  if (trail.length >= maxDepth) {
+    return;
+  }
+
+  for (const relation of createRelationItems(structure, tableName, trail, labels)) {
+    if (visited.has(`${relation.path}:context`)) {
+      continue;
+    }
+
+    visited.add(`${relation.path}:context`);
+    visitStructureContext(structure, relation.tableName, [...trail, relation], labels, maxDepth, visited, options);
+  }
+}
+
+function createRelationItems(
+  structure: EntityApiManagerStructureResponse,
+  tableName: string,
+  trail: readonly EntityQueryFilterBuilderRelationTrailItem[],
+  labels: EntityDataGridColumnPickerLabels | undefined
+): EntityQueryFilterBuilderRelationTrailItem[] {
+  const entity = getStructureEntity(structure, tableName);
+
+  if (!entity) {
+    return [];
+  }
+
+  const prefixPath = trail.length > 0 ? trail[trail.length - 1].path : "";
+  const directRelations = entity.columns
+    .filter((column) => column.isReference && Boolean(column.referenceTableName))
+    .map((column) => {
+      const referenceTableName = String(column.referenceTableName);
+      const referenceEntity = getStructureEntity(structure, referenceTableName);
+      const path = prefixPath ? `${prefixPath}.${column.propertyName}` : column.propertyName;
+
+      return {
+        dbCode: column.columnName || column.propertyName,
+        isReference: true,
+        label: formatRelationLabel(
+          getStructureColumnLabel(column, entity.tableName, labels),
+          getStructureEntityLabel(referenceEntity, referenceTableName, labels),
+          "left"
+        ),
+        path,
+        propertyName: column.propertyName,
+        referenceEntityLabel: getStructureEntityLabel(referenceEntity, referenceTableName, labels),
+        referenceTableName,
+        tableName: referenceTableName,
+        joinDirection: "left" as const,
+        relationColumnName: column.columnName,
+        relationPropertyName: column.propertyName,
+        sourceTableName: entity.tableName
+      };
+    });
+
+  const reverseRelations = structure.entities.flatMap((candidateEntity) =>
+    candidateEntity.columns
+      .filter((column) => column.isReference && column.referenceTableName === tableName)
+      .map((column) => {
+        const candidatePrimaryColumn = getStructurePrimaryColumn(candidateEntity);
+        const sourcePrimaryColumn = getStructurePrimaryColumn(entity);
+        const reverseSegment = `[${column.propertyName}:${candidatePrimaryColumn?.propertyName ?? "Id"}:${sourcePrimaryColumn?.propertyName ?? "Id"}]`;
+        const path = prefixPath
+          ? `${prefixPath}.${reverseSegment}`
+          : reverseSegment;
+
+        return {
+          dbCode: column.columnName || column.propertyName,
+          isReference: true,
+          label: formatRelationLabel(
+            getStructureEntityLabel(candidateEntity, candidateEntity.tableName, labels),
+            getStructureColumnLabel(column, candidateEntity.tableName, labels),
+            "right"
+          ),
+          path,
+          propertyName: column.propertyName,
+          referenceEntityLabel: getStructureEntityLabel(candidateEntity, candidateEntity.tableName, labels),
+          referenceTableName: candidateEntity.tableName,
+          tableName: candidateEntity.tableName,
+          joinDirection: "right" as const,
+          relationColumnName: column.columnName,
+          relationPropertyName: column.propertyName,
+          sourceTableName: tableName
+        };
+      })
+  );
+
+  return [...directRelations, ...reverseRelations];
+}
+
+function createVirtualCountPickerItems(
+  trail: readonly EntityQueryFilterBuilderRelationTrailItem[],
+  labels: EntityDataGridColumnPickerLabels | undefined
+): ColumnSettingsFieldPickerItem[] {
+  if (!trail.some((trailItem) => trailItem.joinDirection === "right")) {
+    return [];
+  }
+
+  const currentPath = trail[trail.length - 1]?.path ?? "";
+  return [{
+    dbCode: "__count",
+    isReference: false,
+    label: getVirtualCountLabel(labels),
+    path: currentPath ? `${currentPath}.__count` : "__count",
+    propertyName: "__count"
+  }];
+}
+
+function getStructureEntity(
+  structure: EntityApiManagerStructureResponse | null | undefined,
+  tableName: string | null | undefined
+): EntityApiStructureEntityResponse | undefined {
+  return structure?.entities.find((entity) => entity.tableName === tableName);
+}
+
+function getStructureEntityLabel(
+  entity: EntityApiStructureEntityResponse | undefined,
+  fallbackTableName: string | null | undefined,
+  labels: EntityDataGridColumnPickerLabels | undefined
+): string {
+  const tableName = entity?.tableName ?? fallbackTableName ?? "";
+  return labels?.entities?.[tableName] ?? splitTechnicalName(entity?.entityTypeName ?? fallbackTableName ?? "Entity");
+}
+
+function getStructureColumnLabel(
+  column: EntityApiStructureColumnResponse,
+  tableName: string,
+  labels: EntityDataGridColumnPickerLabels | undefined
+): string {
+  const tableLabels = labels?.columns?.[tableName];
+  return tableLabels?.[column.propertyName] ?? tableLabels?.[column.columnName] ?? splitTechnicalName(column.propertyName);
+}
+
+function getStructureDisplayColumn(
+  entity: EntityApiStructureEntityResponse | undefined
+): EntityApiStructureColumnResponse | undefined {
+  return entity?.columns.find((column) => column.isDisplay)
+    ?? entity?.columns.find((column) => ["Name", "DisplayName", "Title"].includes(column.propertyName));
+}
+
+function getStructurePrimaryColumn(
+  entity: EntityApiStructureEntityResponse | undefined
+): EntityApiStructureColumnResponse | undefined {
+  return entity?.columns.find((column) => column.isPrimary)
+    ?? entity?.columns.find((column) => ["Id", "ID"].includes(column.propertyName));
+}
+
+function getStructureColumnKind(
+  item: ColumnSettingsFieldPickerItem,
+  structure: EntityApiManagerStructureResponse | null | undefined,
+  tableName: string | null | undefined
+): EntityColumnKind {
+  if (item.propertyName === "__count") {
+    return EntityColumnKind.Number;
+  }
+
+  const entity = getStructureEntity(structure, tableName);
+  const column = entity?.columns.find((candidate) => candidate.propertyName === item.propertyName);
+  return getStructureColumnKindByValue(column?.dataValueType);
+}
+
+function getStructureColumnKindByValue(value: string | number | null | undefined): EntityColumnKind {
+  const normalized = String(value ?? "").toLowerCase();
+
+  if (["boolean", "bool", "3"].includes(normalized)) {
+    return EntityColumnKind.Boolean;
+  }
+
+  if (["number", "decimal", "double", "float", "integer", "int", "long", "short", "2"].includes(normalized)) {
+    return EntityColumnKind.Number;
+  }
+
+  if (["date", "4"].includes(normalized)) {
+    return EntityColumnKind.Date;
+  }
+
+  if (["datetime", "date-time", "datetimeoffset", "5"].includes(normalized)) {
+    return EntityColumnKind.DateTime;
+  }
+
+  if (["time", "6"].includes(normalized)) {
+    return EntityColumnKind.Time;
+  }
+
+  if (["lookup", "reference", "7"].includes(normalized)) {
+    return EntityColumnKind.Lookup;
+  }
+
+  if (["json", "9"].includes(normalized)) {
+    return EntityColumnKind.Json;
+  }
+
+  return EntityColumnKind.String;
+}
+
+function matchesFieldPickerSearch(item: ColumnSettingsFieldPickerItem, searchQuery: string): boolean {
+  if (!searchQuery) {
+    return true;
+  }
+
+  return [
+    item.label,
+    item.dbCode,
+    item.propertyName,
+    item.path,
+    item.referenceEntityLabel
+  ].filter((value): value is string => Boolean(value))
+    .some((value) => normalizeSearchText(value).includes(searchQuery));
+}
+
+function normalizeSearchText(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function formatRelationLabel(label: string, relatedLabel: string, direction: EntityQueryFilterBuilderJoinDirection): string {
+  return direction === "right"
+    ? `${relatedLabel} -> ${label}`
+    : `${label} -> ${relatedLabel}`;
+}
+
+function getVirtualCountLabel(labels: EntityDataGridColumnPickerLabels | undefined): string {
+  return labels?.columns?.__virtual?.__count ?? "Count";
+}
+
+function splitTechnicalName(value: string): string {
+  return value
+    .replace(/Entity$/i, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim() || value;
 }
 
 const defaultOperatorLabels: Record<ConditionOperator, string> = {
