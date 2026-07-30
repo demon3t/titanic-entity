@@ -16,6 +16,7 @@ import { dateInputComponentSchema } from "./dateInput";
 import { dateTimeInputComponentSchema } from "./dateTimeInput";
 import { dragDropItemComponentSchema } from "./dragDrop";
 import { basePageComponentSchema } from "./editPage";
+import { entityQueryFilterBuilderComponentSchema } from "./entityQueryFilterBuilder";
 import { expanderComponentSchema } from "./expander";
 import { fieldComponentSchema } from "./field";
 import { formComponentSchema } from "./form";
@@ -37,6 +38,7 @@ export const entityUiComponentSchemas = [
   buttonComponentSchema,
   collapsiblePanelComponentSchema,
   containerComponentSchema,
+  entityQueryFilterBuilderComponentSchema,
   dragDropItemComponentSchema,
   expanderComponentSchema,
   labelComponentSchema,

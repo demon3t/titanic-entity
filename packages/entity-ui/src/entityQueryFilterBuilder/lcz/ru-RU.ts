@@ -1,0 +1,48 @@
+import { ConditionOperator } from "@titanic-entity/entity-core";
+import { Titanic } from "@titanic-entity/entity-resources";
+
+Titanic.Localization.define("Titanic.UI.EntityQueryFilterBuilder", "ru-RU", {
+  addCondition: "Добавить условие",
+  addGroup: "Добавить группу",
+  and: "И",
+  booleanFalse: "Нет",
+  booleanTrue: "Да",
+  clear: "Очистить",
+  disabled: "Выключено",
+  enabled: "Включено",
+  empty: "Фильтры не настроены",
+  field: "Поле",
+  group: "Группа",
+  noFields: "Нет полей для фильтрации",
+  not: "НЕ",
+  operator: "Оператор",
+  or: "ИЛИ",
+  openFieldPicker: "Выбрать поле",
+  remove: "Удалить",
+  rightJoin: "Внешняя связь",
+  rootObject: "Корневой объект",
+  selectedObject: "Выбранный объект",
+  toggleLogicalOperation: "Переключить И/ИЛИ",
+  value: "Значение",
+  valueListPlaceholder: "значение 1, значение 2",
+  valuePlaceholder: "Значение",
+  virtualCount: "Количество",
+  operators: {
+    [ConditionOperator.Equal]: "Равно",
+    [ConditionOperator.NotEqual]: "Не равно",
+    [ConditionOperator.GreaterThan]: "Больше",
+    [ConditionOperator.GreaterThanOrEqual]: "Больше или равно",
+    [ConditionOperator.LessThan]: "Меньше",
+    [ConditionOperator.LessThanOrEqual]: "Меньше или равно",
+    [ConditionOperator.In]: "В списке",
+    [ConditionOperator.NotIn]: "Не в списке",
+    [ConditionOperator.Like]: "Like",
+    [ConditionOperator.NotLike]: "Not like",
+    [ConditionOperator.ILike]: "ILike",
+    [ConditionOperator.IsNull]: "Пусто",
+    [ConditionOperator.IsNotNull]: "Не пусто",
+    [ConditionOperator.Contains]: "Содержит",
+    [ConditionOperator.StartsWith]: "Начинается с",
+    [ConditionOperator.EndsWith]: "Заканчивается на"
+  }
+}, { defaultLocale: "ru-RU" });
