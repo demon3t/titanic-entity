@@ -7,6 +7,7 @@ import {
   getColumnKey,
   normalizeEntityColumn,
   type EntityColumnDefinition,
+  type EntityLookupOptionsSource,
   type EntityQueryFilter,
   type EntityQueryFilterCollection,
   type EntitySchema,
@@ -211,7 +212,7 @@ export function createEntityQueryFilterBuilderColumnOptions(
         key,
         path: column.path,
         label: column.label ?? key,
-        kind: coerceEntityColumnKind(column.kind),
+        kind: resolveColumnKind(column),
         column,
         filterPath: column.path,
         joinDirection: "root"
@@ -396,9 +397,13 @@ export function createEntityQueryFilterBuilderColumnFromPickerItem(
     : relationTrail.length > 0 ? "left" : "root";
   const isVirtualCount = item.propertyName === "__count";
   const label = relationLabel ? `${relationLabel} / ${item.label}` : item.label;
+  const referenceEntity = item.referenceTableName ? getStructureEntity(structure, item.referenceTableName) : undefined;
+  const lookup = item.isReference
+    ? createStructureLookupSource(referenceEntity, item.referenceTableName)
+    : undefined;
   const kind = isVirtualCount
     ? EntityColumnKind.Number
-    : coerceEntityColumnKind(getStructureColumnKind(item, structure, currentTableName));
+    : item.isReference ? EntityColumnKind.Lookup : coerceEntityColumnKind(getStructureColumnKind(item, structure, currentTableName));
 
   return {
     key: item.path,
@@ -408,7 +413,8 @@ export function createEntityQueryFilterBuilderColumnFromPickerItem(
     column: {
       path: item.path,
       label,
-      kind
+      kind,
+      ...(lookup ? { lookup, lookupMode: lookup.mode } : {})
     },
     ...(isVirtualCount ? { aggregationType: EntityAggregationType.Count, virtual: true } : {}),
     filterPath: isVirtualCount ? undefined : item.path,
@@ -710,6 +716,16 @@ function normalizeColumnLike(
   return column;
 }
 
+function resolveColumnKind(column: ResolvedEntityColumnSchema): EntityColumnKind | undefined {
+  const kind = coerceEntityColumnKind(column.kind);
+
+  if (kind != null) {
+    return kind;
+  }
+
+  return column.lookup || column.options?.length ? EntityColumnKind.Lookup : undefined;
+}
+
 function visitStructureContext(
   structure: EntityApiManagerStructureResponse,
   tableName: string,
@@ -761,7 +777,13 @@ function visitStructureContext(
     const label = relationLabel
       ? `${relationLabel} / ${getStructureColumnLabel(column, entity.tableName, labels)}`
       : getStructureColumnLabel(column, entity.tableName, labels);
-    const kind = coerceEntityColumnKind(getStructureColumnKindByValue(column.dataValueType));
+    const referenceEntity = column.referenceTableName ? getStructureEntity(structure, column.referenceTableName) : undefined;
+    const lookup = column.isReference
+      ? createStructureLookupSource(referenceEntity, column.referenceTableName)
+      : undefined;
+    const kind = column.isReference
+      ? EntityColumnKind.Lookup
+      : coerceEntityColumnKind(getStructureColumnKindByValue(column.dataValueType));
 
     if (!visited.has(path)) {
       visited.add(path);
@@ -773,7 +795,8 @@ function visitStructureContext(
         column: {
           path,
           label,
-          kind
+          kind,
+          ...(lookup ? { lookup, lookupMode: lookup.mode } : {})
         },
         filterPath: path,
         joinDirection,
@@ -929,6 +952,28 @@ function getStructurePrimaryColumn(
 ): EntityApiStructureColumnResponse | undefined {
   return entity?.columns.find((column) => column.isPrimary)
     ?? entity?.columns.find((column) => ["Id", "ID"].includes(column.propertyName));
+}
+
+function createStructureLookupSource(
+  referenceEntity: EntityApiStructureEntityResponse | undefined,
+  referenceTableName: string | null | undefined
+): EntityLookupOptionsSource | undefined {
+  const tableName = referenceEntity?.tableName ?? referenceTableName;
+
+  if (!tableName) {
+    return undefined;
+  }
+
+  const primaryColumn = getStructurePrimaryColumn(referenceEntity);
+  const displayColumn = getStructureDisplayColumn(referenceEntity) ?? primaryColumn;
+
+  return {
+    tableName,
+    valueColumn: primaryColumn?.propertyName ?? "Id",
+    displayColumn: displayColumn?.propertyName ?? primaryColumn?.propertyName ?? "Id",
+    mode: "lookup",
+    rowCount: 15
+  };
 }
 
 function getStructureColumnKind(

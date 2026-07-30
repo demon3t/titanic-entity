@@ -3,11 +3,16 @@ import {
   EntityColumnKind,
   EntityLogicalOperation
 } from "@titanic-entity/entity-core";
-import { Titanic } from "@titanic-entity/entity-react";
+import { Titanic, useEntityLookupOptions } from "@titanic-entity/entity-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Button } from "../button";
 import { getEntityDataGridLabels } from "../dataGrid/data-grid-lcz";
 import { ColumnSettingsFieldPickerSchema, type ColumnSettingsFieldPickerItem } from "../dataGridSettingsModalPage/schemas";
+import { DateInput } from "../dateInput";
+import { DateTimeInput } from "../dateTimeInput";
+import { LookupInput, type LookupInputValue } from "../lookupInput";
+import { NumberInput } from "../numberInput";
+import { TimeInput } from "../timeInput";
 import { getEntityQueryFilterBuilderLabels } from "./entity-query-filter-builder-lcz";
 import type { EntityQueryFilterBuilderLabelsInput, EntityQueryFilterBuilderProps } from "./index";
 import {
@@ -156,6 +161,7 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
                 item={item}
                 key={item.id}
                 labels={resolvedLabels}
+                locale={locale}
                 maxRelationDepth={maxRelationDepth}
                 rootTableName={rootTableName}
                 structure={structure}
@@ -191,6 +197,7 @@ interface FilterBuilderItemProps {
   disabled: boolean;
   item: EntityQueryFilterBuilderItem;
   labels: EntityQueryFilterBuilderLabels;
+  locale?: string;
   maxRelationDepth: number;
   rootTableName?: string | null;
   structure?: EntityQueryFilterBuilderProps["structure"];
@@ -215,6 +222,7 @@ function FilterBuilderGroup({
   disabled,
   item,
   labels,
+  locale,
   maxRelationDepth,
   rootTableName,
   structure,
@@ -262,6 +270,7 @@ function FilterBuilderGroup({
             item={child}
             key={child.id}
             labels={labels}
+            locale={locale}
             maxRelationDepth={maxRelationDepth}
             rootTableName={rootTableName}
             structure={structure}
@@ -291,6 +300,7 @@ function FilterBuilderCondition({
   disabled,
   item,
   labels,
+  locale,
   maxRelationDepth,
   rootTableName,
   structure,
@@ -382,6 +392,7 @@ function FilterBuilderCondition({
         column={selectedColumn}
         disabled={disabled}
         labels={labels}
+        locale={locale}
         operator={selectedOperator}
         value={item.value}
         onChange={(nextValue) => onChange({ ...item, comparisonType: selectedOperator, value: nextValue })}
@@ -520,12 +531,13 @@ interface FilterValueInputProps {
   column: EntityQueryFilterBuilderColumnOption | null;
   disabled: boolean;
   labels: EntityQueryFilterBuilderLabels;
+  locale?: string;
   operator: ConditionOperator;
   value: unknown;
   onChange: (value: unknown) => void;
 }
 
-function FilterValueInput({ column, disabled, labels, operator, value, onChange }: FilterValueInputProps) {
+function FilterValueInput({ column, disabled, labels, locale, operator, value, onChange }: FilterValueInputProps) {
   const valueMode = getEntityQueryFilterOperatorValueMode(operator);
 
   if (valueMode === "none") {
@@ -544,8 +556,82 @@ function FilterValueInput({ column, disabled, labels, operator, value, onChange 
     );
   }
 
-  const inputType = valueMode === "multiple" ? "text" : getInputType(column?.kind);
   const placeholder = valueMode === "multiple" ? labels.valueListPlaceholder : labels.valuePlaceholder;
+
+  if (valueMode === "single") {
+    switch (column?.kind) {
+      case EntityColumnKind.Number:
+        return (
+          <div className="titanic-query-filter-builder__value">
+            <span>{labels.value}</span>
+            <NumberInput
+              className="titanic-query-filter-builder__value-control"
+              disabled={disabled}
+              value={toNumberInputValue(value)}
+              onChange={onChange}
+            />
+          </div>
+        );
+      case EntityColumnKind.Date:
+        return (
+          <div className="titanic-query-filter-builder__value">
+            <span>{labels.value}</span>
+            <DateInput
+              className="titanic-query-filter-builder__value-control"
+              disabled={disabled}
+              locale={locale}
+              placeholder={placeholder}
+              renderFrame={false}
+              value={toNullableString(value)}
+              onChange={onChange}
+            />
+          </div>
+        );
+      case EntityColumnKind.DateTime:
+        return (
+          <div className="titanic-query-filter-builder__value">
+            <span>{labels.value}</span>
+            <DateTimeInput
+              className="titanic-query-filter-builder__value-control"
+              disabled={disabled}
+              locale={locale}
+              placeholder={placeholder}
+              renderFrame={false}
+              value={toNullableString(value)}
+              onChange={onChange}
+            />
+          </div>
+        );
+      case EntityColumnKind.Time:
+        return (
+          <div className="titanic-query-filter-builder__value">
+            <span>{labels.value}</span>
+            <TimeInput
+              className="titanic-query-filter-builder__value-control"
+              disabled={disabled}
+              locale={locale}
+              placeholder={placeholder}
+              renderFrame={false}
+              value={toNullableString(value)}
+              onChange={onChange}
+            />
+          </div>
+        );
+      case EntityColumnKind.Lookup:
+        return (
+          <FilterLookupValueInput
+            column={column}
+            disabled={disabled}
+            labels={labels}
+            locale={locale}
+            value={value}
+            onChange={onChange}
+          />
+        );
+      default:
+        break;
+    }
+  }
 
   return (
     <label className="titanic-query-filter-builder__value">
@@ -553,13 +639,65 @@ function FilterValueInput({ column, disabled, labels, operator, value, onChange 
       <input
         disabled={disabled}
         placeholder={placeholder}
-        type={inputType}
+        type={getInputType(column?.kind)}
         value={formatEntityQueryFilterBuilderInputValue(value)}
         onChange={(event: ChangeEvent<HTMLInputElement>) => {
           onChange(parseEntityQueryFilterBuilderInputValue(event.target.value, operator, column));
         }}
       />
     </label>
+  );
+}
+
+function FilterLookupValueInput({
+  column,
+  disabled,
+  labels,
+  locale,
+  value,
+  onChange
+}: {
+  column: EntityQueryFilterBuilderColumnOption;
+  disabled: boolean;
+  labels: EntityQueryFilterBuilderLabels;
+  locale?: string;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const [searchText, setSearchText] = useState("");
+  const lookup = useEntityLookupOptions(column.column, {
+    enabled: !disabled && Boolean(column.column.lookup || column.column.options?.length),
+    searchText
+  });
+
+  return (
+    <div className="titanic-query-filter-builder__value">
+      <span>{labels.value}</span>
+      <LookupInput
+        className="titanic-query-filter-builder__value-control"
+        disabled={disabled}
+        error={lookup.error}
+        hasMore={lookup.hasMore}
+        items={lookup.options}
+        locale={locale}
+        loading={lookup.loading}
+        loadingMore={lookup.loadingMore}
+        mode={column.column.lookup?.mode ?? column.column.lookupMode ?? "lookup"}
+        renderFrame={false}
+        value={toLookupInputValue(value)}
+        onChange={(nextValue) => onChange(nextValue)}
+        onLoadMore={() => {
+          void lookup.loadMore();
+        }}
+        onOpen={(nextSearchText) => {
+          setSearchText(nextSearchText);
+          void lookup.reload({ searchText: nextSearchText, value: toLookupInputValue(value) });
+        }}
+        onSearchChange={(nextSearchText) => {
+          setSearchText(nextSearchText);
+        }}
+      />
+    </div>
   );
 }
 
@@ -686,6 +824,27 @@ function getInputType(kind?: EntityColumnKind): string {
     default:
       return "text";
   }
+}
+
+function toNullableString(value: unknown): string | null {
+  return value == null || value === "" ? null : String(value);
+}
+
+function toNumberInputValue(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toLookupInputValue(value: unknown): LookupInputValue {
+  return typeof value === "string" || typeof value === "number" ? value : null;
 }
 
 function resolveLabels(
