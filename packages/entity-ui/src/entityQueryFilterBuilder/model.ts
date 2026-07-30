@@ -427,14 +427,14 @@ export function createEntityQueryFilterBuilderColumnFromPickerItem(
 }
 
 export function createEntityQueryFilterGroup(
-  columns: readonly EntityQueryFilterBuilderColumnOption[] = []
+  _columns: readonly EntityQueryFilterBuilderColumnOption[] = []
 ): EntityQueryFilterBuilderGroup {
   return {
     id: createEntityQueryFilterBuilderId("group"),
     kind: "group",
     logicalOperation: EntityLogicalOperation.And,
     isEnabled: true,
-    items: [createEntityQueryFilterCondition(columns)]
+    items: []
   };
 }
 

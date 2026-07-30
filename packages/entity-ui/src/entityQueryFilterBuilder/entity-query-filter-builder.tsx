@@ -26,7 +26,6 @@ import {
   createEntityQueryFilterFieldPickerPathOptions,
   createEntityQueryFilterFieldPickerState,
   createEntityQueryFilterGroup,
-  createEntityQueryFilters,
   createEntityQueryUnsupportedFilters,
   formatEntityQueryFilterBuilderInputValue,
   getEntityQueryFilterOperatorValueMode,
@@ -114,44 +113,44 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
       });
     };
 
-    const filters = createEntityQueryFilters(state);
-
     return (
       <div className={joinClassNames("titanic-query-filter-builder", className)}>
-        <div className="titanic-query-filter-builder__toolbar">
-          <LogicalOperationSelect
-            disabled={disabled}
-            labels={resolvedLabels}
-            value={state.logicalOperation}
-            onChange={(logicalOperation) => commitState({ ...state, logicalOperation })}
-          />
-          <span className="titanic-query-filter-builder__summary">
-            {filters.length ? `${filters.length}` : resolvedLabels.empty}
-          </span>
-          <div className="titanic-query-filter-builder__actions">
-            <Button disabled={disabled || !columnOptions.length} type="button" variant="secondary" onClick={addCondition}>
-              {resolvedLabels.addCondition}
-            </Button>
-            <Button disabled={disabled || !columnOptions.length} type="button" variant="secondary" onClick={addGroup}>
-              {resolvedLabels.addGroup}
-            </Button>
-            <Button
-              disabled={disabled || !state.items.length}
-              type="button"
-              variant="ghost"
-              onClick={() => commitState({ ...state, items: [] })}
-            >
-              {resolvedLabels.clear}
-            </Button>
-          </div>
-        </div>
-
         {!columnOptions.length ? (
           <div className="titanic-query-filter-builder__empty">{resolvedLabels.noFields}</div>
         ) : null}
 
-        {columnOptions.length && state.items.length ? (
-          <div className="titanic-query-filter-builder__items">
+        {columnOptions.length ? (
+          <div className="titanic-query-filter-builder__group titanic-query-filter-builder__group_root">
+            <div className="titanic-query-filter-builder__group-header">
+              <FilterGroupIcon />
+              <LogicalOperationSelect
+                disabled={disabled}
+                labels={resolvedLabels}
+                value={state.logicalOperation}
+                onChange={(logicalOperation) => commitState({ ...state, logicalOperation })}
+              />
+              <div className="titanic-query-filter-builder__group-actions">
+                <FilterIconButton
+                  disabled={disabled || !columnOptions.length}
+                  icon="condition"
+                  label={resolvedLabels.addCondition}
+                  onClick={addCondition}
+                />
+                <FilterIconButton
+                  disabled={disabled || !columnOptions.length}
+                  icon="group"
+                  label={resolvedLabels.addGroup}
+                  onClick={addGroup}
+                />
+                <FilterIconButton
+                  disabled={disabled || !state.items.length}
+                  icon="clear"
+                  label={resolvedLabels.clear}
+                  onClick={() => commitState({ ...state, items: [] })}
+                />
+              </div>
+            </div>
+            <div className="titanic-query-filter-builder__items">
             {state.items.map((item) => (
               <FilterBuilderItem
                 columns={columnOptions}
@@ -183,6 +182,7 @@ export const EntityQueryFilterBuilder = Titanic.define<EntityQueryFilterBuilderP
                 })}
               />
             ))}
+            </div>
           </div>
         ) : null}
       </div>
@@ -237,28 +237,47 @@ function FilterBuilderGroup({
       item.isEnabled === false && "titanic-query-filter-builder__group_disabled"
     )}>
       <div className="titanic-query-filter-builder__group-header">
-        <strong>{labels.group}</strong>
+        <FilterGroupIcon />
         <LogicalOperationSelect
           disabled={disabled}
           labels={labels}
           value={item.logicalOperation}
           onChange={(logicalOperation) => onChange({ ...item, logicalOperation })}
         />
-        <BooleanToggle
-          checked={item.isNot === true}
-          disabled={disabled}
-          label={labels.not}
-          onChange={(isNot) => onChange({ ...item, isNot })}
-        />
-        <EnabledToggle
-          disabled={disabled}
-          labels={labels}
-          value={item.isEnabled !== false}
-          onChange={(enabled) => onChange({ ...item, isEnabled: enabled })}
-        />
-        <Button disabled={disabled} type="button" variant="ghost" onClick={() => onRemove(item.id)}>
-          {labels.remove}
-        </Button>
+        <div className="titanic-query-filter-builder__group-actions">
+          <FilterIconButton
+            disabled={disabled}
+            icon="condition"
+            label={labels.addCondition}
+            onClick={() => onAddCondition(item.id)}
+          />
+          <FilterIconButton
+            disabled={disabled}
+            icon="group"
+            label={labels.addGroup}
+            onClick={() => onAddGroup(item.id)}
+          />
+          <FilterToggleButton
+            active={item.isNot === true}
+            disabled={disabled}
+            label={labels.not}
+            text={labels.not}
+            onClick={() => onChange({ ...item, isNot: item.isNot !== true })}
+          />
+          <FilterIconButton
+            active={item.isEnabled === false}
+            disabled={disabled}
+            icon={item.isEnabled === false ? "disabled" : "enabled"}
+            label={item.isEnabled === false ? labels.disabled : labels.enabled}
+            onClick={() => onChange({ ...item, isEnabled: item.isEnabled === false })}
+          />
+          <FilterIconButton
+            disabled={disabled}
+            icon="remove"
+            label={labels.remove}
+            onClick={() => onRemove(item.id)}
+          />
+        </div>
       </div>
       <div className="titanic-query-filter-builder__items titanic-query-filter-builder__items_nested">
         {item.items.map((child) => (
@@ -280,14 +299,6 @@ function FilterBuilderGroup({
             onRemove={(itemId) => onChange({ ...item, items: removeItem(item.items, itemId) })}
           />
         ))}
-      </div>
-      <div className="titanic-query-filter-builder__group-actions">
-        <Button disabled={disabled} type="button" variant="secondary" onClick={() => onAddCondition(item.id)}>
-          {labels.addCondition}
-        </Button>
-        <Button disabled={disabled} type="button" variant="secondary" onClick={() => onAddGroup(item.id)}>
-          {labels.addGroup}
-        </Button>
       </div>
     </div>
   );
@@ -322,7 +333,7 @@ function FilterBuilderCondition({
       item.isEnabled === false && "titanic-query-filter-builder__condition_disabled"
     )}>
       <div className="titanic-query-filter-builder__field">
-        <span>{labels.field}</span>
+        <span className="titanic-query-filter-builder__sr-only">{labels.field}</span>
         {structure && rootTableName ? (
           <>
             <Button
@@ -373,7 +384,7 @@ function FilterBuilderCondition({
         )}
       </div>
       <label className="titanic-query-filter-builder__operator">
-        <span>{labels.operator}</span>
+        <span className="titanic-query-filter-builder__sr-only">{labels.operator}</span>
         <select
           disabled={disabled}
           value={String(selectedOperator)}
@@ -397,21 +408,28 @@ function FilterBuilderCondition({
         value={item.value}
         onChange={(nextValue) => onChange({ ...item, comparisonType: selectedOperator, value: nextValue })}
       />
-      <BooleanToggle
-        checked={item.isNot === true}
-        disabled={disabled}
-        label={labels.not}
-        onChange={(isNot) => onChange({ ...item, isNot })}
-      />
-      <EnabledToggle
-        disabled={disabled}
-        labels={labels}
-        value={item.isEnabled !== false}
-        onChange={(enabled) => onChange({ ...item, isEnabled: enabled })}
-      />
-      <Button disabled={disabled} type="button" variant="ghost" onClick={() => onRemove(item.id)}>
-        {labels.remove}
-      </Button>
+      <div className="titanic-query-filter-builder__condition-actions">
+        <FilterToggleButton
+          active={item.isNot === true}
+          disabled={disabled}
+          label={labels.not}
+          text={labels.not}
+          onClick={() => onChange({ ...item, isNot: item.isNot !== true })}
+        />
+        <FilterIconButton
+          active={item.isEnabled === false}
+          disabled={disabled}
+          icon={item.isEnabled === false ? "disabled" : "enabled"}
+          label={item.isEnabled === false ? labels.disabled : labels.enabled}
+          onClick={() => onChange({ ...item, isEnabled: item.isEnabled === false })}
+        />
+        <FilterIconButton
+          disabled={disabled}
+          icon="remove"
+          label={labels.remove}
+          onClick={() => onRemove(item.id)}
+        />
+      </div>
     </div>
   );
 }
@@ -491,9 +509,7 @@ function FieldPickerPopover({
     <div className="titanic-query-filter-builder__field-picker">
       <div className="titanic-query-filter-builder__field-picker-head">
         <strong>{labels.openFieldPicker}</strong>
-        <Button type="button" variant="ghost" onClick={onClose}>
-          {labels.remove}
-        </Button>
+        <FilterIconButton disabled={false} icon="remove" label={labels.remove} onClick={onClose} />
       </div>
       <ColumnSettingsFieldPickerSchema
         availableColumns={[]}
@@ -547,7 +563,7 @@ function FilterValueInput({ column, disabled, labels, locale, operator, value, o
   if (column?.kind === EntityColumnKind.Boolean && valueMode === "single") {
     return (
       <label className="titanic-query-filter-builder__value">
-        <span>{labels.value}</span>
+        <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
         <select disabled={disabled} value={value === true ? "true" : "false"} onChange={(event) => onChange(event.target.value === "true")}>
           <option value="true">{labels.booleanTrue}</option>
           <option value="false">{labels.booleanFalse}</option>
@@ -563,7 +579,7 @@ function FilterValueInput({ column, disabled, labels, locale, operator, value, o
       case EntityColumnKind.Number:
         return (
           <div className="titanic-query-filter-builder__value">
-            <span>{labels.value}</span>
+            <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
             <NumberInput
               className="titanic-query-filter-builder__value-control"
               disabled={disabled}
@@ -575,7 +591,7 @@ function FilterValueInput({ column, disabled, labels, locale, operator, value, o
       case EntityColumnKind.Date:
         return (
           <div className="titanic-query-filter-builder__value">
-            <span>{labels.value}</span>
+            <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
             <DateInput
               className="titanic-query-filter-builder__value-control"
               disabled={disabled}
@@ -590,7 +606,7 @@ function FilterValueInput({ column, disabled, labels, locale, operator, value, o
       case EntityColumnKind.DateTime:
         return (
           <div className="titanic-query-filter-builder__value">
-            <span>{labels.value}</span>
+            <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
             <DateTimeInput
               className="titanic-query-filter-builder__value-control"
               disabled={disabled}
@@ -605,7 +621,7 @@ function FilterValueInput({ column, disabled, labels, locale, operator, value, o
       case EntityColumnKind.Time:
         return (
           <div className="titanic-query-filter-builder__value">
-            <span>{labels.value}</span>
+            <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
             <TimeInput
               className="titanic-query-filter-builder__value-control"
               disabled={disabled}
@@ -635,7 +651,7 @@ function FilterValueInput({ column, disabled, labels, locale, operator, value, o
 
   return (
     <label className="titanic-query-filter-builder__value">
-      <span>{labels.value}</span>
+      <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
       <input
         disabled={disabled}
         placeholder={placeholder}
@@ -672,7 +688,7 @@ function FilterLookupValueInput({
 
   return (
     <div className="titanic-query-filter-builder__value">
-      <span>{labels.value}</span>
+      <span className="titanic-query-filter-builder__sr-only">{labels.value}</span>
       <LookupInput
         className="titanic-query-filter-builder__value-control"
         disabled={disabled}
@@ -701,6 +717,79 @@ function FilterLookupValueInput({
   );
 }
 
+type FilterIconButtonKind = "condition" | "group" | "clear" | "remove" | "enabled" | "disabled";
+
+function FilterIconButton({
+  active = false,
+  disabled,
+  icon,
+  label,
+  onClick
+}: {
+  active?: boolean;
+  disabled: boolean;
+  icon: FilterIconButtonKind;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-label={label}
+      className={joinClassNames(
+        "titanic-query-filter-builder__icon-button",
+        `titanic-query-filter-builder__icon-button_${icon}`,
+        active && "titanic-query-filter-builder__icon-button_active"
+      )}
+      disabled={disabled}
+      title={label}
+      type="button"
+      onClick={onClick}
+    >
+      <span aria-hidden="true" className="titanic-query-filter-builder__icon-glyph" />
+    </button>
+  );
+}
+
+function FilterToggleButton({
+  active,
+  disabled,
+  label,
+  text,
+  onClick
+}: {
+  active: boolean;
+  disabled: boolean;
+  label: string;
+  text: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={active}
+      className={joinClassNames(
+        "titanic-query-filter-builder__icon-button",
+        "titanic-query-filter-builder__icon-button_text",
+        active && "titanic-query-filter-builder__icon-button_active"
+      )}
+      disabled={disabled}
+      title={label}
+      type="button"
+      onClick={onClick}
+    >
+      <span aria-hidden="true">{text}</span>
+      <span className="titanic-query-filter-builder__sr-only">{label}</span>
+    </button>
+  );
+}
+
+function FilterGroupIcon() {
+  return (
+    <span className="titanic-query-filter-builder__group-icon" aria-hidden="true">
+      <span />
+    </span>
+  );
+}
+
 function LogicalOperationSelect({
   disabled,
   labels,
@@ -726,44 +815,6 @@ function LogicalOperationSelect({
     >
       {value === EntityLogicalOperation.And ? labels.and : labels.or}
     </button>
-  );
-}
-
-function BooleanToggle({
-  checked,
-  disabled,
-  label,
-  onChange
-}: {
-  checked: boolean;
-  disabled: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="titanic-query-filter-builder__toggle">
-      <input disabled={disabled} checked={checked} type="checkbox" onChange={(event) => onChange(event.target.checked)} />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-function EnabledToggle({
-  disabled,
-  labels,
-  value,
-  onChange
-}: {
-  disabled: boolean;
-  labels: EntityQueryFilterBuilderLabels;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <label className="titanic-query-filter-builder__toggle">
-      <input disabled={disabled} checked={value} type="checkbox" onChange={(event) => onChange(event.target.checked)} />
-      <span>{value ? labels.enabled : labels.disabled}</span>
-    </label>
   );
 }
 
