@@ -19,6 +19,7 @@ export interface ColumnSettingsFieldPickerItem {
   propertyName: string;
   referenceEntityLabel?: string;
   referenceTableName?: string;
+  sortPath?: string;
 }
 
 export interface ColumnSettingsAvailableColumnItem {
@@ -53,10 +54,12 @@ export function createGridColumnFromFieldPickerItem<TRow>(
   return {
     key: item.path,
     path: item.path,
+    ...(item.sortPath ? { sortPath: item.sortPath } : {}),
     label: caption,
     field: {
       key: item.path,
       path: item.path,
+      ...(item.sortPath ? { sortPath: item.sortPath } : {}),
       caption
     },
     defaultVisible: false
@@ -212,6 +215,10 @@ export function createFieldPickerState(
     .map((column): ColumnSettingsFieldPickerItem => {
       const path = prefixPath ? `${prefixPath}.${column.propertyName}` : column.propertyName;
       const referenceEntity = column.referenceTableName ? entityByTableName.get(column.referenceTableName) : undefined;
+      const referenceDisplayColumn = column.isReference
+        ? getStructureDisplayColumn(referenceEntity)
+        : undefined;
+      const sortPath = referenceDisplayColumn ? `${path}.${referenceDisplayColumn.propertyName}` : undefined;
 
       return {
         dbCode: column.columnName || column.propertyName,
@@ -222,7 +229,8 @@ export function createFieldPickerState(
         ...(referenceEntity || column.referenceTableName
           ? { referenceEntityLabel: getStructureEntityLabel(referenceEntity, column.referenceTableName, labels) }
           : {}),
-        ...(column.referenceTableName ? { referenceTableName: column.referenceTableName } : {})
+        ...(column.referenceTableName ? { referenceTableName: column.referenceTableName } : {}),
+        ...(sortPath ? { sortPath } : {})
       };
     })
     .filter((item) => matchesFieldPickerSearch(item, normalizedSearch));
@@ -334,6 +342,13 @@ function getStructureColumnLabel(
 ): string {
   const tableLabels = labels?.columns?.[tableName];
   return tableLabels?.[column.propertyName] ?? tableLabels?.[column.columnName] ?? splitTechnicalName(column.propertyName);
+}
+
+function getStructureDisplayColumn(
+  entity: EntityApiStructureEntityResponse | undefined
+): EntityApiStructureColumnResponse | undefined {
+  return entity?.columns.find((column) => column.isDisplay)
+    ?? entity?.columns.find((column) => ["Name", "DisplayName", "Title"].includes(column.propertyName));
 }
 
 export function getAvailableColumnPath<TRow>(
