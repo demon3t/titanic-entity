@@ -244,11 +244,13 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         || this.methods.normalizeColumnSettingText(column.name)
         || key;
       const normalizedColumn = { ...column, key, path };
+      const sortPath = this.methods.getColumnSortPath(undefined, normalizedColumn);
+      const normalizedColumnWithSortPath = sortPath ? { ...normalizedColumn, sortPath } : normalizedColumn;
 
       return {
-        ...normalizedColumn,
+        ...normalizedColumnWithSortPath,
         defaultVisible: column.defaultVisible ?? true,
-        field: this.methods.createColumnField(normalizedColumn),
+        field: this.methods.createColumnField(normalizedColumnWithSortPath),
         key,
         label: this.methods.getColumnLabel(normalizedColumn),
         path,
@@ -429,6 +431,81 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         || this.methods.normalizeColumnSettingText(this.methods.getColumnKey(column));
     },
 
+    getColumnSortPath(this: any, setting?: any, column?: any): string {
+      const settingField = this.methods.getColumnField(setting);
+      const columnField = this.methods.getColumnField(column);
+      const explicitSortPath = this.methods.normalizeColumnSettingText(setting?.sortPath)
+        || this.methods.normalizeColumnSettingText(settingField?.sortPath)
+        || this.methods.normalizeColumnSettingText(column?.sortPath)
+        || this.methods.normalizeColumnSettingText(columnField?.sortPath);
+
+      if (explicitSortPath) {
+        return explicitSortPath;
+      }
+
+      const valuePath = this.methods.getColumnSettingPath(setting ?? {}, column);
+      const displaySortPath = this.methods.resolveReferenceDisplaySortPath(valuePath);
+
+      return displaySortPath || "";
+    },
+
+    resolveReferenceDisplaySortPath(this: any, valuePath: string): string | undefined {
+      const structure = this.attributes.structure;
+      const rootTableName = this.methods.normalizeColumnSettingText(this.attributes.resolvedEntity?.tableName);
+
+      if (!structure || !Array.isArray(structure.entities) || !rootTableName || !valuePath) {
+        return undefined;
+      }
+
+      const entityByTableName = new Map<string, any>();
+
+      for (const entity of structure.entities) {
+        const tableName = this.methods.normalizeColumnSettingText(entity?.tableName);
+
+        if (tableName) {
+          entityByTableName.set(tableName.toLocaleLowerCase(), entity);
+        }
+      }
+
+      let entity = entityByTableName.get(rootTableName.toLocaleLowerCase());
+      let referenceEntity: any | undefined;
+      const segments = valuePath.split(".").map((segment: string) => segment.trim()).filter(Boolean);
+
+      for (const segment of segments) {
+        if (!entity || !Array.isArray(entity.columns)) {
+          return undefined;
+        }
+
+        const column = entity.columns.find((candidate: any) =>
+          this.methods.normalizeColumnSettingText(candidate?.propertyName).toLocaleLowerCase() === segment.toLocaleLowerCase()
+        );
+
+        if (!column?.isReference || !column.referenceTableName) {
+          referenceEntity = undefined;
+          entity = undefined;
+          continue;
+        }
+
+        referenceEntity = entityByTableName.get(String(column.referenceTableName).toLocaleLowerCase());
+        entity = referenceEntity;
+      }
+
+      if (!referenceEntity || !Array.isArray(referenceEntity.columns)) {
+        return undefined;
+      }
+
+      const displayColumn =
+        referenceEntity.columns.find((column: any) => column?.isDisplay) ??
+        referenceEntity.columns.find((column: any) =>
+          ["name", "displayname", "title"].includes(
+            this.methods.normalizeColumnSettingText(column?.propertyName).toLocaleLowerCase()
+          )
+        );
+      const displayColumnName = this.methods.normalizeColumnSettingText(displayColumn?.propertyName);
+
+      return displayColumnName ? `${valuePath}.${displayColumnName}` : undefined;
+    },
+
     getColumnSettingCaption(this: any, setting: any): string {
       const field = this.methods.getColumnField(setting);
 
@@ -444,6 +521,10 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         || this.methods.getColumnSettingKey(setting);
       const path = this.methods.getColumnSettingPath(setting ?? {}, column)
         || this.methods.normalizeColumnSettingText(column?.path ?? column?.key);
+      const sortPath = this.methods.normalizeColumnSettingText(setting?.sortPath)
+        || this.methods.normalizeColumnSettingText(settingField?.sortPath)
+        || this.methods.normalizeColumnSettingText(column?.sortPath)
+        || this.methods.normalizeColumnSettingText(columnField?.sortPath);
       const alias = this.methods.normalizeColumnSettingText(settingField?.alias)
         || this.methods.normalizeColumnSettingText(columnField?.alias)
         || this.methods.normalizeColumnSettingText(column?.alias);
@@ -456,6 +537,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         ...(settingField ?? {}),
         ...(key ? { key } : {}),
         ...(path ? { path } : {}),
+        ...(sortPath ? { sortPath } : {}),
         ...(alias ? { alias } : {}),
         ...(caption ? { caption } : {})
       };
@@ -732,7 +814,9 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
 
     createColumnSortSetting(this: any, column: any, direction: "asc" | "desc"): { key: string; path?: string; direction: "asc" | "desc" } | null {
       const key = this.methods.getColumnKey(column);
-      const path = this.methods.getColumnSettingPath({}, column);
+      const sortPath = this.methods.getColumnSortPath({}, column);
+      const valuePath = this.methods.getColumnSettingPath({}, column);
+      const path = sortPath || valuePath;
       const fallbackKey = path || key;
 
       if (!fallbackKey) {
@@ -755,8 +839,13 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
 
       const key = this.methods.getColumnKey(column);
       const path = this.methods.getColumnSettingPath({}, column);
+      const sortPath = this.methods.getColumnSortPath({}, column);
 
-      if ((path && sortSetting.path === path) || (key && sortSetting.key === key)) {
+      if (
+        (sortPath && sortSetting.path === sortPath) ||
+        (path && sortSetting.path === path) ||
+        (key && sortSetting.key === key)
+      ) {
         return sortSetting.direction;
       }
 
@@ -1453,6 +1542,12 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
       }
     },
 
+    isCurrentQueryFingerprint(this: any, queryFingerprint: string): boolean {
+      const latestQueryFingerprintRef = this.attributes.latestQueryFingerprintRef;
+
+      return !latestQueryFingerprintRef || latestQueryFingerprintRef.current === queryFingerprint;
+    },
+
     resolveStatusText(this: any): string {
       if (this.attributes.effectiveLoading) {
         return this.attributes.effectiveLabels.loading;
@@ -1504,6 +1599,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
       }
 
       const requestedRowCount = this.methods.resolvePageRowCount(0);
+      const queryFingerprint = this.attributes.queryFingerprint;
 
       if (requestedRowCount <= 0) {
         this.attributes.setInternalRows([]);
@@ -1518,6 +1614,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
       this.attributes.setInternalLoading(true);
       this.attributes.setLoadingMoreRows(false);
       this.attributes.setHasMoreRows(false);
+      this.attributes.setInternalRows([]);
       this.attributes.setLoadedRowCount(0);
       this.attributes.setError(null);
 
@@ -1531,7 +1628,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
               ? await client.queryEntityRows(query)
               : [];
 
-        if (isCancelled?.()) {
+        if (isCancelled?.() || !this.methods.isCurrentQueryFingerprint(queryFingerprint)) {
           return;
         }
 
@@ -1541,7 +1638,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
           ? await this.attributes.mapRows(resultRows)
           : resultRows;
 
-        if (isCancelled?.()) {
+        if (isCancelled?.() || !this.methods.isCurrentQueryFingerprint(queryFingerprint)) {
           return;
         }
 
@@ -1561,7 +1658,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
           this.attributes.setHasMoreRows(false);
         }
       } finally {
-        if (!isCancelled?.()) {
+        if (!isCancelled?.() && this.methods.isCurrentQueryFingerprint(queryFingerprint)) {
           this.attributes.setInternalLoading(false);
           this.attributes.setLoadingMoreRows(false);
 
@@ -1596,6 +1693,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
 
       this.attributes.setLoadingMoreRows(true);
       this.attributes.setError(null);
+      const queryFingerprint = this.attributes.queryFingerprint;
 
       if (this.attributes.loadMorePendingRef) {
         this.attributes.loadMorePendingRef.current = true;
@@ -1612,7 +1710,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
               ? await client.queryEntityRows(query)
               : [];
 
-        if (isCancelled?.()) {
+        if (isCancelled?.() || !this.methods.isCurrentQueryFingerprint(queryFingerprint)) {
           return;
         }
 
@@ -1622,7 +1720,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
             ? await this.attributes.mapRows(resultRows)
             : resultRows;
 
-        if (isCancelled?.()) {
+        if (isCancelled?.() || !this.methods.isCurrentQueryFingerprint(queryFingerprint)) {
           return;
         }
 
@@ -1641,7 +1739,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
           this.attributes.setError(error instanceof Error ? error.message : String(error));
         }
       } finally {
-        if (!isCancelled?.()) {
+        if (!isCancelled?.() && this.methods.isCurrentQueryFingerprint(queryFingerprint)) {
           this.attributes.setLoadingMoreRows(false);
 
           if (this.attributes.loadMorePendingRef) {
@@ -1714,6 +1812,10 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
         this.methods.getRowValue(row, { path: "key", key: "key" });
 
       return candidate == null ? String(rowIndex) : String(candidate);
+    },
+
+    getReactRowKey(this: any, row: any, rowIndex: number): string {
+      return `${this.methods.getResolvedRowKey(row, rowIndex)}:${rowIndex}`;
     },
 
     getRowValue(this: any, row: any, column: any): unknown {
@@ -2159,6 +2261,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
 
     renderBodyRow(this: any, row: any, rowIndex: number): unknown {
       const rowKey = this.methods.getResolvedRowKey(row, rowIndex);
+      const reactRowKey = this.methods.getReactRowKey(row, rowIndex);
       const selected = this.methods.resolveSelectedRowKeys().includes(rowKey);
       const customRow =
         typeof this.attributes.renderRow === "function"
@@ -2178,7 +2281,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
           : null;
 
       if (customRow != null) {
-        return <Fragment key={rowKey}>{customRow as ReactNode}</Fragment>;
+        return <Fragment key={reactRowKey}>{customRow as ReactNode}</Fragment>;
       }
 
       return (
@@ -2193,7 +2296,7 @@ const dataGridMethodDefinitions: Record<string, (this: any, ...args: any[]) => a
             this.attributes.effectiveRowMode === "tile"
               && "titanic-data-grid__row_tile titanic-data-grid__row--tile"
           )}
-          key={rowKey}
+          key={reactRowKey}
           role="row"
           onClick={(event) => this.methods.handleRowClick(event, row, rowIndex)}
           onDoubleClick={(event) => this.methods.handleRowDoubleClick(event, row, rowIndex)}
@@ -2481,6 +2584,8 @@ export const DataGrid = Titanic.define<DataGridProps<any>>(
   const [sortSetting, setSortSetting] = useState<any>(() => null);
   attributes.sortSetting = sortSetting;
   attributes.setSortSetting = setSortSetting;
+  const latestQueryFingerprintRef = useRef<any>("");
+  attributes.latestQueryFingerprintRef = latestQueryFingerprintRef;
   const lastRowsLoadedFingerprint = useRef<any>("");
   attributes.lastRowsLoadedFingerprint = lastRowsLoadedFingerprint;
   const loadMorePendingRef = useRef<any>(false);
@@ -2537,6 +2642,7 @@ export const DataGrid = Titanic.define<DataGridProps<any>>(
   attributes.queryFingerprint = (function(this: any): string {
         return this.methods.createQueryFingerprint();
       }).call(context);
+  attributes.latestQueryFingerprintRef.current = attributes.queryFingerprint;
   attributes.effectiveRows = (function(this: any): readonly any[] {
         return this.methods.resolveEffectiveRows();
       }).call(context);
